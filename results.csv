@@ -1,0 +1,1 @@
+run_id,scenario,data_version,seed,model,imgsz_train,imgsz_eval,epochs,batch,lr0,evaluation_set,mAP50,mAP50_95,precision,recall,AP_tasit,AP_insan,AP_UAP,AP_UAI,duration_min,weights_path

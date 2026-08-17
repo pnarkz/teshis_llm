@@ -1,0 +1,56 @@
+version: 1
+kurallar:
+  saglikli_veri: v00_saglikli
+  test_kullanimi: final_asamasina_kadar_yasak
+  seed: 42
+  manifest_ajana_verilmez: true
+
+senaryolar:
+  - kod: D1
+    ad: sinif_yetersizligi
+    tur: veri
+    config: veri/d1_sinif_yetersizligi.yaml
+  - kod: D2a
+    ad: lokalizasyon_gurultusu
+    tur: veri
+    config: veri/d2a_lokalizasyon_gurultusu.yaml
+  - kod: D2b
+    ad: eksik_etiket
+    tur: veri
+    config: veri/d2b_eksik_etiket.yaml
+  - kod: D3
+    ad: uap_uai_sinif_karisikligi
+    tur: veri
+    config: veri/d3_uap_uai_karisikligi.yaml
+  - kod: D4
+    ad: kucuk_nesne_sinyal_kaybi
+    tur: veri
+    config: veri/d4_kucuk_nesne_sinyal_kaybi.yaml
+  - kod: D5
+    ad: kaynak_alani_kaymasi
+    tur: veri
+    config: veri/d5_kaynak_alani_kaymasi.yaml
+  - kod: D6a
+    ad: split_sizintisi
+    tur: veri
+    config: veri/d6a_split_sizintisi.yaml
+  - kod: D6b
+    ad: tekrar_agirligi
+    tur: veri
+    config: veri/d6b_tekrar_agirligi.yaml
+  - kod: E1
+    ad: overfitting
+    tur: egitim
+    config: egitim/e1_overfitting.yaml
+  - kod: E2
+    ad: underfitting
+    tur: egitim
+    config: egitim/e2_underfitting.yaml
+  - kod: E3
+    ad: egitim_kararsizligi
+    tur: egitim
+    config: egitim/e3_egitim_kararsizligi.yaml
+  - kod: E4
+    ad: egitim_cikarsam_cozunurluk_uyumsuzlugu
+    tur: egitim
+    config: egitim/e4_cozunurluk_uyumsuzlugu.yaml

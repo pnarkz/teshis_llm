@@ -1,0 +1,8 @@
+kod: D5
+ad: kaynak_alani_kaymasi
+kaynak_surum: v00_saglikli
+hedef_split: train
+parametreler:
+  izinli_kaynaklar: [aaterm]
+seed: 42
+beklenen_kanit: kaynak gruplari arasinda belirgin metrik ayrismasi

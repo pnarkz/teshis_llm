@@ -1,0 +1,9 @@
+kod: D6a
+ad: split_sizintisi
+kaynak_surum: v00_saglikli
+hedef_split: train_val
+parametreler:
+  kaynak_sizdirma_orani: 0.20
+seed: 42
+degerlendirme_kumesi: evaluation_set_sizintili
+beklenen_kanit: val yapay yuksek, test-val farki buyuk

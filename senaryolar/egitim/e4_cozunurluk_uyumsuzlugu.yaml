@@ -1,0 +1,8 @@
+kod: E4
+ad: egitim_cikarsam_cozunurluk_uyumsuzlugu
+kaynak_surum: v00_saglikli
+parametreler:
+  imgsz_egitim: 640
+  imgsz_degerlendirme: 1280
+seed: 42
+beklenen_kanit: tum boyut gruplarinda performans duser

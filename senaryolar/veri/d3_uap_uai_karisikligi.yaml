@@ -1,0 +1,13 @@
+kod: D3
+ad: uap_uai_sinif_karisikligi
+kaynak_surum: v00_saglikli
+hedef_split: train
+degerlendirme_kumesi: val_d3
+parametreler:
+  takas_orani: 0.30
+  siniflar: [2, 3]
+seed: 42
+beklenen_kanit: UAP ve UAI arasinda iki yonlu confusion matrix caprazi
+kurallar:
+  val_d3_etiketleri_bozulmaz: true
+  arka_plan_egitimde_bulunamaz: true

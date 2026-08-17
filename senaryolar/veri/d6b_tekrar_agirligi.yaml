@@ -1,0 +1,8 @@
+kod: D6b
+ad: tekrar_agirligi
+kaynak_surum: v00_saglikli
+hedef_split: train
+parametreler:
+  hedef_tekrar: 40
+seed: 42
+beklenen_kanit: baskin sahneler ve nadir sinif precision bozulmasi

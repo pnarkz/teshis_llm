@@ -1,0 +1,1 @@
+"""Yapilandirilmis cikarsam loglama."""

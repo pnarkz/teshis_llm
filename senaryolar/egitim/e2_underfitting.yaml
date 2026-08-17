@@ -1,0 +1,7 @@
+kod: E2
+ad: underfitting
+kaynak_surum: v00_saglikli
+parametreler:
+  epoch: 5
+seed: 42
+beklenen_kanit: train ve val birlikte dusuk, loss hala iner

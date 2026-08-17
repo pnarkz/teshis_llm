@@ -1,0 +1,8 @@
+kod: D4
+ad: kucuk_nesne_sinyal_kaybi
+kaynak_surum: v00_saglikli
+hedef_split: train
+parametreler:
+  etkin_sqrt_alan_esigi_px: 16
+seed: 42
+beklenen_kanit: yalnizca kucuk nesne recall duser

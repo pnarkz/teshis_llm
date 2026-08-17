@@ -1,0 +1,9 @@
+kod: E1
+ad: overfitting
+kaynak_surum: v00_saglikli
+parametreler:
+  kare_sayisi: 1000
+  epoch: 200
+  augmentasyon: kapali
+seed: 42
+beklenen_kanit: train yuksek, val dusuk, train_val farki acilir

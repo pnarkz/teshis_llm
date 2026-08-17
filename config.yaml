@@ -1,0 +1,25 @@
+aktif_ortam: lokal
+
+ortamlar:
+  lokal:
+    dataset_yaml: C:/Users/ASUS/Desktop/HYZ/dataset/data.yaml
+    dataset_root: C:/Users/ASUS/Desktop/HYZ/dataset
+    output_root: C:/Users/ASUS/Desktop/termal_teshis
+    use_for: [istatistik, val_olustur, degerlendirme, ajan]
+  kaggle:
+    dataset_yaml: /kaggle/input/datasets/pnarkcgz/dataset/dataset/data.yaml
+    dataset_root: /kaggle/input/datasets/pnarkcgz/dataset/dataset
+    output_root: /kaggle/working/termal_teshis
+    use_for: [egitim]
+
+siniflar:
+  0: tasit
+  1: insan
+  2: UAP
+  3: UAI
+
+rapor:
+  output_dir: reports
+  json_name: veri_raporu.json
+
+tohum: 42

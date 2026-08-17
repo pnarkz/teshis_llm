@@ -1,0 +1,1 @@
+"""Ajan JSON cikti semalari."""

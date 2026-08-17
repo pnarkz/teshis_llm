@@ -1,0 +1,9 @@
+kod: D1
+ad: sinif_yetersizligi
+kaynak_surum: v00_saglikli
+hedef_split: train
+parametreler:
+  sinif_id: 1
+  kare_cikarma_orani: 0.90
+seed: 42
+beklenen_kanit: insan recall ve AP belirgin duser

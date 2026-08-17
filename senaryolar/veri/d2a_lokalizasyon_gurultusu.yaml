@@ -1,0 +1,8 @@
+kod: D2a
+ad: lokalizasyon_gurultusu
+kaynak_surum: v00_saglikli
+hedef_split: train
+parametreler:
+  merkez_kayma_orani: 0.15
+seed: 42
+beklenen_kanit: mAP50-95 mAP50'den daha fazla duser
