@@ -39,9 +39,9 @@ Tamamlananlar:
 
 Aktif:
 
-- [ ] D1 egitimi tamamlanacak.
-- [ ] D1 best.pt val_diagnostic ile degerlendirilecek.
-- [ ] D1 ile saglikli model farki raporlanacak.
+- [x] D1 egitimi tamamlandi.
+- [x] D1 best.pt val_diagnostic ile degerlendirildi.
+- [x] D1 ile saglikli model farki raporlandi.
 
 Sonraki isler:
 
@@ -214,12 +214,31 @@ olarak isaretlenir ve kanit dosyasi ayni commit'e eklenir.
 - [x] Insan frame: 9.289 -> 929.
 - [x] Train frame: 17.515 -> 9.155.
 - [x] Kaynak dataset degistirilmedi.
-- [x] Kosu: experiments/run_20260817_222003_D1_42.
-- [ ] Egitim tamamen bitti.
-- [ ] weights/best.pt bulundu.
-- [ ] D1 diagnostic val degerlendirmesi.
-- [ ] D1-baseline fark raporu.
+- [x] Kosu: experiments/run_20260817_222323_D1_42.
+- [x] Egitim tamamen bitti.
+- [x] weights/best.pt bulundu.
+- [x] D1 diagnostic val degerlendirmesi.
+- [x] D1-baseline fark raporu.
 - [ ] D1 hata galerisi.
+
+D1 sonucu:
+
+| Olcum | main_model baseline | D1 best.pt | Fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9331 | 0.9061 | -0.0270 |
+| mAP50-95 | 0.6988 | 0.6703 | -0.0286 |
+| Precision | 0.8975 | 0.8870 | -0.0104 |
+| Recall | 0.8786 | 0.8558 | -0.0228 |
+| Insan AP50 | 0.8499 | 0.8160 | -0.0340 |
+| Insan recall | 0.8157 | 0.7200 | -0.0957 |
+
+D1 modelinin insan recall'i baseline'a gore belirgin dustu. Bu, insan egitim
+karelerinin yuzde 90'i cikarilinca modelin daha fazla insan kacirdigini
+gosterir. UAP/UAI sonuclari 15 ve 17 bbox'a dayandigi icin bu sinifler hakkinda
+guclu genelleme iddiasi kurulamaz.
+
+Son model: experiments/run_20260817_222323_D1_42/weights/best.pt
+Son rapor: reports/d1_sonuc/d1_metrics.json
 
 ### E. Senaryolar
 
@@ -428,9 +447,7 @@ kosullarda guvenilirligini kaybettigini olcmeye calismasidir.
 
 ## Sonraki Tek Adim
 
-1. experiments/run_20260817_222003_D1_42/weights/best.pt dosyasini kontrol et.
-2. teshis.degerlendirme.d1_sonuc komutunu calistir.
-3. reports/d1_sonuc/d1_metrics.json dosyasini kontrol et.
-4. main_model.pt baseline'i ile D1 farkini raporla.
-5. D1 checklist kutularini guncelle.
-6. D2a'ya gec.
+1. D1 hata galerisi uret ve insan kacirma orneklerini incele.
+2. Hata galerisi sonucunu rapora ekle.
+3. D1 checklist kutularini tamamla.
+4. D2a'ya gec.
