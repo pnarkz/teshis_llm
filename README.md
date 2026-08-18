@@ -451,3 +451,35 @@ kosullarda guvenilirligini kaybettigini olcmeye calismasidir.
 2. Hata galerisi sonucunu rapora ekle.
 3. D1 checklist kutularini tamamla.
 4. D2a'ya gec.
+
+## Kaggle D2a Calistirma
+
+Kaggle Notebook ayarlarinda GPU acilmali ve iki input eklenmelidir:
+
+1. Dataset: images/train, labels/train ve diger splitleri iceren dataset.
+2. Model: main_model.pt.
+
+Sonra notebook'ta asagidaki komutla script calistirilir:
+
+~~~text
+!python /kaggle/working/teshis_llm/scripts/kaggle_d2a.py
+~~~
+
+Private GitHub reposu Kaggle'da otomatik okunamiyorsa script dosyasi notebook'a
+yuklenebilir veya repository public olmayan durumda Kaggle Dataset olarak
+eklenebilir. Script input altinda main_model.pt ve dataset klasorlerini kendisi
+arar.
+
+D2a ciktilari:
+
+~~~text
+/kaggle/working/v02_d2a_lokalizasyon_gurultusu/data.yaml
+/kaggle/working/v02_d2a_lokalizasyon_gurultusu/manifest.json
+/kaggle/working/experiments/run_D2a_42/weights/best.pt
+~~~
+
+D2a'da her train bbox merkez koordinati, seed=42 ve center_shift_ratio=0.15
+ile kontrollu olarak kaydirilir. Sinif ID'si, bbox genisligi ve yuksekligi
+degistirilmez. Manifest ortalama kaymayi, degisen satir sayisini ve kaynak
+etiket hash'ini kaydeder. Kaggle sonucu indirildikten sonra model yerelde
+val_diagnostic ile degerlendirilmelidir.
