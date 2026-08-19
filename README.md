@@ -512,3 +512,29 @@ ile kontrollu olarak kaydirilir. Sinif ID'si, bbox genisligi ve yuksekligi
 degistirilmez. Manifest ortalama kaymayi, degisen satir sayisini ve kaynak
 etiket hash'ini kaydeder. Kaggle sonucu indirildikten sonra model yerelde
 val_diagnostic ile degerlendirilmelidir.
+
+## Kaggle D2b Calistirma
+
+D2b, train etiket satirlarinin yuzde 25'ini silerek eksik etiket problemini
+simule eder. D2a'daki gibi kaynak dataset salt okunur; val ve test etiketleri
+degistirilmez.
+
+Notebook'a scripts/kaggle_d2a.py ve scripts/kaggle_d2b.py dosyalarini birlikte
+yukleyin. D2b scripti D2a icindeki ortak input bulma ve dosya linkleme
+fonksiyonlarini kullanir.
+
+~~~text
+!python /kaggle/working/teshis_llm/scripts/kaggle_d2b.py
+~~~
+
+D2b ciktilari:
+
+~~~text
+/kaggle/working/v03_d2b_eksik_etiket/manifest.json
+/kaggle/working/v03_d2b_eksik_etiket/data.yaml
+/kaggle/working/experiments/run_D2b_42/weights/best.pt
+~~~
+
+Beklenen kanit: Eksik etiketler nedeniyle modelin recall'i ve ozellikle false
+negative sayisi artabilir. Config beklentisi precision dususudur; bu beklenti
+ayrica diagnostic val metrikleri ve hata galerisi ile kontrol edilmelidir.
