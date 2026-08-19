@@ -8,8 +8,6 @@ experiments/*
 !experiments/README.md
 veri_surumleri/*
 !veri_surumleri/README.md
-!veri_surumleri/**/
-!veri_surumleri/**/manifest.json
 val_diagnostic/*
 runs/
 *.pt
