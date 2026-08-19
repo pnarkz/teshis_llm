@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any
 
 
-def evaluate(model_path: Path, data_path: Path, output_dir: Path, imgsz: int) -> dict[str, Any]:
+def evaluate(
+    model_path: Path, data_path: Path, output_dir: Path, imgsz: int, scenario: str = "D1"
+) -> dict[str, Any]:
     try:
         from ultralytics import YOLO
     except ImportError as error:
@@ -27,11 +29,11 @@ def evaluate(model_path: Path, data_path: Path, output_dir: Path, imgsz: int) ->
         device=0,
         plots=True,
         project=str(output_dir),
-        name="d1_val_diagnostic",
+        name=f"{scenario.lower()}_val_diagnostic",
         exist_ok=True,
     )
     metrics: dict[str, Any] = {
-        "scenario": "D1",
+        "scenario": scenario,
         "model": str(model_path.resolve()),
         "data": str(data_path.resolve()),
         "imgsz": imgsz,
@@ -55,8 +57,9 @@ def main() -> None:
     parser.add_argument("--data", default="val_diagnostic/data.yaml")
     parser.add_argument("--output", default="reports/d1_sonuc")
     parser.add_argument("--imgsz", type=int, default=768)
+    parser.add_argument("--scenario", default="D1")
     args = parser.parse_args()
-    evaluate(Path(args.model), Path(args.data), Path(args.output), args.imgsz)
+    evaluate(Path(args.model), Path(args.data), Path(args.output), args.imgsz, args.scenario)
 
 
 if __name__ == "__main__":

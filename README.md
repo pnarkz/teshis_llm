@@ -242,7 +242,7 @@ Son rapor: reports/d1_sonuc/d1_metrics.json
 
 ### E. Senaryolar
 
-- [ ] D2a lokalizasyon gurultusu.
+- [x] D2a lokalizasyon gurultusu.
 - [ ] D2b eksik etiket.
 - [ ] D3 UAP/UAI class 2-3 karisikligi.
 - [ ] D4 kucuk nesne sinyal kaybi.
@@ -253,6 +253,26 @@ Son rapor: reports/d1_sonuc/d1_metrics.json
 - [ ] E2 underfitting.
 - [ ] E3 seed bazli kararsizlik.
 - [ ] E4 640/768 uyumsuzlugu.
+
+### D2a Sonucu
+
+- [x] Kaggle kosusu: experiments/run_D2a_42.
+- [x] Model: experiments/run_D2a_42/weights/best.pt.
+- [x] Diagnostic degerlendirme: reports/d2a_sonuc/d2a_metrics.json.
+- [x] Test seti kullanilmadi.
+
+| Olcum | main_model baseline | D2a | Fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9331 | 0.8877 | -0.0454 |
+| mAP50-95 | 0.6988 | 0.6162 | -0.0826 |
+| Precision | 0.8975 | 0.8854 | -0.0121 |
+| Recall | 0.8786 | 0.8317 | -0.0469 |
+
+D2a hipotezi desteklendi: bbox merkezleri kaydirilinca tam ortusmeyi olcen
+mAP50-95, gevsek ortusmeyi olcen mAP50'den daha fazla dustu. Bu, lokalizasyon
+etiket gurultusunun tespit performansini bozduguna dair orta guclukte kanittir.
+UAP/UAI bbox sayilari 15 ve 17 oldugu icin bu sinifler icin guclu genelleme
+iddiasi kurulmaz.
 
 ### F. Ajan
 
