@@ -259,6 +259,7 @@ Son rapor: reports/d1_sonuc/d1_metrics.json
 - [x] Kaggle kosusu: experiments/run_D2a_42.
 - [x] Model: experiments/run_D2a_42/weights/best.pt.
 - [x] Diagnostic degerlendirme: reports/d2a_sonuc/d2a_metrics.json.
+- [x] Hata galerisi: reports/d2a_hata_galerisi/index.html.
 - [x] Test seti kullanilmadi.
 
 | Olcum | main_model baseline | D2a | Fark |
@@ -273,6 +274,14 @@ mAP50-95, gevsek ortusmeyi olcen mAP50'den daha fazla dustu. Bu, lokalizasyon
 etiket gurultusunun tespit performansini bozduguna dair orta guclukte kanittir.
 UAP/UAI bbox sayilari 15 ve 17 oldugu icin bu sinifler icin guclu genelleme
 iddiasi kurulmaz.
+
+D2a hata galerisi 1.056 diagnostic goruntuyu taradi ve en yuksek hata skoruna
+sahip 50 goruntuyu kaydetti. Yesil kutular gercek etiketleri, kirmizi kutular
+model tahminlerini gosterir. Galeri su dosyalardan incelenir:
+
+- reports/d2a_hata_galerisi/index.html
+- reports/d2a_hata_galerisi/gallery.json
+- reports/d2a_hata_galerisi/images/
 
 ### F. Ajan
 
