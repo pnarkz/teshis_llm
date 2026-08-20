@@ -1,0 +1,28 @@
+{
+  "scenario": "D2b",
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\experiments\\run_D2b_42_local\\weights\\best.pt",
+  "data": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\val_diagnostic\\data.yaml",
+  "imgsz": 768,
+  "mAP50": 0.9069898807902037,
+  "mAP50_95": 0.6550038538151794,
+  "precision": 0.8088098414504179,
+  "recall": 0.9022517971359076,
+  "class_names": [
+    "tasit",
+    "insan",
+    "UAP",
+    "UAI"
+  ],
+  "class_ap50": [
+    0.8343466462540188,
+    0.8197239880179075,
+    0.995,
+    0.9788888888888888
+  ],
+  "class_ap50_95": [
+    0.5266308541433744,
+    0.4314451867423165,
+    0.8758000000000001,
+    0.786139374375027
+  ]
+}

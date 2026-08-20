@@ -283,6 +283,30 @@ model tahminlerini gosterir. Galeri su dosyalardan incelenir:
 - reports/d2a_hata_galerisi/gallery.json
 - reports/d2a_hata_galerisi/images/
 
+### D2b Ilk Sonucu
+
+- [x] Yerel GPU kosusu: experiments/run_D2b_42_local.
+- [x] Model: experiments/run_D2b_42_local/weights/best.pt.
+- [x] Diagnostic degerlendirme: reports/d2b_sonuc/d1_metrics.json.
+- [x] Orijinal dataset degistirilmedi; train etiket satirlarinin yuzde 25'i
+  kontrollu olarak eksiltildi.
+- [x] Test seti kullanilmadi.
+
+| Olcum | main_model baseline | D2b | Fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9331 | 0.9070 | -0.0261 |
+| mAP50-95 | 0.6988 | 0.6550 | -0.0438 |
+| Precision | 0.8975 | 0.8088 | -0.0887 |
+| Recall | 0.8786 | 0.9023 | +0.0236 |
+
+D2b ilk sonucu, eksik etiketlerin precision'i belirgin dusurdugunu ve modelin
+daha fazla yanlis pozitif urettigini gosteriyor. Recall'in artmasi, eksik
+etiketli train verisinin modeli daha genis tahmin yapmaya itmis olabilecegiyle
+uyumludur. Bu yorum final_best.pt kosusu ile tekrar kontrol edilecektir.
+
+- reports/d2b_sonuc/d1_metrics.json
+- reports/d2b_sonuc/d2b_val_diagnostic/confusion_matrix.png
+
 ### F. Ajan
 
 - [ ] Izinli araclari tanimla.

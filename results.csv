@@ -1,3 +1,4 @@
 run_id,scenario,data_version,seed,model,imgsz_train,imgsz_eval,epochs,batch,lr0,evaluation_set,mAP50,mAP50_95,precision,recall,AP_tasit,AP_insan,AP_UAP,AP_UAI,duration_min,weights_path
 d1_20260817_222323,D1,v01_d1_sinif_yetersizligi,42,main_model.pt,768,768,12,8,0.001,val_diagnostic,0.9061409,0.6702598,0.8870378,0.8558116,0.8711060,0.8159577,0.9950000,0.9425000,89.5,experiments/run_20260817_222323_D1_42/weights/best.pt
 d2a_20260820,D2a,v02_d2a_lokalizasyon_gurultusu,42,main_model.pt,768,768,12,12,0.001,val_diagnostic,0.8877029,0.6162383,0.8854154,0.8317076,0.8408802,0.8104584,0.9950000,0.9044731,,experiments/run_D2a_42/weights/best.pt
+d2b_20260820_main,D2b,v03_d2b_eksik_etiket_local,42,main_model.pt,768,768,30,8,0.001,val_diagnostic,0.9069899,0.6550039,0.8088098,0.9022518,0.8343466,0.8197240,0.9950000,0.9788889,,experiments/run_D2b_42_local/weights/best.pt
