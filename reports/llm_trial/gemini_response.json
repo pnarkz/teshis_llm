@@ -1,0 +1,54 @@
+[
+  {
+    "run_id": "kosu_01",
+    "diagnosis": "optimal_dengeli_performans",
+    "evidence": [
+      "mAP50 degeri 0.9331 ile tum kosular arasindaki en yuksek basari seviyesindedir.",
+      "mAP50_95 degeri 0.6988 ve Precision degeri 0.8975 ile en yuksek konumlandirma hassasiyetine sahiptir."
+    ],
+    "confidence": "orta",
+    "limitations": [
+      "UAP (15 bbox) ve UAI (17 bbox) siniflarindaki veri yetersizligi nedeniyle bu siniflardaki %99.5 AP50 basarisi genel tutarliligi garanti etmez."
+    ],
+    "next_measurement": "UAP ve UAI siniflarina ait etiketli test verisi sayisi artirilarak modelin basarisi yeniden dogrulanmalidir."
+  },
+  {
+    "run_id": "kosu_02",
+    "diagnosis": "orta_yuksek_dengeli_performans",
+    "evidence": [
+      "mAP50 degeri 0.9061 seviyesinde gerceklesmistir.",
+      "Precision degeri 0.8870 ve Recall degeri 0.8558 ile dengeli bir tespit orani sunmaktadir."
+    ],
+    "confidence": "orta",
+    "limitations": [
+      "UAP (15 bbox) ve UAI (17 bbox) siniflarinin sinirli orneklem sayisi genel performans genellemesini kısıtlamaktadir."
+    ],
+    "next_measurement": "Konumlandirma hassasiyetini artirmak amaciyla IoU esik degerlerinin mAP50-95 (0.6703) üzerindeki etkisi incelenmelidir."
+  },
+  {
+    "run_id": "kosu_03",
+    "diagnosis": "en_dusuk_konumlandirma_basarisi",
+    "evidence": [
+      "mAP50 degeri 0.8877 ile tum kosular icindeki en dusuk tespit oranina sahiptir.",
+      "mAP50_95 degeri 0.6162 ile tum kosular icindeki en dusuk hassas konumlandirma performansini gostermektedir."
+    ],
+    "confidence": "orta",
+    "limitations": [
+      "UAP (15 bbox) ve UAI (17 bbox) siniflarindaki kucuk veri boyutu tum model genellemesini olumsuz etkilemektedir."
+    ],
+    "next_measurement": "Insan (AP50_95: 0.4142) ve tasit (AP50_95: 0.5151) siniflarindaki dusuk hassasiyetin nedenlerini belirlemek icin kucuk nesne kayip analizi yapilmalidir."
+  },
+  {
+    "run_id": "kosu_04",
+    "diagnosis": "yuksek_duyarlilik_dusuk_kesinlik",
+    "evidence": [
+      "Recall degeri 0.9023 ile tum kosular arasindaki en yuksek yakalama oranina sahiptir.",
+      "Precision degeri 0.8088 ile tum kosular arasindaki en dusuk dogruluk oranina sahiptir ve yuksek yanlis pozitif uretmektedir."
+    ],
+    "confidence": "orta",
+    "limitations": [
+      "UAP (15 bbox) ve UAI (17 bbox) siniflarinin orneklem azligi sebebiyle kesin sinif bazli yargiya varilamamaktadir."
+    ],
+    "next_measurement": "Yanlis pozitifleri azaltmak icin guven esigi (confidence threshold) artirilarak Precision (0.8088) ve Recall (0.9023) dengesi yeniden olculmelidir."
+  }
+]

@@ -42,11 +42,17 @@ Aktif:
 - [x] D1 egitimi tamamlandi.
 - [x] D1 best.pt val_diagnostic ile degerlendirildi.
 - [x] D1 ile saglikli model farki raporlandi.
+- [x] D2a lokalizasyon gurultusu kosusu ve diagnostic raporu tamamlandi.
+- [x] D2b eksik etiket kosusu iki baslangic modeliyle tamamlandi.
+- [x] Gemini 3.6 Flash ile anonim LLM pilotu yapildi.
+- [x] Streamlit ara sunum demosu kuruldu ve localhost'ta dogrulandi.
 
 Sonraki isler:
 
 - [ ] D1 hata galerisi.
-- [ ] D2a-D6b veri senaryolari.
+- [x] D2a veri senaryosu.
+- [x] D2b veri senaryosu.
+- [ ] D3-D6b veri senaryolari.
 - [ ] E1-E4 egitim senaryolari.
 - [ ] Bootstrap guven araliklari ve ajan karar akisi.
 - [ ] Final test: sadece bir kez.
@@ -329,10 +335,30 @@ kurulmamalidir.
 - reports/d2b_final_best_sonuc/d1_metrics.json
 - reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic/confusion_matrix.png
 
+### Ara Sunum Demosu
+
+Streamlit arayuzu tamamlanan deneyleri egitim calistirmadan gosterir. Baslatma:
+
+```powershell
+python -m pip install -r requirements-demo.txt
+streamlit run demo/app.py
+```
+
+Arayuzde su bolumler bulunur:
+
+- Genel Bakis: kosu tablosu, mAP/precision/recall trendleri ve sinif performans haritasi.
+- Proje ve Senaryolar: her senaryonun nasil ve neden olusturuldugu.
+- Senaryo Incele: baseline farki, precision-recall dengesi, confusion matrix ve ornek tahminler.
+- LLM Ajan: Gemini'nin anonim metrikler uzerinden uretdigi pilot teshisler.
+
+Demo kaynak kodu `demo/`, bagimliliklari `requirements-demo.txt` altindadir.
+
 ### F. Ajan
 
+- [x] Gemini ile anonim metrik yorumlama pilotu.
+- [x] LLM icin anonim girdi ve JSON cikti semasi olusturuldu.
 - [ ] Izinli araclari tanimla.
-- [ ] JSON girdi/cikti semalarini sabitle.
+- [ ] JSON girdi/cikti semalarini production semasi olarak sabitle.
 - [ ] Manifesti ajandan gizle.
 - [ ] Kanit, karsilastirma, guven ve sinir alanlarini zorunlu kil.
 - [ ] yetersiz_kanit kararini destekle.
@@ -344,7 +370,7 @@ kurulmamalidir.
 - [ ] Testi sadece bir kez calistir.
 - [ ] Test sonucunu commit/model/veri manifesti ile sakla.
 - [ ] Mentor raporunu tamamla.
-- [ ] GitHub main branch'ini guncelle.
+- [x] GitHub main branch'ini guncelle.
 
 ## Deney Degismezleri
 
