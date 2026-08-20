@@ -302,10 +302,32 @@ model tahminlerini gosterir. Galeri su dosyalardan incelenir:
 D2b ilk sonucu, eksik etiketlerin precision'i belirgin dusurdugunu ve modelin
 daha fazla yanlis pozitif urettigini gosteriyor. Recall'in artmasi, eksik
 etiketli train verisinin modeli daha genis tahmin yapmaya itmis olabilecegiyle
-uyumludur. Bu yorum final_best.pt kosusu ile tekrar kontrol edilecektir.
+uyumludur.
 
 - reports/d2b_sonuc/d1_metrics.json
 - reports/d2b_sonuc/d2b_val_diagnostic/confusion_matrix.png
+
+### D2b Final_best Karsilastirmasi
+
+- [x] Ayni D2b bozuk veri protokolu final_best.pt ile tekrarlandi.
+- [x] Model: experiments/run_D2b_42_final_best_local/weights/best.pt.
+- [x] Diagnostic degerlendirme: reports/d2b_final_best_sonuc/d1_metrics.json.
+
+| Olcum | main_model D2b | final_best D2b | Fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9070 | 0.8992 | -0.0077 |
+| mAP50-95 | 0.6550 | 0.6491 | -0.0059 |
+| Precision | 0.8088 | 0.8324 | +0.0236 |
+| Recall | 0.9023 | 0.8724 | -0.0299 |
+
+Bu iki kosu, ayni eksik etiket senaryosunda baslangic modelinin sonucu
+etkiledigini gosteriyor. final_best precision'da daha iyi, ancak recall ve
+toplam mAP'te main_model D2b kosusunun gerisinde. UAP/UAI siniflarinda bbox
+sayisi 15 ve 17 oldugu icin bu sinifler hakkinda guclu genelleme iddiasi
+kurulmamalidir.
+
+- reports/d2b_final_best_sonuc/d1_metrics.json
+- reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic/confusion_matrix.png
 
 ### F. Ajan
 
