@@ -23,6 +23,94 @@ Arastirma sorusu: Termal nesne tespit sistemi hangi veri, etiket, dagilim,
 egitim ve alan kaymasi kosullarinda bozulur; bir LLM/ajan bu bozulmayi yeterli
 kanitla teshis edebilir mi?
 
+## Bakım Günlüğü
+
+Bu bölüm, projede yapılan düzenleme/temizlik/eksik-giderme işlerinin
+kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
+madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
+üzerinden takip edilebilir. En yeni kayıt en üstte durur.
+
+### 2026-08-25 (2) — Ajan katmanı gerçek koda kavuştu, ilk birim testleri eklendi
+
+Sorun: `teshis/ajan/*.py` ve `teshis/servis/*.py` tamamen tek satırlık
+docstring'den ibaretti. Projenin adı "Termal Teşhis Ajanı" olmasına rağmen
+gerçekte çalışan tek şey `scripts/run_gemini_trial.py` içindeki, hiç araç
+(tool) kullanmayan tek seferlik bir Gemini metin çağrısıydı. Ayrıca
+`tests/` klasöründe hiç test dosyası yoktu.
+
+Yapılanlar:
+
+- [teshis/ajan/araclar.py](teshis/ajan/araclar.py): gerçek function-calling
+  araçları (`kosu_listesini_getir`, `kosu_metriklerini_getir`,
+  `baseline_farkini_getir`, `bbox_sayilarini_getir`). `katalog.yaml`'daki
+  `manifest_ajana_verilmez: true` kuralını kod seviyesinde uyguluyor —
+  hiçbir fonksiyon manifest veya senaryo adı okumuyor, sadece
+  `results.csv`/`reports/` metriklerini anonim `kosu_NN` kimlikleriyle
+  sunuyor.
+- [teshis/ajan/semalar.py](teshis/ajan/semalar.py): ajan çıktısı için
+  `TESHIS_SEMASI` + `teshis_dogrula` (programatik doğrulama — eskiden
+  Gemini'nin JSON'u hiç doğrulanmadan diske yazılıyordu) ve Gemini
+  function-calling için `ARAC_BILDIRIMLERI`.
+- [teshis/ajan/puanlama.py](teshis/ajan/puanlama.py): pilot puanlama
+  mantığı `scripts/score_llm_trial.py`'den buraya taşındı, tek kaynak
+  oldu; script artık ince bir CLI sarmalayıcısı. Taşıma sonrası çıktı
+  gerçek `reports/llm_trial/gemini_response.json` ile bit-bit karşılaştırıldı,
+  fark yok.
+- [teshis/ajan/ajan.py](teshis/ajan/ajan.py): gerçek Gemini function-calling
+  döngüsü (`teshis_uret`, `kor_deneme_calistir`). **Not:** bu kısım canlı
+  bir `GEMINI_API_KEY` ile bu ortamda uçtan uca test edilmedi (internet
+  erişimi yok); kullanmadan önce tek bir `kosu_id` ile duman testi
+  yapılması önerilir. Araç/şema katmanı tamamen yerel test edildi.
+- `tests/`: `conftest.py` + 4 yeni test dosyası, toplam 40 test, hepsi
+  gerçek proje verisiyle (results.csv, reports/) çalışıyor ve geçiyor.
+  `test_egitim_protokolu.py` özellikle önceki maddedeki lr0/warmup_epochs
+  hatasının bir daha sessizce geri gelmemesini garanti eden bir sözleşme
+  testi içeriyor.
+- `requirements-dev.txt` eklendi (`pytest`); `pyproject.toml`'a
+  `[tool.pytest.ini_options]` eklendi.
+- **Açık iş:** `teshis/servis/*` (API, anomali, arıza, loglama) hâlâ boş
+  iskelet; roadmap'te "Aşama 2" olarak işaretli, bu turda kapsanmadı.
+
+### 2026-08-25 (1) — Eğitim protokolü merkezileştirildi, Git kanıt takibi tutarlı hale getirildi
+
+Sorun: `teshis/egitim/kos.py` (D1'de kullanıldı) `lr0=0.0005`,
+`warmup_epochs=2` kullanıyordu; `scripts/kaggle_d2a.py`, `kaggle_d2b.py`,
+`local_d2b.py`, `local_d3.py` ise `lr0=0.001`, `warmup_epochs=3` kullanıyordu.
+Bu, D1 ile D2a/D2b/D3 arasındaki metrik farkının bir kısmının veri
+bozulmasından değil, farklı optimizasyon ayarından kaynaklanabileceği
+anlamına geliyordu — projenin "senaryolar arasında tek değişken değişir"
+temel ilkesini zayıflatan gerçek bir metodoloji açığıydı.
+
+Yapılanlar:
+
+- [senaryolar/egitim_protokolu.yaml](senaryolar/egitim_protokolu.yaml):
+  tüm D serisi koşularda paylaşılan sabit optimizasyon/augmentasyon
+  değerlerinin tek kaynağı. `bilinen_sapmalar` alanında D1'in tamamlanmış
+  koşusunun (`run_20260817_222323_D1_42`) bu protokolden önce, farklı
+  `lr0`/`warmup_epochs` ile üretildiği açıkça kayıt altına alındı.
+- [teshis/egitim/protokol.py](teshis/egitim/protokol.py): bu YAML'ı okuyan
+  `egitim_kwargs()` yardımcı fonksiyonu.
+- [teshis/egitim/kos.py](teshis/egitim/kos.py), [scripts/local_d2b.py](scripts/local_d2b.py),
+  [scripts/local_d3.py](scripts/local_d3.py), [scripts/kaggle_d2a.py](scripts/kaggle_d2a.py),
+  [scripts/kaggle_d2b.py](scripts/kaggle_d2b.py): hepsi artık hiperparametreleri
+  kendi içlerinde tekrar tanımlamak yerine `egitim_kwargs()` üzerinden alıyor.
+  Kaggle scriptleri repo kökü Kaggle'a yüklendiği için `teshis` paketini
+  `sys.path` üzerinden import edebiliyor.
+- **Açık iş / kullanıcı kararı gerekiyor:** D1'in mevcut sonucu (README'deki
+  D1 tablosu, `results.csv` satırı `d1_20260817_222323`) düzeltilen protokolle
+  yeniden üretilmedi. D1'i D2a/D2b/D3 ile kesin biçimde karşılaştırmadan önce
+  D1'in bu ortak protokolle yeniden koşulması önerilir (~90 dakika GPU
+  süresi). Bu yeniden koşu kullanıcı onayı olmadan başlatılmadı.
+- `.gitignore`: `reports/`, `experiments/`, `veri_surumleri/` için tutarsız
+  bir politika vardı — bazı kanıt dosyaları (`d2b_sonuc`, `llm_trial`) elle
+  force-add edilmişti, diğerleri (`d1_sonuc`, `d2a_sonuc`,
+  `model_karsilastirma*`, çoğu veri sürümü manifesti) hiç Git'e girmemişti.
+  Artık kural tutarlı: her senaryonun `manifest.json`, `data.yaml`,
+  `run_manifest.json`, `args.yaml`, `results.csv` ve rapor JSON/CSV'leri
+  otomatik olarak izleniyor; ağır PNG/JPG/HTML çıktılar ve kopyalanan
+  dataset görüntü/etiket klasörleri kasıtlı olarak Git dışı kalmaya devam
+  ediyor (repo boyutu ve orijinal dataset'e dokunmama kuralı korunuyor).
+
 ## 2. Mevcut Durum
 
 Tamamlananlar:
@@ -371,13 +459,29 @@ arasinda ayrim oldugunu gosteren kayitli bir sinirliliktir.
 
 - [x] Gemini ile anonim metrik yorumlama pilotu.
 - [x] LLM icin anonim girdi ve JSON cikti semasi olusturuldu.
-- [ ] Izinli araclari tanimla.
+- [x] Izinli araclari tanimla: [teshis/ajan/araclar.py](teshis/ajan/araclar.py)
+  (kosu_listesini_getir, kosu_metriklerini_getir, baseline_farkini_getir,
+  bbox_sayilarini_getir).
 - [x] Pilot JSON girdi/cikti semasi olusturuldu.
-- [ ] JSON girdi/cikti semalarini production semasi olarak sabitle.
-- [ ] Manifesti ajandan gizle.
-- [ ] Kanit, karsilastirma, guven ve sinir alanlarini zorunlu kil.
-- [ ] yetersiz_kanit kararini destekle.
-- [ ] Anonim senaryo adlarini ve puanlama cetvelini test et.
+- [x] JSON girdi/cikti semalarini production semasi olarak sabitle:
+  [teshis/ajan/semalar.py](teshis/ajan/semalar.py)::TESHIS_SEMASI +
+  ARAC_BILDIRIMLERI (Gemini function-calling formatinda).
+- [x] Manifesti ajandan gizle: `araclar.py` hicbir fonksiyonda
+  veri surumu manifestini okumaz; yalnizca results.csv ve reports/ metrik
+  JSON'larini, anonim kosu_NN kimlikleriyle sunar.
+- [x] Kanit, guven ve sinir alanlarini zorunlu kil:
+  `semalar.teshis_dogrula` eksik alan, gecersiz confidence degeri, tek
+  kanitli veya sayisal olmayan evidence, liste olmayan limitations
+  durumlarini programatik olarak reddeder (bkz. tests/test_ajan_semalar.py).
+- [~] yetersiz_kanit kararini destekle: sema ve prompt bunu bir secenek
+  olarak taniyor; modelin bunu ne zaman secmesi gerektigi canli bir LLM
+  kosusuyla henuz gozlemlenmedi.
+- [x] Anonim senaryo adlarini ve puanlama cetvelini test et:
+  tests/test_ajan_araclar.py, tests/test_ajan_puanlama.py.
+- [ ] `teshis/ajan/ajan.py::teshis_uret` (gercek Gemini function-calling
+  dongusu) canli bir `GEMINI_API_KEY` ile uctan uca dogrulanmadi — bu kod
+  tabaninda internet erisimi yok. Calistirmadan once kucuk bir kosu ile
+  (tek `kosu_id`) duman testi yapilmasi onerilir.
 
 ### G. Final
 

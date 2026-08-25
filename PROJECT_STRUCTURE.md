@@ -10,21 +10,30 @@ termal_teshis/
   main_model.pt                       Secilen ana model, buyuk dosya
   proje-brifingi-v2.2.md              Proje kapsam belgesi
   results.csv                         Tum deneylerin tek satirlik kaydi
+  requirements.txt                    Calisma zamani bagimliliklari
+  requirements-dev.txt                + pytest; test calistirmak icin
   teshis/                             Ana Python paketi
     veri/                             Veri raporu ve veri surumleme
     egitim/                           Egitim komutlari ve kayit
+      protokol.py                     Tum D senaryolarinin paylastigi sabit
+                                       egitim/augmentasyon protokolu (tek kaynak)
     degerlendirme/                    Metrik, hata ve kanit analizi
     ajan/                             Araclar, JSON cikti ve puanlama
-    servis/                           Aşama 2 servis ve log analizi
+      araclar.py                      Function-calling araclari (anonim metrik okuma)
+      semalar.py                      Arac bildirimleri + teshis cikti semasi/dogrulama
+      ajan.py                         Gemini function-calling orkestrasyonu
+      puanlama.py                     Pilot puanlama rubrigi (tek kaynak)
+    servis/                           Aşama 2 servis ve log analizi (henuz bos iskelet)
   senaryolar/                         Degistirilemez senaryo tanimlari
     katalog.yaml                      Senaryo kodlarinin tek listesi
+    egitim_protokolu.yaml             D serisi sabit egitim protokolu (tek kaynak)
     veri/                             D1-D6 veri arizalari
     egitim/                           E1-E4 egitim arizalari
   veri_surumleri/                     Uretilen dataset kopyalari
   experiments/                        Her kosunun kanit ve metrik ciktilari
   reports/                            Insan okunabilir raporlar
   scripts/                            Tekrarlanabilir yardimci komutlar
-  tests/                              Birim ve sozlesme testleri
+  tests/                              Birim ve sozlesme testleri (pytest)
 ```
 
 ## Isim kurallari
