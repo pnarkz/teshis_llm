@@ -78,10 +78,16 @@ def build_dataset(source: Path, output: Path, swap_ratio: float, seed: int) -> P
         output_label.write_text("\n".join(changed) + ("\n" if changed else ""), encoding="utf-8")
 
     data_yaml = output / "data.yaml"
+    # val, kaynak dataset'in operasyonel val bolmesidir; val_diagnostic DEGILDIR.
+    # val_diagnostic egitim val'i olarak kullanilirsa best.pt, sonradan
+    # senaryolari karsilastirmak icin kullandigimiz setin uzerinde secilmis olur
+    # (checkpoint secimi = degerlendirme seti). Bu, o senaryoya digerlerine gore
+    # iyimser bir yanlilik kazandirir. Bkz. tests/test_veri_surumu_val.py.
     data_yaml.write_text(
         f"path: {output.resolve().as_posix()}\n"
         "train: images/train\n"
-        f"val: {(Path('val_diagnostic') / 'images').resolve().as_posix()}\n"
+        f"val: {(source / 'images/val').resolve().as_posix()}\n"
+        f"test: {(source / 'images/test').resolve().as_posix()}\n"
         "nc: 4\n"
         "names: [tasit, insan, UAP, UAI]\n",
         encoding="utf-8",

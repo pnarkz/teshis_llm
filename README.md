@@ -30,6 +30,48 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-25 (6) — D3'te değerlendirme seti sızıntısı bulundu; boyut bazlı metrik modülü yazıldı
+
+**Ciddi bulgu — D3'ün kayıtlı sonucu iyimser yanlı.**
+`scripts/local_d3.py`, ürettiği `data.yaml`'a eğitim val'i olarak
+`val_diagnostic/images` yazıyordu. Diğer tüm senaryolar (D1, D2a, D2b, D2b
+final_best) operasyonel `dataset/images/val` kullanıyor. Ultralytics
+`best.pt`'yi val üzerindeki en iyi skora göre seçtiği için, **D3'ün
+`best.pt`'si sonradan tüm senaryoları karşılaştırmak için kullandığımız
+kilitli tanı setinin üzerinde seçilmiş oldu** — yani checkpoint seçimi
+değerlendirme setine baktı.
+
+Bunun pratik anlamı: D3 tablosundaki sayılar (özellikle baseline'ın
+*üzerinde* çıkan `precision +0.0110` değeri, bir bozulma senaryosu için
+beklenmedik bir sonuçtu) D1/D2a/D2b ile adil karşılaştırılabilir değil.
+D3'ün UAP↔UAI çapraz karışıklık bulgusu confusion matrix'ten geldiği ve
+çok belirgin olduğu için niteliksel olarak ayakta kalır; ancak **sayısal
+tablo yeniden koşulmadan kesin kabul edilmemelidir.**
+
+- `scripts/local_d3.py` düzeltildi (artık kaynak dataset'in val/test
+  bölmelerini yazıyor, diğer senaryolarla aynı).
+- `tests/test_veri_surumu_val.py`: hem üretici scriptlerin hem diskteki veri
+  sürümlerinin kilitli tanı setini eğitim val'i yapmadığını doğrular. Mevcut
+  `v04_d3_...` sürümü tarihsel kayıt olduğu için (koşunun provenansını
+  koruyor) `xfail` ile açıkça işaretlendi; yeni bir ihlal testi kırar.
+- **Açık karar:** D3'ün düzeltilmiş config ile yeniden koşulması gerekiyor
+  (~5 saat GPU, orijinal koşu 17.438 sn sürmüştü). Bu karar kullanıcıya
+  bırakıldı; D1 yeniden koşusu bitmeden ikinci koşu başlatılmadı (kural 10).
+
+**Yeni yetenek — boyut bazlı metrikler.**
+`teshis/degerlendirme/metrikler.py` bugüne kadar boş bir stub'dı, oysa
+dosya sözleşmesi "sınıf, boyut ve kaynak grubu bazlı metrik" vaat ediyordu.
+Artık kilitli tanı setindeki her gerçek kutuyu etkin piksel boyutuna göre
+bantlara ayırıp bant başına recall hesaplıyor. Etkin boyut çözünürlüğe göre
+normalize ediliyor (dataset'te hem 1024×1024 hem 640×512 kare var), formül
+`teshis/veri/istatistik.py` ile aynı. Bant sınırları D4'ün 16px eşiğiyle
+hizalı, böylece "eğitimden çıkarılan boyut bandı" ile "recall'i ölçülen
+bant" birebir örtüşüyor. Toplam mAP, "model küçük nesneleri kaçırmaya
+başladı" iddiasını gösteremez — küçük nesneler bbox sayısının küçük bir
+kısmı olduğu için toplam metrikte kaybolurlar; bu modül tam da o boşluğu
+kapatıyor. 15 birim testi (IoU, normalizasyon, bant sınırları, eşleştirme)
+`tests/test_metrikler.py` içinde.
+
 ### 2026-08-25 (5) — Tamamlanan bölümler baştan sona test edildi; LLM paketindeki kayma düzeltildi
 
 Bu tura kadar yapılan her şey sistematik olarak doğrulandı. Sonuç: **iki
@@ -564,6 +606,16 @@ kurulmamalidir.
 - reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic/confusion_matrix.png
 
 ### D3 Sonucu
+
+> **UYARI — bu sayisal tablo iyimser yanlidir, yeniden kosulmasi gerekiyor.**
+> Bu kosu, egitim val'i olarak kilitli tanı setini (`val_diagnostic`)
+> kullandi; yani `best.pt`, asagida raporlanan setin uzerinde secildi.
+> Diger tum senaryolar operasyonel `dataset/images/val` kullaniyor, bu yuzden
+> asagidaki sayilar D1/D2a/D2b ile adil karsilastirilamaz. Hata
+> `scripts/local_d3.py` icinde duzeltildi (bkz. Bakim Gunlugu 2026-08-25 (6)).
+> UAP<->UAI capraz karisiklik bulgusu confusion matrix'ten geldigi ve cok
+> belirgin oldugu icin niteliksel olarak gecerlidir; sayisal tablo yeniden
+> kosulmadan kesinlestirilmemelidir.
 
 - [x] Yerel GPU kosusu: experiments/run_D3_42_local (22 epoch, patience=10
   ile erken durdu).
