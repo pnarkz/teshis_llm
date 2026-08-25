@@ -30,6 +30,45 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-26 — D1 ortak protokolle yeniden koşuldu: genel kaybın çoğu protokol artefaktıymış
+
+D1, `senaryolar/egitim_protokolu.yaml` ortak protokolüyle (lr0=0.001,
+warmup_epochs=3) yeniden koşuldu. Yeni koşu eskisinden **yalnızca** bu iki
+parametrede farklı — diğer 27 eğitim parametresi (batch, imgsz, seed,
+augmentasyon, patience, cos_lr, başlangıç modeli, veri sürümü) birebir aynı
+olduğu programatik olarak doğrulandı. Süre de neredeyse aynı: 11 epoch /
+88 dk (ilk koşu 11 epoch / 89,5 dk).
+
+Sonuç, D1'in yorumunu önemli ölçüde değiştirdi:
+
+| Ölçüm | İlk koşu (lr0=0.0005) | Ortak protokol | |
+|---|---:|---:|---|
+| mAP50 farkı | -0.0270 | **-0.0082** | genel kayıp büyük ölçüde kayboldu |
+| mAP50-95 farkı | -0.0286 | **-0.0041** | neredeyse sıfır |
+| Precision farkı | -0.0104 | **+0.0186** | baseline'ın üstüne çıktı |
+| İnsan recall farkı | -0.0957 | **-0.0912** | değişmedi |
+
+**Asıl bulgu ayakta, ama artık izole:** insan eğitim karelerinin %90'ı
+çıkarılınca insan recall'i 9,1 puan düşüyor — bu etki iki koşuda da
+neredeyse aynı, yani protokol değişikliğine dayanıklı. Buna karşılık ilk
+koşunun gösterdiği **genel** performans kaybının büyük kısmı veri
+bozulmasından değil, düşük öğrenme oranından kaynaklanıyormuş. Ortak
+protokolle koşulduğunda geriye tam olarak beklenen imza kalıyor:
+hedeflenen sınıfın recall'inde belirgin düşüş, genel tespit kalitesinde
+neredeyse değişim yok. Bu, "tek değişken değişir" ilkesinin neden
+önemsenmesi gerektiğinin somut kanıtı.
+
+- `results.csv`'de D1 satırı yeni koşuyla değiştirildi (satır sırası
+  korundu, böylece ajanın anonim `kosu_NN` eşlemesi kaymadı — testle
+  doğrulandı). İlk koşu `experiments/run_20260817_222323_D1_42` ve
+  `reports/d1_sonuc/` altında tarihsel kayıt olarak duruyor.
+- `teshis/degerlendirme/d1_sonuc.py` artık sınıf bazlı **precision ve
+  recall** de kaydediyor. Rule 8 "sınıf AP, recall, bbox n" istiyordu ama
+  metrik JSON'u yalnızca AP tutuyordu; README tabloları için recall'ı elle
+  Ultralytics çıktısından okumak gerekiyordu. Sınıf adları artık
+  `ap_class_index` üzerinden eşleniyor, böylece val'de örneği olmayan bir
+  sınıf olursa isimler kaymaz.
+
 ### 2026-08-25 (6) — D3'te değerlendirme seti sızıntısı bulundu; boyut bazlı metrik modülü yazıldı
 
 **Ciddi bulgu — D3'ün kayıtlı sonucu iyimser yanlı.**
@@ -305,7 +344,7 @@ Tamamlananlar:
 
 Aktif:
 
-- [x] D1 egitimi tamamlandi.
+- [x] D1 egitimi tamamlandi ve ortak protokolle yeniden kosuldu.
 - [x] D1 best.pt val_diagnostic ile degerlendirildi.
 - [x] D1 ile saglikli model farki raporlandi.
 - [x] D2a lokalizasyon gurultusu kosusu ve diagnostic raporu tamamlandi.
@@ -490,31 +529,66 @@ olarak isaretlenir ve kanit dosyasi ayni commit'e eklenir.
 - [x] Insan frame: 9.289 -> 929.
 - [x] Train frame: 17.515 -> 9.155.
 - [x] Kaynak dataset degistirilmedi.
-- [x] Kosu: experiments/run_20260817_222323_D1_42.
+- [x] Kosu: experiments/run_20260825_223435_D1_42 (ortak protokolle yeniden
+  kosuldu; ilk kosu run_20260817_222323_D1_42 tarihsel kayit).
 - [x] Egitim tamamen bitti.
 - [x] weights/best.pt bulundu.
 - [x] D1 diagnostic val degerlendirmesi.
 - [x] D1-baseline fark raporu.
 - [ ] D1 hata galerisi.
 
-D1 sonucu:
+D1 sonucu (2026-08-25 yeniden kosusu, ortak protokol):
 
-| Olcum | main_model baseline | D1 best.pt | Fark |
+Bu tablo, `senaryolar/egitim_protokolu.yaml` ortak protokoluyle (lr0=0.001,
+warmup_epochs=3) yapilan yeniden kosuya aittir. Ilk D1 kosusu farkli
+optimizasyon ayariyla (lr0=0.0005, warmup_epochs=2) egitilmisti; bu yuzden
+D2a/D2b/D3 ile karsilastirilabilir degildi. Yeniden kosu 11 epoch surdu
+(88 dk), ilk kosu da 11 epoch/89,5 dk surmustu.
+
+| Olcum | main_model baseline | D1 (ortak protokol) | Fark |
 |---|---:|---:|---:|
-| mAP50 | 0.9331 | 0.9061 | -0.0270 |
-| mAP50-95 | 0.6988 | 0.6703 | -0.0286 |
-| Precision | 0.8975 | 0.8870 | -0.0104 |
-| Recall | 0.8786 | 0.8558 | -0.0228 |
-| Insan AP50 | 0.8499 | 0.8160 | -0.0340 |
-| Insan recall | 0.8157 | 0.7200 | -0.0957 |
+| mAP50 | 0.9331 | 0.9250 | -0.0082 |
+| mAP50-95 | 0.6988 | 0.6947 | -0.0041 |
+| Precision | 0.8975 | 0.9160 | +0.0186 |
+| Recall | 0.8786 | 0.8619 | -0.0167 |
+| Insan AP50 | 0.8499 | 0.8330 | -0.0170 |
+| **Insan recall** | **0.8157** | **0.7244** | **-0.0912** |
 
-D1 modelinin insan recall'i baseline'a gore belirgin dustu. Bu, insan egitim
-karelerinin yuzde 90'i cikarilinca modelin daha fazla insan kacirdigini
-gosterir. UAP/UAI sonuclari 15 ve 17 bbox'a dayandigi icin bu sinifler hakkinda
-guclu genelleme iddiasi kurulamaz.
+Sinif bazli recall (bbox n ile birlikte, rule 8):
 
-Son model: experiments/run_20260817_222323_D1_42/weights/best.pt
-Son rapor: reports/d1_sonuc/d1_metrics.json
+| Sinif | baseline recall | D1 recall | Fark | bbox n |
+|---|---:|---:|---:|---:|
+| tasit | 0.8703 | 0.8410 | -0.0293 | 1.264 |
+| insan | 0.8157 | 0.7244 | -0.0912 | 2.718 |
+| UAP | 1.0000 | 1.0000 | +0.0000 | 15 |
+| UAI | 0.8286 | 0.8824 | +0.0538 | 17 |
+
+**D1 hipotezi desteklendi ve etkisi artik izole edilmis durumda.** Insan
+egitim karelerinin yuzde 90'i cikarilinca insan recall'i 9,1 puan dusuyor;
+yani model belirgin sekilde daha fazla insan kaciriyor. Buna karsilik
+mAP50 yalnizca 0,8 puan, mAP50-95 ise 0,4 puan dusuyor ve precision
+baseline'in uzerine cikiyor.
+
+Bu ayrisma, ilk kosunun verdigi resimden onemli olcude farklidir. Ilk kosu
+mAP50'de -0,0270 ve mAP50-95'te -0,0286 gosteriyordu; yani bozulma genel bir
+performans kaybi gibi gorunuyordu. **O genel kaybin buyuk kismi veri
+bozulmasindan degil, dusuk ogrenme oranindan kaynaklaniyormus.** Ortak
+protokolle kosuldugunda geriye kalan sey, tam olarak beklenen imza oluyor:
+hedeflenen sinifin recall'inde belirgin dusus, genel tespit kalitesinde ise
+neredeyse degisim yok. Insan recall dususu iki kosuda da benzer (-0,0957 ve
+-0,0912), yani asil bulgu protokol degisikligine dayanikli.
+
+Tasit recall'indeki -0,0293'luk dusus yan etkidir: insan iceren 8.360 kare
+egitimden cikarilirken o karelerdeki tasitlar da cikmistir. UAP/UAI
+sonuclari 15 ve 17 bbox'a dayandigi icin bu sinifler hakkinda guclu
+genelleme iddiasi kurulamaz; UAI'deki +0,0538 tek bir kutunun yakalanmasina
+karsilik gelir.
+
+Son model: experiments/run_20260825_223435_D1_42/weights/best.pt
+Son rapor: reports/d1_v2_sonuc/d1_metrics.json
+
+Ilk kosu (protokol sapmali, tarihsel kayit olarak korunuyor):
+experiments/run_20260817_222323_D1_42 · reports/d1_sonuc/d1_metrics.json
 
 ### E. Senaryolar
 

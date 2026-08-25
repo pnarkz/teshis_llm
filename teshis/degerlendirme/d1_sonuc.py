@@ -35,6 +35,11 @@ def evaluate(
         name=f"{scenario.lower()}_val_diagnostic",
         exist_ok=True,
     )
+    # Rule 8: sonuclar genel mAP ile birlikte sinif AP *ve recall* icermelidir.
+    # ap_class_index, yalnizca val'de ornegi bulunan siniflarin sirasini verir;
+    # sinif adlarini bu indise gore eslemek, sinif atlanirsa kaymayi onler.
+    class_names = ["tasit", "insan", "UAP", "UAI"]
+    gorulen = [class_names[int(i)] for i in result.box.ap_class_index]
     metrics: dict[str, Any] = {
         "scenario": scenario,
         "model": str(model_path.resolve()),
@@ -44,9 +49,11 @@ def evaluate(
         "mAP50_95": float(result.box.map),
         "precision": float(result.box.mp),
         "recall": float(result.box.mr),
-        "class_names": ["tasit", "insan", "UAP", "UAI"],
+        "class_names": gorulen,
         "class_ap50": [float(x) for x in result.box.ap50],
         "class_ap50_95": [float(x) for x in result.box.ap],
+        "class_precision": [float(x) for x in result.box.p],
+        "class_recall": [float(x) for x in result.box.r],
     }
     path = output_dir / "d1_metrics.json"
     path.write_text(json.dumps(metrics, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
