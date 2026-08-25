@@ -1,5 +1,6 @@
 path: C:/Users/ASUS/Desktop/termal_teshis/veri_surumleri/v04_d3_uap_uai_sinif_karisikligi
 train: images/train
-val: C:/Users/ASUS/Desktop/termal_teshis/val_diagnostic/images
+val: C:/Users/ASUS/Desktop/HYZ/dataset/images/val
+test: C:/Users/ASUS/Desktop/HYZ/dataset/images/test
 nc: 4
 names: [tasit, insan, UAP, UAI]

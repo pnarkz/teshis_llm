@@ -28,12 +28,12 @@ URETICI_SCRIPTLER = [
 
 VERI_SURUMU_YAMLLARI = sorted((ROOT / "veri_surumleri").glob("*/data.yaml"))
 
-# Bu hata kesfedilmeden ONCE uretilmis, etkilendigi bilinen veri surumleri.
-# Dosyalar tarihsel kayittir (run_D3_42_local'i fiilen bu config uretti), bu
-# yuzden duzeltilmez; silinirse kosunun provenansi kaybolur. Senaryo yeniden
-# kosuldugunda yeni bir surum uretilir ve bu liste bosalir.
-# Ayrinti: README "Bakim Gunlugu" 2026-08-25 (6).
-BILINEN_ETKILENEN = {"v04_d3_uap_uai_sinif_karisikligi"}
+# Bu hata kesfedilmeden ONCE uretilmis, henuz duzeltilmemis veri surumleri.
+# Su an bos: v04_d3'un data.yaml'i duzeltildi (etiketler degismedi, yalnizca
+# val/test isaretcileri operasyonel bolmelere cevrildi) ve senaryo yeniden
+# kosuluyor. Eski yaml git gecmisinde, eski kosu experiments/run_D3_42_local
+# altinda duruyor. Ayrinti: README "Bakim Gunlugu" 2026-08-25 (6).
+BILINEN_ETKILENEN: set[str] = set()
 
 
 @pytest.mark.parametrize("script", URETICI_SCRIPTLER, ids=lambda p: p.name)

@@ -28,5 +28,13 @@
   "files": {
     "data_yaml": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v04_d3_uap_uai_sinif_karisikligi\\data.yaml",
     "output_dataset": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v04_d3_uap_uai_sinif_karisikligi"
+  },
+  "duzeltme_notu": {
+    "tarih_utc": "2026-08-25",
+    "sorun": "data.yaml egitim val'i olarak val_diagnostic/images gosteriyordu",
+    "etki": "run_D3_42_local kosusunun best.pt'si kilitli tanı setinin uzerinde secildi; o kosunun metrikleri D1/D2a/D2b ile adil karsilastirilamaz",
+    "duzeltme": "data.yaml val/test artik kaynak dataset'in operasyonel bolmelerini gosteriyor",
+    "etiketler_degisti_mi": false,
+    "eski_kosu": "experiments/run_D3_42_local (tarihsel kayit, silinmedi)"
   }
 }
