@@ -50,6 +50,19 @@ def main() -> None:
         name: compact(metrics, bbox_counts)
         for name, metrics, bbox_counts in sources
     }
+    reference = runs["kosu_01"]
+    for run in runs.values():
+        run["delta_vs_kosu_01"] = {
+            metric: round(run[metric] - reference[metric], 6)
+            for metric in ("mAP50", "mAP50_95", "precision", "recall")
+        }
+        run["class_AP50_delta_vs_kosu_01"] = {
+            class_name: round(
+                run["class_AP50"][class_name] - reference["class_AP50"][class_name],
+                6,
+            )
+            for class_name in run["class_AP50"]
+        }
     packet = {
         "task": "Termal drone YOLO diagnostigi",
         "classes": ["tasit", "insan", "UAP", "UAI"],
@@ -63,6 +76,7 @@ def main() -> None:
             "Kosu adlarindan senaryo tahmini yapma.",
             "Her iddiayi en az iki sayisal kanitla destekle.",
             "UAP/UAI bbox sayisi 15 ve 17 oldugu icin bu siniflerde kesin genelleme yapma.",
+            "delta_vs_kosu_01 alanlarini degisim kaniti olarak kullan; tek basina nedensellik kaniti sayma.",
             "Kanıt yetersizse yetersiz_kanit de.",
         ],
         "required_output": {

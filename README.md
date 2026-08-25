@@ -359,7 +359,10 @@ cevabini yerelde tutulan gizli `answer_key.json` ile karsilastirir. Puanlama
 diagnosis, sayisal evidence ve limitations alanlarina esit agirlik verir. Bu
 ilk puan bir benchmark degil, ajan gelistirme icin pilot rubriktir. Ilk Gemini
 sonucu ortalama `0.833` olmustur; D1 nedenini acikca adlandiramamasi sonraki
-prompt ve kanit tasariminin gelistirme hedefidir.
+prompt ve kanit tasariminin gelistirme hedefidir. Bunun icin ikinci paket
+surumunde her anonim kosuya baseline'a gore toplam ve sinif bazli delta alanlari
+eklendi. Yeni paket `scripts/prepare_llm_trial.py` ile uretilir; Gemini API
+denemesi tamamlandiginda `run_gemini_trial.py` tekrar calistirilir.
 
 ### F. Ajan
 

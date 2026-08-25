@@ -16,6 +16,7 @@
     "Kosu adlarindan senaryo tahmini yapma.",
     "Her iddiayi en az iki sayisal kanitla destekle.",
     "UAP/UAI bbox sayisi 15 ve 17 oldugu icin bu siniflerde kesin genelleme yapma.",
+    "delta_vs_kosu_01 alanlarini degisim kaniti olarak kullan; tek basina nedensellik kaniti sayma.",
     "Kanıt yetersizse yetersiz_kanit de."
   ],
   "required_output": {
@@ -53,6 +54,18 @@
         "insan": 2718,
         "UAP": 15,
         "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": 0.0,
+        "mAP50_95": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": 0.0,
+        "insan": 0.0,
+        "UAP": 0.0,
+        "UAI": 0.0
       }
     },
     "kosu_02": {
@@ -78,6 +91,18 @@
         "insan": 2718,
         "UAP": 15,
         "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": -0.026991,
+        "mAP50_95": -0.028553,
+        "precision": -0.010446,
+        "recall": -0.02282
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": -0.021497,
+        "insan": -0.033967,
+        "UAP": 0.0,
+        "UAI": -0.0525
       }
     },
     "kosu_03": {
@@ -103,6 +128,18 @@
         "insan": 2718,
         "UAP": 15,
         "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": -0.045429,
+        "mAP50_95": -0.082574,
+        "precision": -0.012068,
+        "recall": -0.046924
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": -0.051722,
+        "insan": -0.039467,
+        "UAP": 0.0,
+        "UAI": -0.090527
       }
     },
     "kosu_04": {
@@ -128,6 +165,18 @@
         "insan": 2718,
         "UAP": 15,
         "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": -0.026142,
+        "mAP50_95": -0.043809,
+        "precision": -0.088674,
+        "recall": 0.023621
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": -0.058256,
+        "insan": -0.030201,
+        "UAP": 0.0,
+        "UAI": -0.016111
       }
     }
   }
