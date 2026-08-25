@@ -1,2 +1,3 @@
-streamlit>=1.40
+# width="stretch" API'si icin 1.49+ gerekir (use_container_width kullanimdan kalkti).
+streamlit>=1.49
 pandas>=2.0

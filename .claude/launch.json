@@ -4,7 +4,7 @@
     {
       "name": "demo",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "streamlit", "run", "demo/app.py", "--server.headless", "true", "--server.port", "8577"],
+      "runtimeArgs": ["-m", "streamlit", "run", "demo/app.py", "--server.headless", "true", "--server.port", "8577", "--browser.gatherUsageStats", "false"],
       "port": 8577
     }
   ]

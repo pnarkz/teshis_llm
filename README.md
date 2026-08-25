@@ -30,6 +30,46 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-25 (4) — Demo yeniden tasarlandı, kullanılmayan tüm görseller konsola bağlandı
+
+Sorun: demo, sık kullanılan bir dashboard şablonuydu (koyu teal/turuncu
+gradyan hero, yuvarlak kartlar) ve eğitim/değerlendirme sırasında üretilen
+görsellerin çoğunu hiç göstermiyordu. Özellikle 50 görüntülük D2a hata
+galerisi ve her koşunun epoch bazlı `results.csv` eğitim eğrileri tamamen
+kullanılmıyordu.
+
+Yapılanlar:
+
+- **Yeni tasarım yönü — ölçüm aleti / mühendislik konsolu.** Monospace
+  tipografi, keskin köşeler, ince ızgara çizgileri; gradyan, gölge ve
+  yuvarlak köşe kaldırıldı. Metrikler `MAP50  0.9073  ▾ -0.0258` biçiminde
+  hizalı readout satırları olarak gösteriliyor. Yalnızca sistemde hazır
+  bulunan monospace yazı tipleri kullanılıyor — sunumda internet olmasa da
+  görünüm bozulmaz.
+- **Yeni "Hata Galerisi" bölümü:** `reports/*_hata_galerisi/` klasörleri
+  otomatik keşfediliyor. FN/FP dağılım grafiği, özet istatistikler ve
+  skora/FN'e/FP'ye/IoU'ya göre sıralanabilir kareler. Bu materyal daha önce
+  hiç kullanılmıyordu.
+- **Epoch bazlı eğitim eğrileri:** `experiments/<run>/results.csv` artık
+  interaktif olarak çiziliyor (doğrulama metrikleri + eğitim kayıpları,
+  sekmeli). Genel Bakış'ta her koşu için unicode sparkline özeti var.
+  Koşu klasörü `results.csv`'deki `weights_path` sütunundan türetiliyor,
+  ayrıca eşleme tablosu tutulmuyor — yeni senaryo otomatik gelir.
+- **Eşik eğrileri** (BoxPR/BoxF1/BoxP/BoxR), **etiket-vs-tahmin** karşılaştırmaları
+  (3 çift, önceden yalnızca 3 tekil görsel kapalı bir expander içindeydi) ve
+  **bozulmuş eğitim verisi önizlemesi** (`train_batch*.jpg`, `labels.jpg`)
+  eklendi.
+- **Düzeltilen gerçek hata:** `st.bar_chart` varsayılan olarak yığıyordu, bu
+  yüzden metrik profili grafiğinin y ekseni 0-3 arasına çıkıyor ve
+  mAP+precision+recall toplanmış gibi görünüyordu. `stack=False` eklendi
+  (bu hata eski tasarımda da vardı).
+- `use_container_width` yerine `width="stretch"` kullanıldı (deprecation
+  uyarıları gitti); `requirements-demo.txt` bu API için `streamlit>=1.49`
+  olarak güncellendi.
+- Beş bölümün tamamı tarayıcıda doğrulandı: sayfa geçişleri, senaryo seçimi,
+  galeri sıralaması, tüm görsellerin yüklendiği (0 kırık) ve sunucu tarafında
+  hata/uyarı olmadığı kontrol edildi.
+
 ### 2026-08-25 (3) — D3 senaryosu tamamlandı; Ultralytics çıktı yolu hatası düzeltildi
 
 D3'ün eğitimi bu oturumdan önce zaten bitmişti (`experiments/run_D3_42_local`,
@@ -509,7 +549,7 @@ degisebilir; guclu istatistiksel genelleme iddiasi kurulmaz.
 - reports/d3_sonuc/d3_val_diagnostic/confusion_matrix.png
 - veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
 
-### Ara Sunum Demosu
+### Ara Sunum Konsolu
 
 Streamlit arayuzu tamamlanan deneyleri egitim calistirmadan gosterir. Baslatma:
 
@@ -520,10 +560,21 @@ streamlit run demo/app.py
 
 Arayuzde su bolumler bulunur:
 
-- Genel Bakis: kosu tablosu, mAP/precision/recall trendleri ve sinif performans haritasi.
+- Genel Bakis: her kosunun readout karti, epoch sparkline'lari, karsilastirma
+  tablosu, metrik profili ve sinif bazli AP50.
+- Senaryo Incele: baseline farki, epoch bazli egitim egrileri, confusion
+  matrix, esik egrileri (PR/F1/P/R), etiket-vs-tahmin gorselleri ve bozulmus
+  egitim verisi onizlemesi.
+- Hata Galerisi: 50 goruntuluk D2a hata galerisi; FN/FP/IoU dagilimi ve
+  siralanabilir kareler.
 - Proje ve Senaryolar: her senaryonun nasil ve neden olusturuldugu.
-- Senaryo Incele: baseline farki, precision-recall dengesi, confusion matrix ve ornek tahminler.
-- LLM Ajan: Gemini'nin anonim metrikler uzerinden uretdigi pilot teshisler.
+- LLM Ajan: Gemini'nin anonim metrikler uzerinden urettigi pilot teshisler ve
+  rubrik puanlari.
+
+Konsol hicbir metrigi kendi icinde saklamaz; hepsi `results.csv`, `reports/`
+ve `experiments/` altindan okunur. Yeni bir senaryo `results.csv`'ye
+eklendiginde egitim egrisi ve readout otomatik gelir. Ayrinti icin
+[demo/README.md](demo/README.md).
 
 Demo kaynak kodu `demo/`, bagimliliklari `requirements-demo.txt` altindadir.
 
