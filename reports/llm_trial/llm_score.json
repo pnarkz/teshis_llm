@@ -9,7 +9,7 @@
       "evidence_score": 1.0,
       "limitation_score": 1.0,
       "total": 1.0,
-      "model_diagnosis": "optimal_dengeli_performans"
+      "model_diagnosis": "referans_performans_yuksek_denge"
     },
     {
       "run_id": "kosu_02",
@@ -19,7 +19,7 @@
       "evidence_score": 1.0,
       "limitation_score": 1.0,
       "total": 0.667,
-      "model_diagnosis": "orta_yuksek_dengeli_performans"
+      "model_diagnosis": "hafif_genel_performans_kaybi"
     },
     {
       "run_id": "kosu_03",
@@ -29,7 +29,7 @@
       "evidence_score": 1.0,
       "limitation_score": 1.0,
       "total": 1.0,
-      "model_diagnosis": "en_dusuk_konumlandirma_basarisi"
+      "model_diagnosis": "belirgin_konumlandirma_ve_katilik_kaybi"
     },
     {
       "run_id": "kosu_04",
@@ -39,7 +39,7 @@
       "evidence_score": 1.0,
       "limitation_score": 1.0,
       "total": 0.667,
-      "model_diagnosis": "yuksek_duyarlilik_dusuk_kesinlik"
+      "model_diagnosis": "yuksek_duyarlilik_dusuk_kesinlik_dengesizligi"
     }
   ],
   "mean_score": 0.833

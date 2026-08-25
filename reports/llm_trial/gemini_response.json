@@ -1,54 +1,58 @@
 [
   {
     "run_id": "kosu_01",
-    "diagnosis": "optimal_dengeli_performans",
+    "diagnosis": "referans_performans_yuksek_denge",
     "evidence": [
-      "mAP50 degeri 0.9331 ile tum kosular arasindaki en yuksek basari seviyesindedir.",
-      "mAP50_95 degeri 0.6988 ve Precision degeri 0.8975 ile en yuksek konumlandirma hassasiyetine sahiptir."
+      "mAP50 degeri 0.9331 ve mAP50_95 degeri 0.6988 ile tum kosular arasindaki en yuksek seviyededir.",
+      "Precision 0.8975 ve Recall 0.8786 ile dengeli bir tespit performansi sergilemektedir."
     ],
-    "confidence": "orta",
+    "confidence": "yuksek",
     "limitations": [
-      "UAP (15 bbox) ve UAI (17 bbox) siniflarindaki veri yetersizligi nedeniyle bu siniflardaki %99.5 AP50 basarisi genel tutarliligi garanti etmez."
+      "UAP (15 bbox) ve UAI (17 bbox) veri sayisi cok az oldugu icin bu siniflardaki yuksek AP50 (0.9950) degerleri genelletilemez.",
+      "Koku neden ve ortam kosullari hakkinda parametrik bilgi bulunmamaktadir."
     ],
-    "next_measurement": "UAP ve UAI siniflarina ait etiketli test verisi sayisi artirilarak modelin basarisi yeniden dogrulanmalidir."
+    "next_measurement": "UAP ve UAI siniflari icin en az 100+ ek etiketli goruntu toplanarak test tekrarlanmalidir."
   },
   {
     "run_id": "kosu_02",
-    "diagnosis": "orta_yuksek_dengeli_performans",
+    "diagnosis": "hafif_genel_performans_kaybi",
     "evidence": [
-      "mAP50 degeri 0.9061 seviyesinde gerceklesmistir.",
-      "Precision degeri 0.8870 ve Recall degeri 0.8558 ile dengeli bir tespit orani sunmaktadir."
+      "mAP50 degeri kosu_01'e gore 0.026991 kayip ile 0.906141 seviyesine dusmustur.",
+      "Recall degeri 0.022820 azalma gostererek 0.855812'ye gerilemistir."
     ],
     "confidence": "orta",
     "limitations": [
-      "UAP (15 bbox) ve UAI (17 bbox) siniflarinin sinirli orneklem sayisi genel performans genellemesini kısıtlamaktadir."
+      "delta_vs_kosu_01 verileri degisimi gosterse de tek basina dususun nedenselligini (hipotezi) kanitlamaz.",
+      "UAP (15 bbox) ve UAI (17 bbox) orneklem azligi sebebiyle sinif bazli degisimler kesin cikarim saglamaz."
     ],
-    "next_measurement": "Konumlandirma hassasiyetini artirmak amaciyla IoU esik degerlerinin mAP50-95 (0.6703) üzerindeki etkisi incelenmelidir."
+    "next_measurement": "Farkli IoU esiklerinde performans kaybinin kesisim kaynakli mi yoksa yanlis negatif kaynakli mi oldugunu dogrulamak icin karkas hatasi (confusion matrix) olculmelidir."
   },
   {
     "run_id": "kosu_03",
-    "diagnosis": "en_dusuk_konumlandirma_basarisi",
+    "diagnosis": "belirgin_konumlandirma_ve_katilik_kaybi",
     "evidence": [
-      "mAP50 degeri 0.8877 ile tum kosular icindeki en dusuk tespit oranina sahiptir.",
-      "mAP50_95 degeri 0.6162 ile tum kosular icindeki en dusuk hassas konumlandirma performansini gostermektedir."
+      "mAP50_95 degeri kosu_01'e gore 0.082574 gibi yuksek bir oranda duserek 0.616238'e inmistir.",
+      "Recall degeri 0.046924 kayip ile tum kosular arasindaki en dusuk seviye olan 0.831708'e gerilemistir."
     ],
-    "confidence": "orta",
+    "confidence": "yuksek",
     "limitations": [
-      "UAP (15 bbox) ve UAI (17 bbox) siniflarindaki kucuk veri boyutu tum model genellemesini olumsuz etkilemektedir."
+      "Senaryo parametreleri bilinmedigi icin hassasiyet kaybinin nedeni (goruntude bulaniklik, cozunurluk vb.) kesinlestirilemez.",
+      "UAP ve UAI bbox sayilarinin yetersizligi (15 ve 17) genelleme yapmayi engeller."
     ],
-    "next_measurement": "Insan (AP50_95: 0.4142) ve tasit (AP50_95: 0.5151) siniflarindaki dusuk hassasiyetin nedenlerini belirlemek icin kucuk nesne kayip analizi yapilmalidir."
+    "next_measurement": "Sinirlayici kutu (bounding box) regresyon kayiplari (GIoU/CIoU loss) ve nesne boyutu bazli mAP analizleri yapilmalidir."
   },
   {
     "run_id": "kosu_04",
-    "diagnosis": "yuksek_duyarlilik_dusuk_kesinlik",
+    "diagnosis": "yuksek_duyarlilik_dusuk_kesinlik_dengesizligi",
     "evidence": [
-      "Recall degeri 0.9023 ile tum kosular arasindaki en yuksek yakalama oranina sahiptir.",
-      "Precision degeri 0.8088 ile tum kosular arasindaki en dusuk dogruluk oranina sahiptir ve yuksek yanlis pozitif uretmektedir."
+      "Precision degeri kosu_01'e gore 0.088674 belirgin sekilde duserek 0.808810'a gerilemistir.",
+      "Recall degeri ise kosu_01'e gore 0.023621 artarak 0.902252 ile en yuksek seviyeye ulasmistir."
     ],
-    "confidence": "orta",
+    "confidence": "yuksek",
     "limitations": [
-      "UAP (15 bbox) ve UAI (17 bbox) siniflarinin orneklem azligi sebebiyle kesin sinif bazli yargiya varilamamaktadir."
+      "Degisim verileri (delta) nedensellik kaniti sayilmaz; modelin daha cok yanlis pozitif uretme nedeni bilinememektedir.",
+      "UAP (15 bbox) ve UAI (17 bbox) kucuk orneklem boyutu sebebiyle bu siniflardaki kesinlik analizleri kısıtlıdır."
     ],
-    "next_measurement": "Yanlis pozitifleri azaltmak icin guven esigi (confidence threshold) artirilarak Precision (0.8088) ve Recall (0.9023) dengesi yeniden olculmelidir."
+    "next_measurement": "Yanlis pozitif (False Positive) oranini azaltmak icin guven esigi (confidence threshold) ve NMS IoU esik araligi taranmalidir."
   }
 ]

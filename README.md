@@ -361,8 +361,10 @@ ilk puan bir benchmark degil, ajan gelistirme icin pilot rubriktir. Ilk Gemini
 sonucu ortalama `0.833` olmustur; D1 nedenini acikca adlandiramamasi sonraki
 prompt ve kanit tasariminin gelistirme hedefidir. Bunun icin ikinci paket
 surumunde her anonim kosuya baseline'a gore toplam ve sinif bazli delta alanlari
-eklendi. Yeni paket `scripts/prepare_llm_trial.py` ile uretilir; Gemini API
-denemesi tamamlandiginda `run_gemini_trial.py` tekrar calistirilir.
+eklendi. Gemini v2 bu paketle tekrar calistirildi ve skor yine `0.833` oldu.
+Model degisimleri kanit olarak kullandi, ancak D1 ve D2b'nin nedensel adini
+dogrudan koyamadi. Bu, LLM'nin metrik okuma becerisi ile nedensel veri teshisi
+arasinda ayrim oldugunu gosteren kayitli bir sinirliliktir.
 
 ### F. Ajan
 
