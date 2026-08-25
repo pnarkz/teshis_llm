@@ -47,6 +47,7 @@ Aktif:
 - [x] Gemini 3.6 Flash ile anonim LLM pilotu yapildi.
 - [x] Gemini pilotu gizli cevap anahtariyla otomatik puanlandi.
 - [x] Streamlit ara sunum demosu kuruldu ve localhost'ta dogrulandi.
+- [~] D3 UAP/UAI sinif karisikligi veri surumu ve yerel GPU kosusu baslatildi.
 
 Sonraki isler:
 
