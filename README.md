@@ -30,6 +30,44 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-25 (3) — D3 senaryosu tamamlandı; Ultralytics çıktı yolu hatası düzeltildi
+
+D3'ün eğitimi bu oturumdan önce zaten bitmişti (`experiments/run_D3_42_local`,
+22 epoch, `best.pt` mevcut) ama hiç diagnostic değerlendirmesi yapılmamıştı —
+roadmap'te "D3-D6 veri senaryoları" hâlâ eksik görünüyordu. Bunu bitirmek,
+90 dakikalık yeni bir eğitimden çok daha ucuzdu (~20 saniyelik bir val
+koşusu), o yüzden önce bunu tamamladım.
+
+- `python -m teshis.degerlendirme.d1_sonuc --model experiments/run_D3_42_local/weights/best.pt --data val_diagnostic/data.yaml --output reports/d3_sonuc --scenario D3`
+  çalıştırıldı.
+- **Yan bulgu:** bu ortamdaki Ultralytics sürümü (8.4.121), göreceli bir
+  `project=` yolu verildiğinde çıktıyı sessizce `runs/detect/<project>/`
+  altına yazıyor — bizim kodumuz ise dosyaları doğrudan `<project>` altında
+  bekliyor (demo, rapor klasörleri). D1/D2a/D2b bu sorunu yaşamamıştı çünkü
+  o çalıştırıldığı sırada farklı bir Ultralytics sürümü kurulu olmalıydı;
+  D3'te görsel kanıtlar `runs/detect/reports/d3_sonuc/...` altında
+  kayboluyordu. [teshis/degerlendirme/d1_sonuc.py](teshis/degerlendirme/d1_sonuc.py),
+  [model.py](teshis/degerlendirme/model.py), [karsilastir.py](teshis/degerlendirme/karsilastir.py)
+  içindeki `project=` parametreleri `.resolve()` ile mutlak yola çevrildi
+  (kos.py ve local_d2b.py/local_d3.py'de zaten böyleydi). Regresyon testi:
+  [tests/test_degerlendirme_project_yolu.py](tests/test_degerlendirme_project_yolu.py).
+- D3 sonucu README'ye eklendi (bkz. "D3 Sonucu" bölümü). Confusion matrix,
+  aggregate AP50'nin gizlediği güçlü bir UAP<->UAI çapraz karışıklığını
+  ortaya çıkardı (true UAP'nin %73'ü UAI olarak tahmin edildi) — bu, D-serisi
+  içindeki en net nedensel kanıt örneklerinden biri.
+- `results.csv`'ye D3 satırı eklendi; `demo/data_loader.py` ve
+  `demo/app.py` D3'ü tanıyacak şekilde güncellendi. Bu arada
+  `demo/app.py`'deki hardcoded `"Tamamlanan kosu": "5"` metrikini
+  `len(scenarios)` ile dinamik hale getirdim — yeni bir senaryo eklendiğinde
+  bir daha elle güncellenmesi gerekmeyecek.
+- `.claude/launch.json` eklendi (streamlit demo'yu port 8577'de başlatan
+  kısayol); demo, tarayıcıda D3 dahil doğrulandı (ana sayfa metrikleri ve
+  grafikler), ancak bu oturumun otomasyon tarayıcısında Streamlit'in
+  sidebar'ı hiç DOM'a render olmadı (konsol/sunucu hatası yok) — bu koda
+  ait bir regresyon degil gibi görünüyor (sidebar kodu değiştirilmedi);
+  D3'e özgü veri fonksiyonları doğrudan Python'da ayrıca doğrulandı.
+  Kullanıcı gerçek tarayıcısında sidebar'ı kontrol etmek isteyebilir.
+
 ### 2026-08-25 (2) — Ajan katmanı gerçek koda kavuştu, ilk birim testleri eklendi
 
 Sorun: `teshis/ajan/*.py` ve `teshis/servis/*.py` tamamen tek satırlık
@@ -135,14 +173,16 @@ Aktif:
 - [x] Gemini 3.6 Flash ile anonim LLM pilotu yapildi.
 - [x] Gemini pilotu gizli cevap anahtariyla otomatik puanlandi.
 - [x] Streamlit ara sunum demosu kuruldu ve localhost'ta dogrulandi.
-- [~] D3 UAP/UAI sinif karisikligi veri surumu ve yerel GPU kosusu baslatildi.
+- [x] D3 UAP/UAI sinif karisikligi: veri surumu, yerel GPU egitimi ve
+  diagnostic degerlendirmesi tamamlandi.
 
 Sonraki isler:
 
 - [ ] D1 hata galerisi.
 - [x] D2a veri senaryosu.
 - [x] D2b veri senaryosu.
-- [ ] D3-D6b veri senaryolari.
+- [x] D3 veri senaryosu.
+- [ ] D4-D6b veri senaryolari.
 - [ ] E1-E4 egitim senaryolari.
 - [ ] Bootstrap guven araliklari ve ajan karar akisi.
 - [ ] Final test: sadece bir kez.
@@ -339,8 +379,8 @@ Son rapor: reports/d1_sonuc/d1_metrics.json
 ### E. Senaryolar
 
 - [x] D2a lokalizasyon gurultusu.
-- [ ] D2b eksik etiket.
-- [ ] D3 UAP/UAI class 2-3 karisikligi.
+- [x] D2b eksik etiket.
+- [x] D3 UAP/UAI class 2-3 karisikligi.
 - [ ] D4 kucuk nesne sinyal kaybi.
 - [ ] D5 kaynak/alani kaymasi.
 - [ ] D6a split sizintisi.
@@ -424,6 +464,50 @@ kurulmamalidir.
 
 - reports/d2b_final_best_sonuc/d1_metrics.json
 - reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic/confusion_matrix.png
+
+### D3 Sonucu
+
+- [x] Yerel GPU kosusu: experiments/run_D3_42_local (22 epoch, patience=10
+  ile erken durdu).
+- [x] Model: experiments/run_D3_42_local/weights/best.pt.
+- [x] Diagnostic degerlendirme: reports/d3_sonuc/d1_metrics.json.
+- [x] Orijinal dataset degistirilmedi; train etiketlerinde UAP (2) ve UAI (3)
+  satirlarinin %30'u (117/391 satir; 68 UAP->UAI, 49 UAI->UAP) kontrollu
+  olarak yer degistirildi (seed=42).
+- [x] Test seti kullanilmadi.
+
+| Olcum | main_model baseline | D3 | Fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9331 | 0.9073 | -0.0258 |
+| mAP50-95 | 0.6988 | 0.6660 | -0.0328 |
+| Precision | 0.8975 | 0.9085 | +0.0110 |
+| Recall | 0.8786 | 0.8646 | -0.0140 |
+| UAP AP50 | 0.9950 | 0.9328 | -0.0622 |
+| UAI AP50 | 0.9950 | 0.9950 | 0.0000 |
+
+Sadece AP50'ye bakilirsa UAI hic etkilenmemis gibi gorunur; ancak
+val_diagnostic uzerindeki confusion matrix (varsayilan esikte, argmax
+sinifiyla) asagidaki capraz karisikligi gosteriyor:
+
+| Gercek sinif (n) | UAP tahmin edildi | UAI tahmin edildi |
+|---|---:|---:|
+| UAP (15) | 4 (%27) | 11 (%73) |
+| UAI (17) | 7 (%41) | 10 (%59) |
+
+D3 hipotezi guclu bicimde destekleniyor: train etiketlerinin %30'unun
+UAP<->UAI arasinda kontrollu karistirilmasi, val_diagnostic'te bu iki
+sinif arasinda yogun capraz hataya yol acti (true UAP kutularinin
+%73'u UAI olarak tahmin edildi). AP50'nin UAI icin dusmemis gorunmesi,
+AP'nin esik-bagimsiz siralama metrigi olmasindan kaynaklaniyor olabilir;
+sabit-esikli confusion matrix, argmax sinifin sik sik yer degistirdigini
+gosteriyor. Bu, projenin kendi ilkesiyle (mAP tek basina yeterli degildir,
+confusion matrix ile birlikte okunmalidir) birebir ortusen bir bulgu.
+UAP/UAI bbox sayisi 15 ve 17 oldugu icin oranlar birkac ornekle
+degisebilir; guclu istatistiksel genelleme iddiasi kurulmaz.
+
+- reports/d3_sonuc/d1_metrics.json
+- reports/d3_sonuc/d3_val_diagnostic/confusion_matrix.png
+- veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
 
 ### Ara Sunum Demosu
 

@@ -49,38 +49,38 @@ def load_results() -> pd.DataFrame:
     return combined
 
 
+EVIDENCE_JSON = {
+    "D1": ROOT / "reports/d1_sonuc/d1_metrics.json",
+    "D2a": ROOT / "reports/d2a_sonuc/d1_metrics.json",
+    "D2b": ROOT / "reports/d2b_sonuc/d1_metrics.json",
+    "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d1_metrics.json",
+    "D3": ROOT / "reports/d3_sonuc/d1_metrics.json",
+}
+
+EVIDENCE_FOLDERS = {
+    "D1": ROOT / "reports/d1_sonuc/d1_val_diagnostic",
+    "D2a": ROOT / "reports/d2a_sonuc/d2a_val_diagnostic",
+    "D2b": ROOT / "reports/d2b_sonuc/d2b_val_diagnostic",
+    "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic",
+    "D3": ROOT / "reports/d3_sonuc/d3_val_diagnostic",
+}
+
+
 def evidence_for(scenario: str) -> dict:
-    paths = {
-        "D1": ROOT / "reports/d1_sonuc/d1_metrics.json",
-        "D2a": ROOT / "reports/d2a_sonuc/d1_metrics.json",
-        "D2b": ROOT / "reports/d2b_sonuc/d1_metrics.json",
-        "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d1_metrics.json",
-    }
     if scenario == "Baseline":
         return read_json(ROOT / "reports/model_karsilastirma_fair/model_karsilastirma.json").get("aday", {})
-    return read_json(paths.get(scenario, Path("")))
+    return read_json(EVIDENCE_JSON.get(scenario, Path("")))
 
 
 def images_for(scenario: str) -> list[Path]:
-    folders = {
-        "D1": ROOT / "reports/d1_sonuc/d1_val_diagnostic",
-        "D2a": ROOT / "reports/d2a_sonuc/d2a_val_diagnostic",
-        "D2b": ROOT / "reports/d2b_sonuc/d2b_val_diagnostic",
-        "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic",
-    }
-    folder = folders.get(scenario)
+    folder = EVIDENCE_FOLDERS.get(scenario)
     if not folder or not folder.is_dir():
         return []
     return [folder / name for name in ("confusion_matrix.png", "confusion_matrix_normalized.png") if (folder / name).is_file()]
 
 
 def examples_for(scenario: str) -> list[Path]:
-    folders = {
-        "D1": ROOT / "reports/d1_sonuc/d1_val_diagnostic",
-        "D2a": ROOT / "reports/d2a_sonuc/d2a_val_diagnostic",
-        "D2b": ROOT / "reports/d2b_sonuc/d2b_val_diagnostic",
-        "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic",
-    }
+    folders = EVIDENCE_FOLDERS
     folder = folders.get(scenario)
     if not folder or not folder.is_dir():
         return []

@@ -44,7 +44,9 @@ def tek_model_degerlendir(
         device=0,
         workers=2,
         plots=True,
-        project=str(output_root),
+        # Goreceli project yolu bazi Ultralytics surumlerinde sessizce
+        # runs/detect/<project> altina yaziliyor; resolve() bunu onler.
+        project=str(output_root.resolve()),
         name=ad,
         exist_ok=True,
     )

@@ -103,13 +103,20 @@ scenario_info = {
         "why": "Sonucun yalnizca veri bozulmasindan mi, yoksa model farkindan mi geldigini kontrol eder.",
         "status": "Tamamlandi",
     },
+    "D3": {
+        "problem": "UAP/UAI sinif karisikligi",
+        "change": "Train etiketlerinde UAP (2) ve UAI (3) siniflarinin %30'u kontrollu olarak birbirine karistirildi.",
+        "signal": "UAP/UAI arasinda confusion matrix'te capraz hata artisi beklenir.",
+        "why": "Sinif ID etiketleme hatasinin, ozellikle az orneli siniflarda etkisini olcer.",
+        "status": "Tamamlandi",
+    },
 }
 
 
 if page == "Genel Bakis":
     st.markdown('<h2 class="section-title">Yonetici Ozeti</h2><p class="section-subtitle">Ara sunum icin hazirlanan mevcut deneylerin tek bakista gorunumu.</p>', unsafe_allow_html=True)
     cards = st.columns(4)
-    cards[0].metric("Tamamlanan kosu", "5")
+    cards[0].metric("Tamamlanan kosu", str(len(scenarios)))
     cards[1].metric("Diagnostic goruntu", "1.056")
     cards[2].metric("Sinif", "4")
     cards[3].metric("Test kullanimi", "Yok")

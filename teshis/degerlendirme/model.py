@@ -30,7 +30,9 @@ def degerlendir(model_yolu: Path, data_yolu: Path, output_dir: Path, imgsz: int 
         split="val",
         imgsz=imgsz,
         plots=True,
-        project=str(output_dir),
+        # Goreceli project yolu bazi Ultralytics surumlerinde sessizce
+        # runs/detect/<project> altina yaziliyor; resolve() bunu onler.
+        project=str(output_dir.resolve()),
         name="yolo_val",
         exist_ok=True,
     )

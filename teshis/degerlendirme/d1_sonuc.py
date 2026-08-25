@@ -28,7 +28,10 @@ def evaluate(
         batch=8,
         device=0,
         plots=True,
-        project=str(output_dir),
+        # Goreceli project yolu bazi Ultralytics surumlerinde sessizce
+        # runs/detect/<project> altina yaziliyor (D3 kosusunda gozlendi);
+        # resolve() bunu onler.
+        project=str(output_dir.resolve()),
         name=f"{scenario.lower()}_val_diagnostic",
         exist_ok=True,
     )

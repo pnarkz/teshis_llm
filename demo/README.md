@@ -17,7 +17,7 @@ Tarayıcıda varsayılan adres: `http://localhost:8501`
 ## Gösterilecek akış
 
 1. Baseline seçilir ve sağlıklı referans açıklanır.
-2. D1, D2a ve D2b seçilerek metrik farkları gösterilir.
+2. D1, D2a, D2b ve D3 seçilerek metrik farkları gösterilir.
 3. Sınıf bazlı AP50 ve confusion matrix incelenir.
 4. Gemini pilot ajan çıktısı gösterilir.
 5. Sonuç, "hangi veri problemi hangi metriği etkiledi" sorusuyla açıklanır.
