@@ -1,0 +1,7 @@
+# D1: only the train image list is reduced; val/test remain operational.
+path: C:/Users/ASUS/Desktop/HYZ/dataset
+train: C:/Users/ASUS/Desktop/termal_teshis/veri_surumleri/v01_d1_sinif_yetersizligi/train_images.txt
+val: C:/Users/ASUS/Desktop/HYZ/dataset/images/val
+test: C:/Users/ASUS/Desktop/HYZ/dataset/images/test
+nc: 4
+names: [tasit, insan, UAP, UAI]

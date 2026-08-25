@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import random
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -12,6 +13,9 @@ import torch
 from ultralytics import YOLO
 
 from kaggle_d2a import find_image, find_input_dataset, find_input_model, link_or_copy
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from teshis.egitim.protokol import egitim_kwargs  # noqa: E402
 
 
 SEED = 42
@@ -109,31 +113,12 @@ def main() -> None:
         device=0 if torch.cuda.is_available() else "cpu",
         workers=2,
         seed=SEED,
-        deterministic=True,
-        cos_lr=True,
-        patience=10,
         project=str(experiment_root),
         name="run_D2b_42",
         exist_ok=True,
         plots=True,
         val=True,
-        lr0=0.001,
-        lrf=0.01,
-        warmup_epochs=3,
-        hsv_h=0.0,
-        hsv_s=0.0,
-        hsv_v=0.15,
-        degrees=5.0,
-        translate=0.08,
-        scale=0.3,
-        shear=0.0,
-        perspective=0.0,
-        flipud=0.0,
-        fliplr=0.5,
-        mosaic=0.5,
-        close_mosaic=8,
-        mixup=0.0,
-        copy_paste=0.0,
+        **egitim_kwargs(),
     )
     print(f"best_model={experiment_root / 'run_D2b_42/weights/best.pt'}")
 

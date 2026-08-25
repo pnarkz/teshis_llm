@@ -1,0 +1,5 @@
+path: C:/Users/ASUS/Desktop/termal_teshis/val_diagnostic
+train: images
+val: images
+nc: 4
+names: [tasit, insan, UAP, UAI]

@@ -1,0 +1,178 @@
+{
+  "dataset_root": "C:\\Users\\ASUS\\Desktop\\HYZ\\dataset",
+  "siniflar": {
+    "0": "tasit",
+    "1": "insan",
+    "2": "UAP",
+    "3": "UAI"
+  },
+  "splitler": {
+    "train": {
+      "goruntu": 17515,
+      "etiket": 17515,
+      "bbox": 131700,
+      "bos_etiket": 1267,
+      "cozunurluk": {
+        "1024x1024": 11064,
+        "640x512": 6451
+      },
+      "sinif_bbox": {
+        "tasit": 83600,
+        "insan": 47709,
+        "UAP": 237,
+        "UAI": 154
+      },
+      "kaynak": {
+        "aaterm": {
+          "goruntu": 11064,
+          "bbox": 97614
+        },
+        "tf2026": {
+          "goruntu": 101,
+          "bbox": 275
+        },
+        "hituav": {
+          "goruntu": 2292,
+          "bbox": 20794
+        },
+        "sentetik": {
+          "goruntu": 273,
+          "bbox": 852
+        },
+        "termal": {
+          "goruntu": 3785,
+          "bbox": 12165
+        }
+      },
+      "yetim_goruntu_sayisi": 0,
+      "yetim_etiket_sayisi": 0,
+      "yetim_goruntu_ornekleri": [],
+      "yetim_etiket_ornekleri": []
+    },
+    "val": {
+      "goruntu": 2164,
+      "etiket": 2164,
+      "bbox": 7507,
+      "bos_etiket": 374,
+      "cozunurluk": {
+        "1024x1024": 1383,
+        "640x512": 781
+      },
+      "sinif_bbox": {
+        "tasit": 1473,
+        "insan": 6002,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "kaynak": {
+        "aaterm": {
+          "goruntu": 1383,
+          "bbox": 4378
+        },
+        "tf2026": {
+          "goruntu": 21,
+          "bbox": 106
+        },
+        "hituav": {
+          "goruntu": 287,
+          "bbox": 2165
+        },
+        "termal": {
+          "goruntu": 473,
+          "bbox": 858
+        }
+      },
+      "yetim_goruntu_sayisi": 0,
+      "yetim_etiket_sayisi": 0,
+      "yetim_goruntu_ornekleri": [],
+      "yetim_etiket_ornekleri": []
+    },
+    "test": {
+      "goruntu": 2167,
+      "etiket": 2167,
+      "bbox": 14934,
+      "bos_etiket": 171,
+      "cozunurluk": {
+        "1024x1024": 1383,
+        "640x512": 784
+      },
+      "sinif_bbox": {
+        "tasit": 10804,
+        "insan": 4091,
+        "UAP": 16,
+        "UAI": 23
+      },
+      "kaynak": {
+        "aaterm": {
+          "goruntu": 1383,
+          "bbox": 11728
+        },
+        "tf2026": {
+          "goruntu": 23,
+          "bbox": 75
+        },
+        "hituav": {
+          "goruntu": 287,
+          "bbox": 1792
+        },
+        "termal": {
+          "goruntu": 474,
+          "bbox": 1339
+        }
+      },
+      "yetim_goruntu_sayisi": 0,
+      "yetim_etiket_sayisi": 0,
+      "yetim_goruntu_ornekleri": [],
+      "yetim_etiket_ornekleri": []
+    }
+  },
+  "toplam": {
+    "goruntu": 21846,
+    "etiket": 21846,
+    "bbox": 154141,
+    "bos_etiket": 1812,
+    "sinif_bbox": {
+      "tasit": 95877,
+      "insan": 57802,
+      "UAP": 268,
+      "UAI": 194
+    }
+  },
+  "kaynak_toplam": {
+    "aaterm": {
+      "goruntu": 13830,
+      "bbox": 113720
+    },
+    "tf2026": {
+      "goruntu": 145,
+      "bbox": 456
+    },
+    "hituav": {
+      "goruntu": 2866,
+      "bbox": 24751
+    },
+    "sentetik": {
+      "goruntu": 273,
+      "bbox": 852
+    },
+    "termal": {
+      "goruntu": 4732,
+      "bbox": 14362
+    }
+  },
+  "saglik": {
+    "gecersiz_satir": 0,
+    "gecersiz_sinif": 0,
+    "eksik_kolon": 0,
+    "fazla_kolon": 0,
+    "koordinat_aralik_disi": 0,
+    "kutu_goruntu_disi": 42,
+    "sifir_alan": 2,
+    "tekrar_kutu": 11,
+    "cok_kucuk_kutu_sqrt_alan_6_alt": 1080,
+    "asiri_en_boy": 205,
+    "etiketsiz_goruntu": 0,
+    "goruntusuz_etiket": 0,
+    "okunamayan_goruntu": 0
+  }
+}

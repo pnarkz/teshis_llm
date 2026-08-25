@@ -1,0 +1,50 @@
+version: 1
+aciklama: >
+  D serisi veri bozulma senaryolarinin (D1, D2a, D2b, D3, ...) birbiriyle
+  karsilastirilabilir olmasi icin tum kosularda ayni optimizasyon ve
+  augmentasyon protokolu kullanilir. Senaryolar arasinda yalnizca veri
+  surumu (ve gerekiyorsa baslangic modeli) degisir; asagidaki degerler
+  sabit kalir. Bu dosya teshis/egitim/protokol.py, teshis/egitim/kos.py,
+  scripts/local_d2b.py, scripts/local_d3.py, scripts/kaggle_d2a.py ve
+  scripts/kaggle_d2b.py tarafindan tek kaynak olarak okunur.
+
+sabit:
+  deterministic: true
+  cos_lr: true
+  patience: 10
+  lr0: 0.001
+  lrf: 0.01
+  warmup_epochs: 3
+  hsv_h: 0.0
+  hsv_s: 0.0
+  hsv_v: 0.15
+  degrees: 5.0
+  translate: 0.08
+  scale: 0.3
+  shear: 0.0
+  perspective: 0.0
+  flipud: 0.0
+  fliplr: 0.5
+  mosaic: 0.5
+  close_mosaic: 8
+  mixup: 0.0
+  copy_paste: 0.0
+
+bilinen_sapmalar:
+  - kosu: experiments/run_20260817_222323_D1_42
+    senaryo: D1
+    sapan_alanlar: {lr0: 0.0005, warmup_epochs: 2}
+    durum: duzeltilmedi_yeniden_kosu_onerilir
+    not: >
+      Bu D1 kosusu bu protokol dosyasi olusturulmadan once, teshis/egitim/kos.py
+      icindeki farkli lr0/warmup_epochs degerleriyle uretildi. results.csv ve
+      README'deki D1 sonuc tablosu bu kosuya aittir. D2a/D2b/D3 ile dogrudan
+      lr0/warmup farkindan bagimsiz bir karsilastirma icin D1'in bu sabit
+      protokolle yeniden kosulmasi (ve raporun guncellenmesi) gerekir.
+
+kapsam_disi:
+  - dosya: teshis/egitim/v3_iyilestirme.py
+    neden: >
+      D serisi tanı senaryosu degildir; ayri bir genel iyilestirme fine-tune
+      denemesidir (farkli mosaic/close_mosaic/patience kasitli olarak
+      kullanilir). Bu protokolun kapsaminda degildir.

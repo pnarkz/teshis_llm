@@ -7,9 +7,12 @@ import hashlib
 import json
 import random
 import shutil
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from teshis.egitim.protokol import egitim_kwargs  # noqa: E402
 
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 CLASS_NAMES = {0: "tasit", 1: "insan", 2: "UAP", 3: "UAI"}
@@ -130,12 +133,10 @@ def main() -> None:
     model = YOLO(str(args.model.resolve()))
     model.train(
         data=str(data_yaml), imgsz=args.imgsz, batch=args.batch, epochs=args.epochs,
-        device=0, workers=0, seed=args.seed, deterministic=True, cos_lr=True,
-        patience=10, project=str(args.output_root.resolve()), name="run_D3_42_local",
-        exist_ok=True, plots=False, val=True, lr0=0.001, lrf=0.01,
-        warmup_epochs=3, hsv_h=0.0, hsv_s=0.0, hsv_v=0.15, degrees=5.0,
-        translate=0.08, scale=0.3, shear=0.0, perspective=0.0, flipud=0.0,
-        fliplr=0.5, mosaic=0.5, close_mosaic=8, mixup=0.0, copy_paste=0.0,
+        device=0, workers=0, seed=args.seed,
+        project=str(args.output_root.resolve()), name="run_D3_42_local",
+        exist_ok=True, plots=False, val=True,
+        **egitim_kwargs(),
     )
     print(f"best_model={args.output_root.resolve() / 'run_D3_42_local' / 'weights/best.pt'}")
 

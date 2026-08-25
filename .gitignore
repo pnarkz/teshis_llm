@@ -2,14 +2,53 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-reports/*
-!reports/README.md
-experiments/*
-!experiments/README.md
-veri_surumleri/*
-!veri_surumleri/README.md
-val_diagnostic/*
-runs/
+*.log
 *.pt
 *.onnx
-*.log
+runs/
+
+# val_diagnostic: kilitli tanı val, orijinal dataset'ten turetiliyor; tamamen Git disi kalir.
+val_diagnostic/*
+
+# experiments/: agirliklar (*.pt yukarida) ve Ultralytics'in urettigi agir
+# egitim/val gorselleri izlenmez. Kosu kaniti olan run_manifest.json, args.yaml
+# ve results.csv kucuk oldugu icin izlenir; boylece rule 6/8 (her veri
+# degisikligi ve final sonucu manifestle saklanir) fiilen calisir.
+experiments/*
+!experiments/README.md
+!experiments/**/
+experiments/**/*.jpg
+experiments/**/*.jpeg
+experiments/**/*.png
+experiments/**/*.cache
+!experiments/**/run_manifest.json
+!experiments/**/args.yaml
+!experiments/**/results.csv
+
+# reports/: agir gorseller (PNG/JPG) ve HTML galeriler yerelde kalir; JSON/CSV
+# metrik ve kanit dosyalari kucuk oldugu icin izlenir. Onceden bazi rapor
+# klasorleri (d2b_sonuc, llm_trial) elle force-add edilmisti, digerleri
+# (d1_sonuc, d2a_sonuc, model_karsilastirma*) hic izlenmiyordu; bu kural artik
+# tum senaryolar icin tutarli sekilde JSON/CSV kanitini izler.
+reports/*
+!reports/README.md
+!reports/**/
+reports/**/*.jpg
+reports/**/*.jpeg
+reports/**/*.png
+reports/**/*.html
+!reports/**/*.json
+!reports/**/*.csv
+
+# veri_surumleri/: manifest.json, data.yaml ve kucuk liste dosyalari izlenir;
+# kopyalanan goruntu/etiket klasorleri (orijinal dataset + manifest'ten
+# yeniden uretilebilir, boyutu buyuktur) izlenmez.
+veri_surumleri/*
+!veri_surumleri/README.md
+!veri_surumleri/**/
+veri_surumleri/*/images/
+veri_surumleri/*/labels/
+!veri_surumleri/**/manifest.json
+!veri_surumleri/**/manifest.txt
+!veri_surumleri/**/data.yaml
+!veri_surumleri/**/*.txt

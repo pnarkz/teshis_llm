@@ -12,9 +12,12 @@ import json
 import os
 import random
 import shutil
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from teshis.egitim.protokol import egitim_kwargs  # noqa: E402
 
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 NOISE_RATIO = 0.15
@@ -183,31 +186,12 @@ def main() -> None:
         device=device,
         workers=2,
         seed=SEED,
-        deterministic=True,
-        cos_lr=True,
-        patience=10,
         project=str(output),
         name="run_D2a_42",
         exist_ok=True,
         plots=True,
         val=True,
-        lr0=0.001,
-        lrf=0.01,
-        warmup_epochs=3,
-        hsv_h=0.0,
-        hsv_s=0.0,
-        hsv_v=0.15,
-        degrees=5.0,
-        translate=0.08,
-        scale=0.3,
-        shear=0.0,
-        perspective=0.0,
-        flipud=0.0,
-        fliplr=0.5,
-        mosaic=0.5,
-        close_mosaic=8,
-        mixup=0.0,
-        copy_paste=0.0,
+        **egitim_kwargs(),
     )
     print(f"best_model={output / 'run_D2a_42/weights/best.pt'}")
 

@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .kayit import write_run_manifest
+from .protokol import egitim_kwargs
 
 
 def run_training(
@@ -65,9 +66,6 @@ def run_training(
         device=device,
         workers=workers,
         seed=seed,
-        deterministic=True,
-        cos_lr=True,
-        patience=10,
         project=str(output_root.resolve()),
         name=run_name,
         exist_ok=True,
@@ -75,23 +73,7 @@ def run_training(
         plots=False,
         val=True,
         pretrained=str(model_path),
-        lr0=0.0005,
-        lrf=0.01,
-        warmup_epochs=2,
-        hsv_h=0.0,
-        hsv_s=0.0,
-        hsv_v=0.15,
-        degrees=5.0,
-        translate=0.08,
-        scale=0.3,
-        shear=0.0,
-        perspective=0.0,
-        flipud=0.0,
-        fliplr=0.5,
-        mosaic=0.5,
-        close_mosaic=8,
-        mixup=0.0,
-        copy_paste=0.0,
+        **egitim_kwargs(),
     )
     print(json.dumps({"run_dir": str(run_dir), "weights": str(run_dir / "weights")}, indent=2))
     return run_dir

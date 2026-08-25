@@ -1,0 +1,25 @@
+{
+  "format": "dataset_manifest_v1",
+  "scenario": "D2a",
+  "version": "v02_d2a_lokalizasyon_gurultusu",
+  "created_at_utc": "2026-08-18T05:49:35.019947+00:00",
+  "source_dataset": "/kaggle/input/datasets/pnarkcgz/dataset/dataset",
+  "source_dataset_unchanged": true,
+  "seed": 42,
+  "parameters": {
+    "center_shift_ratio": 0.15
+  },
+  "counts": {
+    "train_images": 17515,
+    "changed_bbox_rows": 131700,
+    "invalid_rows_preserved": 0,
+    "mean_abs_dx": 0.0040398215519235,
+    "mean_abs_dy": 0.004825405119275455
+  },
+  "source_train_labels_sha256": "0e2584a600aeac8c9373f813676e406a2d05b1eeafab86b38f7fe806d30043b4",
+  "val_test_modified": false,
+  "files": {
+    "data_yaml": "/kaggle/working/v02_d2a_lokalizasyon_gurultusu/data.yaml",
+    "output_dataset": "/kaggle/working/v02_d2a_lokalizasyon_gurultusu"
+  }
+}
