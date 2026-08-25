@@ -45,6 +45,7 @@ Aktif:
 - [x] D2a lokalizasyon gurultusu kosusu ve diagnostic raporu tamamlandi.
 - [x] D2b eksik etiket kosusu iki baslangic modeliyle tamamlandi.
 - [x] Gemini 3.6 Flash ile anonim LLM pilotu yapildi.
+- [x] Gemini pilotu gizli cevap anahtariyla otomatik puanlandi.
 - [x] Streamlit ara sunum demosu kuruldu ve localhost'ta dogrulandi.
 
 Sonraki isler:
@@ -353,11 +354,19 @@ Arayuzde su bolumler bulunur:
 
 Demo kaynak kodu `demo/`, bagimliliklari `requirements-demo.txt` altindadir.
 
+LLM pilot puanlamasi `scripts/score_llm_trial.py` ile yapilir. Script, Gemini
+cevabini yerelde tutulan gizli `answer_key.json` ile karsilastirir. Puanlama
+diagnosis, sayisal evidence ve limitations alanlarina esit agirlik verir. Bu
+ilk puan bir benchmark degil, ajan gelistirme icin pilot rubriktir. Ilk Gemini
+sonucu ortalama `0.833` olmustur; D1 nedenini acikca adlandiramamasi sonraki
+prompt ve kanit tasariminin gelistirme hedefidir.
+
 ### F. Ajan
 
 - [x] Gemini ile anonim metrik yorumlama pilotu.
 - [x] LLM icin anonim girdi ve JSON cikti semasi olusturuldu.
 - [ ] Izinli araclari tanimla.
+- [x] Pilot JSON girdi/cikti semasi olusturuldu.
 - [ ] JSON girdi/cikti semalarini production semasi olarak sabitle.
 - [ ] Manifesti ajandan gizle.
 - [ ] Kanit, karsilastirma, guven ve sinir alanlarini zorunlu kil.

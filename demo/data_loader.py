@@ -90,3 +90,7 @@ def examples_for(scenario: str) -> list[Path]:
 
 def llm_response() -> list | dict:
     return read_json(ROOT / "reports/llm_trial/gemini_response.json")
+
+
+def llm_score() -> dict:
+    return read_json(ROOT / "reports/llm_trial/llm_score.json")

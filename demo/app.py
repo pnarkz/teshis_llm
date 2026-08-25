@@ -8,7 +8,7 @@ from pathlib import Path
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from data_loader import examples_for, evidence_for, images_for, llm_response, load_results  # noqa: E402
+from data_loader import examples_for, evidence_for, images_for, llm_response, llm_score, load_results  # noqa: E402
 
 
 st.set_page_config(page_title="Termal Teshis Ajani", page_icon="", layout="wide", initial_sidebar_state="expanded")
@@ -203,6 +203,13 @@ elif page == "LLM Ajan":
     st.markdown('<h2 class="section-title">LLM Ajan Denemesi</h2><p class="section-subtitle">Gemini 3.6 Flash, anonim deney metriklerini yorumluyor.</p>', unsafe_allow_html=True)
     st.markdown('<div class="callout"><b>Bu bir pilot ajan testidir.</b> LLM, senaryo isimlerini gormeden metriklerden teshis, kanit, guven ve sonraki olcumu uretir.</div>', unsafe_allow_html=True)
     response = llm_response()
+    score = llm_score()
+    if score:
+        score_cols = st.columns(3)
+        score_cols[0].metric("Pilot ortalama skoru", f"{score.get('mean_score', 0):.3f}")
+        score_cols[1].metric("Degerlendirilen kosu", str(len(score.get("runs", []))))
+        score_cols[2].metric("Rubrik", "3 alan")
+        st.caption("Skor; teshis, sayisal kanit ve sinirlama alanlarinin esit agirlikli pilot rubrigidir.")
     if response:
         for item in response if isinstance(response, list) else [response]:
             run_id = item.get("run_id", "kosu")
