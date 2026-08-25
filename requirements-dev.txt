@@ -1,2 +1,5 @@
 -r requirements.txt
+# Demo render testleri (tests/test_demo_render.py) Streamlit'in AppTest
+# cercevesini kullanir; bu dosya olmadan o testler atlanir.
+-r requirements-demo.txt
 pytest>=8.0

@@ -17,15 +17,33 @@ from __future__ import annotations
 import re
 from typing import Any
 
-# run_id -> (diagnosis alaninda aranan regex, beklenen okunabilir etiket).
-# Yeni bir senaryo eklendiginde buraya ve reports/llm_trial/answer_key.json'a
-# birlikte satir eklenmelidir; aksi halde teshis_puani o kosu icin
-# degerlendirilemez (0.0, None) doner, sessizce yanlis puanlanmaz.
+# Senaryo kodu -> cevap anahtarindaki "expected" etiketi. prepare_llm_trial.py
+# cevap anahtarini bu tablodan uretir; puanlama da ayni tabloyu okur, boylece
+# paket ile puanlama birbirinden ayrisamaz.
+SENARYO_BEKLENEN: dict[str, str] = {
+    "Baseline": "saglikli_referans",
+    "D1": "sinif_yetersizligi",
+    "D2a": "lokalizasyon_etiket_gurultusu",
+    "D2b": "eksik_etiket",
+    # Ayni eksik-etiket bozulmasi, farkli baslangic modeli: beklenen teshis aynidir.
+    "D2b final_best": "eksik_etiket",
+    "D3": "uap_uai_sinif_karisikligi",
+}
+
+# beklenen etiket -> (diagnosis alaninda aranan regex, okunabilir etiket).
+#
+# Anahtar olarak kosu_NN degil beklenen etiket kullanilir: kosu_NN numaralari
+# results.csv satir sirasina bagli oldugu icin araya yeni bir kosu eklenirse
+# kayar; beklenen etiket ise senaryonun kendisine baglidir ve kaymaz.
+# Yeni bir senaryo eklendiginde SENARYO_BEKLENEN'e ve buraya birlikte satir
+# eklenmelidir; eksikse teshis_puani (0.0, None) doner, yani "degerlendirilemedi"
+# olarak ayirt edilir ve sessizce yanlis puanlanmaz.
 ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
-    "kosu_01": (r"baseline|saglikli|referans|optimal|dengeli|en yuksek", "saglikli referans"),
-    "kosu_02": (r"sinif|yetersiz|insan.*(az|dus|kayb)|temsil", "sinif yetersizligi"),
-    "kosu_03": (r"konum|lokal|box|iou|yerlestir|konumlandirma|gurultu", "lokalizasyon gurultusu"),
-    "kosu_04": (r"eksik|etiket|anot|annotation|yanlis pozitif|false positive", "eksik etiket"),
+    "saglikli_referans": (r"baseline|saglikli|referans|optimal|dengeli|en yuksek", "saglikli referans"),
+    "sinif_yetersizligi": (r"sinif|yetersiz|insan.*(az|dus|kayb)|temsil", "sinif yetersizligi"),
+    "lokalizasyon_etiket_gurultusu": (r"konum|lokal|box|iou|yerlestir|konumlandirma|gurultu", "lokalizasyon gurultusu"),
+    "eksik_etiket": (r"eksik|etiket|anot|annotation|yanlis pozitif|false positive", "eksik etiket"),
+    "uap_uai_sinif_karisikligi": (r"sinif|karis|uap|uai|id hatas|capraz|confusion", "UAP/UAI sinif karisikligi"),
 }
 
 
@@ -36,20 +54,22 @@ def metin_ozeti(cevap: dict[str, Any]) -> str:
     return " ".join(str(parca).lower() for parca in parcalar)
 
 
-def teshis_puani(kosu_id: str, cevap: dict[str, Any]) -> tuple[float, str | None]:
-    """Diagnosis metninin beklenen etikete uyup uymadigini 0/0.5/1 olarak puanlar.
+def teshis_puani(beklenen_etiket: str, cevap: dict[str, Any]) -> tuple[float, str | None]:
+    """Diagnosis metninin beklenen teshise uyup uymadigini 0/0.5/1 olarak puanlar.
 
-    kosu_id icin ANAHTAR_KALIPLAR'da kayit yoksa (henuz cevap anahtarina
-    eklenmemis yeni bir senaryo) puan hesaplanamaz; (0.0, None) doner ve
-    cagiran taraf bunu "degerlendirilemedi" olarak ayirt edebilir.
+    beklenen_etiket, cevap anahtarindaki "expected" degeridir. ANAHTAR_KALIPLAR'da
+    kayit yoksa (henuz kalip yazilmamis yeni bir senaryo) puan hesaplanamaz;
+    (0.0, None) doner ve cagiran taraf bunu "degerlendirilemedi" olarak ayirt eder.
     """
-    if kosu_id not in ANAHTAR_KALIPLAR:
+    if beklenen_etiket not in ANAHTAR_KALIPLAR:
         return 0.0, None
-    kalip, etiket = ANAHTAR_KALIPLAR[kosu_id]
+    kalip, etiket = ANAHTAR_KALIPLAR[beklenen_etiket]
     metin = str(cevap.get("diagnosis", "")).lower()
     if re.search(kalip, metin):
         return 1.0, etiket
-    if kosu_id == "kosu_04" and "precision" in metin and "recall" in metin:
+    # Eksik etikette model nedeni adlandiramasa bile precision/recall dengesizligini
+    # dogru tarif etmisse kismi puan alir.
+    if beklenen_etiket == "eksik_etiket" and "precision" in metin and "recall" in metin:
         return 0.5, etiket
     return 0.0, etiket
 
@@ -70,7 +90,7 @@ def siniri_puanla(cevap: dict[str, Any]) -> float:
 
 def kosuyu_puanla(kosu_id: str, beklenen: dict[str, Any], cevap: dict[str, Any]) -> dict[str, Any]:
     """Tek bir kosu icin diagnosis/evidence/limitation alt puanlarini ve toplami dondurur."""
-    teshis, beklenen_etiket = teshis_puani(kosu_id, cevap)
+    teshis, beklenen_etiket = teshis_puani(str(beklenen.get("expected", "")), cevap)
     kanit = kaniti_puanla(cevap)
     sinir = siniri_puanla(cevap)
     return {

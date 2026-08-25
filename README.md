@@ -30,6 +30,64 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-25 (5) — Tamamlanan bölümler baştan sona test edildi; LLM paketindeki kayma düzeltildi
+
+Bu tura kadar yapılan her şey sistematik olarak doğrulandı. Sonuç: **iki
+gerçek hata bulundu ve düzeltildi**, geri kalan her şey temiz çıktı.
+
+Doğrulananlar (hepsi geçti):
+
+- 66 birim/sözleşme testi, tüm `.py` dosyalarının derlenmesi, temiz git ağacı.
+- `results.csv`'deki 5 koşunun **her metriği** kaynak rapor JSON'larıyla
+  birebir karşılaştırıldı (`mAP50`, `mAP50-95`, precision, recall ve 4 sınıf
+  AP50'si) — sapma yok; her `weights_path` diskte mevcut.
+- README'deki D3 tablosunun tüm sayıları kaynak veriden yeniden hesaplandı —
+  birebir tutuyor.
+- 14 CLI giriş noktasının tamamı (`teshis.*` modülleri ve `scripts/*.py`).
+- Ajan katmanı uçtan uca (yerel): 6 koşunun tamamı için araçlar, araç
+  dispatch'i (geçerli / bilinmeyen araç / geçersiz argüman), **anonimlik
+  sızıntısı taraması** (senaryo kodu, manifest, veri sürümü adı, run_id
+  sızmıyor), kayıtlı Gemini cevabının şema doğrulaması ve puanlamanın
+  kayıtlı `llm_score.json` ile birebir eşleşmesi.
+- Demo: 5 sayfa × 6 senaryo × 4 galeri sıralaması, Streamlit AppTest ile
+  headless çalıştırıldı — hiçbirinde istisna yok, tarayıcıda 0 kırık görsel.
+
+**Bulunan hata 1 — LLM paketi senaryolardan geri kalmıştı.**
+`scripts/prepare_llm_trial.py` dört koşuyu dosya yollarıyla hardcode
+ediyordu. D2b final_best ve D3 eklenince ajan araçları 6 koşu sunar hale
+geldi ama `answer_key.json` 4 koşuda kaldı; yeni iki koşu **sessizce
+puanlanamaz** durumdaydı (`paketi_puanla` cevap anahtarı üzerinden döndüğü
+için fazladan cevaplar yok sayılıyordu). Script artık paketi ve cevap
+anahtarını doğrudan `teshis/ajan/araclar.py`'den türetiyor — yani LLM'ye
+verilen paket ile ajanın araçlarla gördüğü veri artık ayrışamaz; yeni bir
+senaryo `results.csv`'ye eklendiğinde pakete otomatik giriyor.
+
+**Bulunan hata 2 — puanlama kalıpları konuma bağlıydı.**
+`ANAHTAR_KALIPLAR` `kosu_01..kosu_04` ile anahtarlanmıştı. `kosu_NN`
+numaraları `results.csv` satır sırasından türetildiği için araya bir satır
+eklenirse kayar ve statik cevap anahtarı **sessizce yanlış senaryoyu**
+puanlamaya başlardı. Kalıplar artık senaryonun kendisine bağlı olan
+`expected` etiketiyle anahtarlanıyor (`sinif_yetersizligi`, `eksik_etiket`,
+`uap_uai_sinif_karisikligi`, …). Refactor davranışı korudu: kayıtlı Gemini
+cevabı yeniden puanlandığında sonuç yine birebir `0.833`.
+
+Küçük düzeltme: `prepare_llm_trial.py`'de argparse yoktu, bu yüzden
+`--help` yardım göstermek yerine scripti **çalıştırıp** kanıt paketinin
+üzerine yazıyordu. Artık argparse var ve mevcut paketin üzerine `--force`
+olmadan yazmayı reddediyor (üzerine yazmak, kayıtlı `gemini_response.json`'ı
+üretildiği paketten kopardığı için).
+
+Kalıcı korumalar: `tests/test_llm_paketi.py` (paket ↔ araç tutarlılığı,
+cevap anahtarı kayması, pakette senaryo adı sızıntısı) ve
+`tests/test_demo_render.py` (her sayfa/senaryo/sıralama kombinasyonu).
+Test sayısı 43 → 66.
+
+**Not:** Kayıtlı LLM paketi bilerek 4 koşuluk bırakıldı. 6 koşuya
+genişletmek `gemini_response.json`'ı üretildiği paketten koparır ve bu
+ortamda `GEMINI_API_KEY` olmadığı için deneme yeniden koşulamaz. Ajan bir
+sonraki kez çalıştırılacağında `scripts/prepare_llm_trial.py --force` ile
+paket yenilenmeli ve LLM denemesi tekrarlanmalıdır.
+
 ### 2026-08-25 (4) — Demo yeniden tasarlandı, kullanılmayan tüm görseller konsola bağlandı
 
 Sorun: demo, sık kullanılan bir dashboard şablonuydu (koyu teal/turuncu
