@@ -7,10 +7,10 @@
   "goruntu": 1056,
   "toplam_tahmin": 3898,
   "bant_tanimi": {
-    "cok_kucuk_16_alti": 16.0,
-    "kucuk_16_32": 32.0,
-    "orta_32_64": 64.0,
-    "buyuk_64_ustu": Infinity
+    "cok_kucuk_16_alti": "0-16 px",
+    "kucuk_16_32": "16-32 px",
+    "orta_32_64": "32-64 px",
+    "buyuk_64_ustu": "64+ px"
   },
   "boyut_bandi_recall": {
     "cok_kucuk_16_alti": {

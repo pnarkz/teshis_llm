@@ -43,6 +43,23 @@ BANTLAR: tuple[tuple[float, str], ...] = (
 )
 
 
+def bant_araliklari() -> dict[str, str]:
+    """Bant sinirlarini JSON-guvenli, okunabilir araliklar olarak dondurur.
+
+    BANTLAR'in son siniri float("inf")'tir; bu deger JSON'a ``Infinity`` diye
+    yazilir ve RFC 8259'a gore GECERSIZDIR. Gemini API'si boyle bir govdeyi
+    400 INVALID_ARGUMENT ile reddeder. Bu fonksiyon sayisal siniri metin
+    araligina cevirir; hem gecerli JSON uretir hem de modele daha anlasilir
+    gelir ("16-32" gibi).
+    """
+    araliklar: dict[str, str] = {}
+    alt = 0.0
+    for ust, ad in BANTLAR:
+        araliklar[ad] = f"{alt:g}-{ust:g} px" if ust != float("inf") else f"{alt:g}+ px"
+        alt = ust
+    return araliklar
+
+
 def etkin_sqrt_alan(
     w_norm: float, h_norm: float, goruntu_w: int, goruntu_h: int, referans: int = 640
 ) -> float:
@@ -271,7 +288,7 @@ def boyut_bazli_recall(
         "iou_esigi": iou_esigi,
         "goruntu": len(goruntuler),
         "toplam_tahmin": toplam_tahmin,
-        "bant_tanimi": {ad: sinir for sinir, ad in BANTLAR},
+        "bant_tanimi": bant_araliklari(),
         "boyut_bandi_recall": {
             ad: _ozetle(bant_sayaclari)[ad] for ad in bant_sirasi if ad in bant_sayaclari
         },

@@ -119,3 +119,62 @@ def test_sistem_talimati_kirilim_araclarini_anlatir():
                  "sinif_karisikligini_getir"):
         assert arac in talimat, f"{arac} sistem talimatinda anilmiyor"
     assert "GIZLEYEBILIR" in talimat
+
+
+# --- JSON tasima guvenligi -------------------------------------------------
+
+def test_json_guvenli_sonsuzu_metne_cevirir():
+    """Infinity JSON'da gecersizdir; Gemini API'si 400 ile reddeder."""
+    assert ajan.json_guvenli(float("inf")) == "sonsuz"
+    assert ajan.json_guvenli(float("-inf")) == "-sonsuz"
+    assert ajan.json_guvenli(float("nan")) is None
+    assert ajan.json_guvenli(1.5) == 1.5
+
+
+def test_json_guvenli_ic_ice_yapilari_temizler():
+    veri = {"a": {"b": [1.0, float("inf")]}, "c": float("nan")}
+    temiz = ajan.json_guvenli(veri)
+    metin = json.dumps(temiz, allow_nan=False)  # allow_nan=False: gecersizse patlar
+    assert "Infinity" not in metin and "NaN" not in metin
+
+
+@pytest.mark.parametrize("arac", sorted(ajan.ARAC_UYGULAMALARI))
+def test_her_arac_ciktisi_gecerli_json_uretir(arac):
+    """Hicbir arac API'ye gonderilemeyecek bir deger dondurmemeli.
+
+    Gercek bir kosuda tum kosular bu yuzden basarisiz oldu: boyut bandi
+    tanimindaki ust sinir float("inf") idi ve Gemini govdeyi reddetti.
+    """
+    argumanlar = {"kosu_id": "kosu_02"} if "kosu_id" in str(
+        next(b for b in semalar.ARAC_BILDIRIMLERI if b["name"] == arac)
+    ) else {}
+    sonuc = ajan._arac_cagrisini_calistir(arac, argumanlar)
+    json.dumps(sonuc, allow_nan=False)  # gecersiz deger varsa ValueError firlatir
+
+
+def test_bant_tanimi_json_guvenli():
+    from teshis.degerlendirme.metrikler import bant_araliklari
+
+    metin = json.dumps(bant_araliklari(), allow_nan=False)
+    assert "Infinity" not in metin
+
+
+# --- Kota (429) yeniden deneme --------------------------------------------
+
+def test_kota_hatasi_taninir():
+    assert ajan._kota_hatasi_mi(Exception("429 RESOURCE_EXHAUSTED ..."))
+    assert not ajan._kota_hatasi_mi(Exception("400 INVALID_ARGUMENT"))
+
+
+def test_bekleme_suresi_sunucu_onerisini_okur():
+    hata = Exception("... Please retry in 14.277709133s. ...")
+    assert 15.0 <= ajan._bekleme_suresi(hata) <= 16.0
+
+
+def test_bekleme_suresi_retrydelay_alanini_okur():
+    hata = Exception("{'@type': '...RetryInfo', 'retryDelay': '13s'}")
+    assert ajan._bekleme_suresi(hata) == 14.0
+
+
+def test_bekleme_suresi_varsayilana_duser():
+    assert ajan._bekleme_suresi(Exception("bilinmeyen"), varsayilan=7.0) == 7.0

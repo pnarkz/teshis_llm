@@ -92,6 +92,30 @@ def _arac_tanimlari():
     )
 
 
+def json_guvenli(deger: Any) -> Any:
+    """Infinity/NaN gibi JSON'da gecersiz degerleri metne cevirir.
+
+    RFC 8259 Infinity ve NaN'a izin vermez; Python'un json modulu bunlari
+    varsayilan olarak yazar ama Gemini API'si boyle bir govdeyi
+    400 INVALID_ARGUMENT ile reddeder. Gercek bir kosuda tum kosular bu yuzden
+    basarisiz oldu: boyut bandi tanimindaki ust sinir float("inf") idi.
+
+    Kaynak (metrikler.bant_araliklari) duzeltildi; bu fonksiyon ikinci savunma
+    hattidir ve eski ciktilarla da calisilabilmesini saglar.
+    """
+    if isinstance(deger, float):
+        if deger != deger:  # NaN
+            return None
+        if deger in (float("inf"), float("-inf")):
+            return "sonsuz" if deger > 0 else "-sonsuz"
+        return deger
+    if isinstance(deger, dict):
+        return {anahtar: json_guvenli(alt) for anahtar, alt in deger.items()}
+    if isinstance(deger, (list, tuple)):
+        return [json_guvenli(alt) for alt in deger]
+    return deger
+
+
 def _arac_cagrisini_calistir(ad: str, argumanlar: dict[str, Any]) -> dict[str, Any]:
     """Araci calistirir; hata olursa ajani dusurmek yerine modele hata dondurur."""
     fonksiyon = ARAC_UYGULAMALARI.get(ad)
@@ -102,7 +126,9 @@ def _arac_cagrisini_calistir(ad: str, argumanlar: dict[str, Any]) -> dict[str, A
     except Exception as hata:  # noqa: BLE001 - arac hatasi modele geri bildirilir
         return {"hata": str(hata)}
     # FunctionResponse.response bir sozluk olmalidir; liste donen araclari sar.
-    return sonuc if isinstance(sonuc, dict) else {"sonuc": sonuc}
+    if not isinstance(sonuc, dict):
+        sonuc = {"sonuc": sonuc}
+    return json_guvenli(sonuc)
 
 
 def json_ayikla(metin: str) -> dict[str, Any]:
@@ -127,6 +153,44 @@ def json_ayikla(metin: str) -> dict[str, Any]:
     if bas >= 0 and son > bas:
         return json.loads(ham[bas : son + 1])
     raise ValueError(f"cevapta gecerli JSON bulunamadi: {ham[:200]}")
+
+
+def _bekleme_suresi(hata: Exception, varsayilan: float = 20.0) -> float:
+    """429 hatasindan sunucunun onerdigi bekleme suresini cikarir."""
+    metin = str(hata)
+    eslesme = re.search(r"retry in ([\d.]+)s", metin, re.IGNORECASE)
+    if eslesme:
+        return float(eslesme.group(1)) + 1.0
+    eslesme = re.search(r"'retryDelay':\s*'(\d+)s'", metin)
+    if eslesme:
+        return float(eslesme.group(1)) + 1.0
+    return varsayilan
+
+
+def _kota_hatasi_mi(hata: Exception) -> bool:
+    metin = str(hata)
+    return "429" in metin or "RESOURCE_EXHAUSTED" in metin
+
+
+def _istek_gonder(client, model: str, contents, config, deneme: int = 4):
+    """generate_content cagrisini yapar; kota hatasinda bekleyip yeniden dener.
+
+    Ucretsiz katmanda dakikada 5 istek siniri var; ajan her kosuda birden fazla
+    tur kullandigi icin bu sinire kolayca takiliyor. Sunucunun onerdigi
+    retryDelay dikkate alinarak beklenir.
+    """
+    son_hata: Exception | None = None
+    for sira in range(1, deneme + 1):
+        try:
+            return client.models.generate_content(model=model, contents=contents, config=config)
+        except Exception as hata:  # noqa: BLE001
+            if not _kota_hatasi_mi(hata) or sira == deneme:
+                raise
+            son_hata = hata
+            sure = _bekleme_suresi(hata)
+            print(f"      kota siniri, {sure:.0f} sn bekleniyor ({sira}/{deneme - 1})...")
+            time.sleep(sure)
+    raise son_hata  # pragma: no cover - dongu her zaman doner veya firlatir
 
 
 def teshis_uret(
@@ -169,7 +233,7 @@ def teshis_uret(
     arac_kaydi: list[dict[str, Any]] = []
 
     for tur in range(1, max_tur + 1):
-        response = client.models.generate_content(model=model, contents=contents, config=config)
+        response = _istek_gonder(client, model, contents, config)
         if not response.candidates:
             raise ValueError(f"{kosu_id}: model aday cevap dondurmedi")
         aday = response.candidates[0]
@@ -209,7 +273,7 @@ def kor_deneme_calistir(
     model: str = "gemini-3.6-flash",
     cikti: Path = VARSAYILAN_CIKTI,
     log_yolu: Path = VARSAYILAN_LOG,
-    bekleme_sn: float = 0.0,
+    bekleme_sn: float = 8.0,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Tum anonim kosular icin teshis uretir; tek kosunun hatasi digerlerini dusurmez."""
     sonuclar: list[dict[str, Any]] = []
@@ -274,7 +338,8 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=VARSAYILAN_CIKTI)
     parser.add_argument("--log", type=Path, default=VARSAYILAN_LOG)
     parser.add_argument("--kosu", default=None, help="Yalnizca tek bir kosu calistir (orn. kosu_02)")
-    parser.add_argument("--bekleme", type=float, default=0.0, help="Kosular arasi bekleme (sn)")
+    parser.add_argument("--bekleme", type=float, default=8.0,
+                        help="Kosular arasi bekleme (sn). Ucretsiz katman 5 istek/dk sinirlidir.")
     args = parser.parse_args()
 
     if args.kosu:
