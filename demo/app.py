@@ -154,12 +154,27 @@ def readout(row: pd.Series, reference: pd.Series | None = None) -> str:
     return f'<div class="readout">{"".join(lines)}</div>'
 
 
+VARSAYILAN_BILGI = {
+    "problem": "Aciklama girilmemis",
+    "change": "-",
+    "signal": "-",
+    "why": "Bu senaryo icin demo/app.py::scenario_info altina aciklama eklenmedi.",
+    "status": "Bilinmiyor",
+}
+
 scenario_info = {
     "Baseline": {
-        "problem": "Saglikli referans",
-        "change": "Veri veya etiketler kasitli olarak bozulmaz.",
-        "signal": "Diger kosularin olcum noktasi olarak kullanilir.",
-        "why": "Bir bozulmanin etkisini soyleyebilmek icin once normal performansi bilmek gerekir.",
+        "problem": "Saglikli referans (fine-tune YOK)",
+        "change": "main_model.pt dogrudan olculur; hicbir egitim yapilmaz.",
+        "signal": "Dagitimdaki modelin oldugu gibi performansi.",
+        "why": "Senaryolarla ayni protokolde egitilmedigi icin bozulma karsilastirmasinda taban olarak KULLANILMAZ; onun yerine v00 kullanilir.",
+        "status": "Tamamlandi",
+    },
+    "v00_saglikli": {
+        "problem": "Saglikli referans (ortak protokolle egitildi)",
+        "change": "Veri hic bozulmaz; senaryolarla birebir ayni protokolde fine-tune edilir.",
+        "signal": "Bozulmanin degil, yalnizca fine-tune'un kendi etkisini gosterir.",
+        "why": "Senaryo farklarinin 'bozulma etkisi' mi yoksa 'fine-tune etkisi' mi oldugunu ayirmak icin gereken dogru taban budur.",
         "status": "Tamamlandi",
     },
     "D1": {
@@ -245,7 +260,7 @@ if page == "Genel Bakis":
     rule("01 // kosu kayitlari", "epoch egrisi = egitim ilerlemesi")
     for _, row in results.iterrows():
         scenario = row["scenario"]
-        info = scenario_info.get(scenario, {})
+        info = scenario_info.get(scenario, VARSAYILAN_BILGI)
         left, right = st.columns([1.05, 1])
         with left:
             st.markdown(
@@ -295,7 +310,7 @@ if page == "Genel Bakis":
 elif page == "Senaryo Incele":
     selected = st.sidebar.selectbox("Kosu", scenarios, index=0)
     row = results[results["scenario"] == selected].iloc[0]
-    info = scenario_info[selected]
+    info = scenario_info.get(selected, VARSAYILAN_BILGI)
 
     rule(f"// {selected}", info["problem"])
     left, right = st.columns([1, 1])
@@ -528,7 +543,7 @@ else:
 
     rule("02 // senaryo katalogu", f"{len(scenarios)} tamamlandi")
     for name in scenarios:
-        info = scenario_info[name]
+        info = scenario_info.get(name, VARSAYILAN_BILGI)
         with st.expander(f"{name} · {info['problem']}", expanded=name == "Baseline"):
             columns = st.columns(2)
             columns[0].markdown(

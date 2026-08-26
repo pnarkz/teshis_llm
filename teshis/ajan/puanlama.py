@@ -22,6 +22,10 @@ from typing import Any
 # paket ile puanlama birbirinden ayrisamaz.
 SENARYO_BEKLENEN: dict[str, str] = {
     "Baseline": "saglikli_referans",
+    # v00: temiz veriyle, senaryolarla ayni protokolde egitilmis saglikli
+    # referans. Ajan icin de saglikli referans olarak puanlanir.
+    "v00_saglikli": "saglikli_referans",
+    "D3b": "tasit_insan_sinif_karisikligi",
     "D1": "sinif_yetersizligi",
     "D2a": "lokalizasyon_etiket_gurultusu",
     "D2b": "eksik_etiket",
@@ -44,6 +48,7 @@ ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
     "lokalizasyon_etiket_gurultusu": (r"konum|lokal|box|iou|yerlestir|konumlandirma|gurultu", "lokalizasyon gurultusu"),
     "eksik_etiket": (r"eksik|etiket|anot|annotation|yanlis pozitif|false positive", "eksik etiket"),
     "uap_uai_sinif_karisikligi": (r"sinif|karis|uap|uai|id hatas|capraz|confusion", "UAP/UAI sinif karisikligi"),
+    "tasit_insan_sinif_karisikligi": (r"sinif|karis|tasit|insan|id hatas|capraz|confusion", "tasit/insan sinif karisikligi"),
 }
 
 

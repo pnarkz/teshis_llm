@@ -30,6 +30,58 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-26 (3) — v00 sağlıklı referans eğitildi: D1 hipotezi çöktü, diğer üçü sağlamlaştı
+
+Katalog ve 8 senaryo config'inin tamamı `kaynak_surum: v00_saglikli` diyordu
+ama böyle bir sürüm hiç üretilmemişti. Karşılaştırmalar, protokolle hiç
+fine-tune edilmemiş `main_model.pt`'ye karşı yapılıyordu — yani her senaryo
+farkı `(bozulma etkisi) + (fine-tune etkisi)` toplamıydı.
+
+v00 üretildi (manifest-only, kaynak dataset'e dokunulmadan) ve senaryolarla
+birebir aynı protokolde eğitildi (11 epoch, 2,28 saat). Sonuç, fine-tune'un
+tek başına küçük olmadığını gösterdi: **insan recall'i 7,7 puan düşürüyor**
+(0.8157 → 0.7391), precision'ı 2 puan yükseltiyor. Yani bir çalışma noktası
+kayması yaratıyor.
+
+**D1 hipotezi çöktü.** Raporlanan "insan recall -0.0912"nin -0.0765'i temiz
+fine-tune'un kendi etkisiymiş. D1'e özgü kısım yalnızca **-0.0147** ve
+istatistiksel olarak anlamlı değil (z=-1.22, n=2718). Hiçbir sınıfta anlamlı
+fark yok.
+
+Nedeni öğretici ve deney kurgusuyla ilgili: tüm senaryolar `main_model.pt`'den
+başlıyor, ama bu model zaten **aynı dataset'in tamamı** üzerinde eğitilmiş.
+İnsan karelerinin %90'ı çıkarılsa bile model insanları zaten biliyor ve 11
+epoch'luk kısa bir fine-tune bunu unutturmuyor. Bu, iki bozulma türünü
+ayırıyor: **aktif bozulmalar** (D2a/D2b/D3 — modele yanlış bilgi öğretir,
+mevcut bilgisiyle çelişir) az epoch'ta bile güçlü etki üretiyor; **pasif
+bozulma** (D1 — sadece daha az örnek) eğitilmiş bir modeli etkilemiyor.
+
+Destekleyici kanıt: v00, D1 ve D2a'da `best.pt` **epoch 1'den** seçilmiş
+(model hiçbir epoch'ta başlangıçtan iyi olamamış); D2b/D2b_fb/D3'te epoch
+3/11/14. Eşit maruziyeti test etmek için D1 ve v00'ın `last.pt`'leri (epoch
+11) de ölçüldü — sonuç değişmedi (-0.0150, z=-1.27).
+
+**Diğer üç senaryo v00 tabanında da sağlam durdu** ve imzaları netleşti:
+D2a mAP50-95'i en çok düşürüyor (-0.0544), D2b precision'ı düşürürken insan
+recall'ini +0.1016 artırıyor (fazladan kutu üretiyor), D3 precision'ı en sert
+düşürüyor (-0.2047) ve düşüş karıştırılan sınıfta yoğunlaşıyor (UAP precision
+-0.4887). Bu ayrışma, ajanın metrik imzasından teşhis koyabilmesinin temeli.
+
+- README'ye "v00 Sağlıklı Referans ve Senaryo Karşılaştırması" otoriter tablosu
+  eklendi; her sayı kaynak JSON'dan programatik doğrulandı. Eski D1 tablosunun
+  başına uyarı konuldu.
+- D2a, D2b ve D2b final_best sınıf bazlı precision/recall için yeniden
+  değerlendirildi (metrik JSON'ları eski formattaydı).
+- `results.csv`'ye v00 satırı **sona** eklendi — araya eklemek ajanın
+  `kosu_NN` eşlemesini kaydırırdı; test bunu doğruluyor.
+- `demo/app.py` yeni senaryoda çöküyordu (`scenario_info` sabit kodluydu, ilk
+  denetimde işaret ettiğim kırılganlık). Demo render testi bunu otomatik
+  yakaladı; hem v00 girdisi eklendi hem de eksik girdide çökmek yerine
+  varsayılana düşecek şekilde düzeltildi.
+- **Açık öneri:** D1'i geçerli kılmak için senaryo, dataset'in tamamını görmüş
+  `main_model.pt` yerine genel amaçlı bir başlangıç modelinden (repoda mevcut
+  `yolo26n.pt`) eğitilmeli; v00 da aynı başlangıçtan yeniden koşulmalı.
+
 ### 2026-08-26 (2) — D3 sızıntısız yeniden koşuldu: gizlenen etki ortaya çıktı
 
 D3, düzeltilmiş config ile yeniden koşuldu (24 epoch, 5,6 saat). Tek fark:
@@ -582,6 +634,15 @@ olarak isaretlenir ve kanit dosyasi ayni commit'e eklenir.
 
 D1 sonucu (2026-08-25 yeniden kosusu, ortak protokol):
 
+> **UYARI — asagidaki tablo fine-tune-edilmemis main_model'e goredir ve
+> bozulma etkisini oldugundan buyuk gosterir.** v00 saglikli referansi
+> uretildikten sonra goruldu ki buradaki "insan recall -0.0912"nin
+> -0.0765'i temiz fine-tune'un kendi etkisi; D1'e ozgu kisim yalnizca
+> **-0.0147** ve istatistiksel olarak anlamli degil (z=-1.22).
+> **D1 hipotezi desteklenmemistir.** Gerekce ve dogru sayilar icin
+> "v00 Saglikli Referans ve Senaryo Karsilastirmasi" bolumune bakin.
+> Asagidaki tablo tarihsel kayit olarak korunuyor.
+
 Bu tablo, `senaryolar/egitim_protokolu.yaml` ortak protokoluyle (lr0=0.001,
 warmup_epochs=3) yapilan yeniden kosuya aittir. Ilk D1 kosusu farkli
 optimizasyon ayariyla (lr0=0.0005, warmup_epochs=2) egitilmisti; bu yuzden
@@ -791,6 +852,120 @@ Ilk kosu (egitim val'i olarak kilitli tanı setini kullaniyordu, bu yuzden
 iyimser yanliydi; tarihsel kayit olarak korunuyor):
 experiments/run_D3_42_local · reports/d3_sonuc/d1_metrics.json
 - veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
+
+### v00 Saglikli Referans ve Senaryo Karsilastirmasi (OTORITER TABLO)
+
+Bu bolum projenin ana sonuc tablosudur. Yukaridaki senaryo bolumleri her
+senaryonun kendi hikayesini anlatir, ancak **karsilastirma icin bu tablo
+kullanilmalidir.**
+
+**Neden v00 gerekliydi.** Onceki tum senaryo tablolari, fine-tune edilmemis
+`main_model.pt`'ye gore hesaplanmisti. Bu, her farki
+`(bozulma etkisi) + (fine-tune etkisi)` toplami yapiyordu. v00, veriyi hic
+bozmadan senaryolarla **birebir ayni protokolde** egitilmis referanstir; ikisi
+arasindaki fark artik yalnizca bozulmanin kendisidir.
+
+Fine-tune'un tek basina etkisi kucuk degildi:
+
+| Olcum | main_model (fine-tune yok) | v00 (temiz fine-tune) | fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9331 | 0.9200 | -0.0132 |
+| mAP50-95 | 0.6988 | 0.6707 | -0.0282 |
+| Precision | 0.8975 | 0.9175 | +0.0201 |
+| Recall (genel) | 0.8786 | 0.8785 | -0.0001 |
+| **insan recall** | **0.8157** | **0.7391** | **-0.0765** |
+
+Genel recall'in degismemesine karsilik insan recall'inin 7,7 puan dusmesi
+dikkat cekicidir: fine-tune, recall'i siniflar arasinda yeniden dagitmis
+(insan duserken UAI +0.1126 yukselmis), toplamda ise sabit birakmistir.
+
+Yani temiz fine-tune bile insan recall'ini 7,7 puan dusuruyor (precision'i
+yukseltip recall'i dusuren bir calisma noktasi kaymasi). Bu deger, D1'in
+manset iddiasinin neredeyse tamaminin aslinda fine-tune etkisi oldugunu
+gosterir.
+
+**Senaryolarin izole edilmis etkisi (v00'a gore):**
+
+| Senaryo | mAP50 | mAP50-95 | Precision | Recall | Hipotez |
+|---|---:|---:|---:|---:|---|
+| D1 sinif yetersizligi | +0.0050 | +0.0240 | -0.0015 | -0.0166 | **desteklenmedi** |
+| D2a lokalizasyon gurultusu | -0.0323 | **-0.0544** | -0.0321 | -0.0468 | desteklendi |
+| D2b eksik etiket | -0.0130 | -0.0157 | **-0.1087** | +0.0237 | desteklendi |
+| D3 sinif karisikligi | -0.0281 | -0.0215 | **-0.2047** | -0.0347 | guclu destek |
+
+**Sinif bazli recall farki (v00'a gore, * = p<0.05 iki oran testi):**
+
+| Senaryo | tasit (n=1264) | insan (n=2718) | UAP (n=15) | UAI (n=17) |
+|---|---:|---:|---:|---:|
+| D1 | +0.0071 | -0.0147 | 0.0000 | -0.0588 |
+| D2a | -0.0111 | +0.0364 * | 0.0000 | -0.2127 |
+| D2b | -0.0111 | +0.1016 * | 0.0000 | +0.0043 |
+| D3 | +0.0823 * | +0.0728 * | 0.0000 | **-0.2941 *** |
+
+**Sinif bazli precision farki (v00'a gore):**
+
+| Senaryo | tasit | insan | UAP | UAI |
+|---|---:|---:|---:|---:|
+| D1 | +0.0017 | +0.0091 | -0.0090 | -0.0078 |
+| D2a | -0.0650 | -0.0401 | -0.0335 | +0.0101 |
+| D2b | -0.1184 | -0.1663 | -0.1017 | -0.0485 |
+| D3 | -0.1035 | -0.1349 | **-0.4887** | -0.0916 |
+
+#### Her senaryonun ayirt edici imzasi
+
+Uc senaryo birbirinden **farkli metrik imzalari** uretiyor; ajanin teshis
+gorevini anlamli kilan sey budur:
+
+- **D2a (lokalizasyon gurultusu):** en cok mAP50-95 duser (-0.0544), mAP50'den
+  (-0.0323) belirgin sekilde daha fazla. Kutu konumu bozuldugu icin siki IoU
+  esikleri daha cok cezalandirir. Precision tum siniflarda orta duzeyde duser.
+- **D2b (eksik etiket):** precision cokerken (-0.1087) recall **artar**
+  (+0.0237); insan recall'i +0.1016 ile carpici sekilde yukselir. Model,
+  egitimde "burada nesne yok" diye ogrendigi yerlerde fazladan kutu uretmeye
+  itilmis; yani daha cok tahmin ediyor, daha cok yaniliyor.
+- **D3 (sinif karisikligi):** precision en sert duser (-0.2047) ve dusus
+  **karistirilan sinifta yogunlasir**: UAP precision -0.4887. Kutu yerleri
+  dogru, sinif etiketleri yanlis. UAI recall -0.2941 (n=17 olmasina ragmen
+  p<0.05).
+
+Bu ayrisma, "bir LLM metrik imzasindan bozulmanin nedenini teshis edebilir mi"
+sorusunun olumlu cevaplanabilmesi icin gereken temeldir.
+
+#### D1 hipotezi neden desteklenmedi
+
+D1 tek basarisiz senaryodur ve bunun nedeni ogreticidir. Hicbir sinif recall
+farki istatistiksel anlamliliga ulasmiyor (insan recall -0.0147, z=-1.22).
+
+Sebep, senaryonun kendisinde degil **deney kurgusunda**: tum senaryolar
+`main_model.pt`'den fine-tune ile basliyor, ancak bu model zaten **ayni
+dataset'in tamami uzerinde** egitilmis durumda. Insan iceren karelerin %90'i
+egitimden cikarilsa bile, model insanlari zaten biliyor ve 11 epoch'luk kisa
+bir fine-tune bunu unutturmaya yetmiyor.
+
+Bu, iki bozulma turu arasindaki farki ortaya cikariyor:
+
+- **Aktif bozulmalar** (D2a kaydirilmis kutu, D2b eksik etiket, D3 yanlis
+  sinif) modele *yanlis bilgi ogretir* ve mevcut bilgisiyle celisir; bu yuzden
+  az epoch'ta bile guclu etki uretirler.
+- **Pasif bozulma** (D1 daha az ornek) yalnizca sinyali azaltir, yanlis bir
+  sey ogretmez. Zaten egitilmis bir model bunu kisa fine-tune'da fark etmez.
+
+Ek bir kanit: v00, D1 ve D2a kosularinda `best.pt` **epoch 1'den** secildi
+(model hicbir epoch'ta baslangictan daha iyi olamadi). D2b, D2b final_best ve
+D3'te ise sirasiyla epoch 3, 11 ve 14 secildi. Yani D1'in secilen agirliklari
+bozulmaya neredeyse hic maruz kalmamis. Esit maruziyeti test etmek icin her
+iki kosunun `last.pt`'si (epoch 11) de olculdu; sonuc degismedi:
+
+| karsilastirma | insan AP50 | insan recall |
+|---|---:|---:|
+| D1 - v00, `best.pt` (epoch 1) | +0.0260 | -0.0147 (z=-1.22) |
+| D1 - v00, `last.pt` (epoch 11) | -0.0541 | -0.0150 (z=-1.27) |
+
+**D1'i gecerli hale getirmek icin oneri:** senaryo, dataset'in tamamini gormus
+`main_model.pt`'den degil, genel amacli bir baslangic modelinden (repoda
+mevcut `yolo26n.pt`) egitilmelidir. O zaman "sinif yetersizligi" modelin
+ogrenmesini gercekten kisitlar. Bu, v00'in da ayni baslangictan yeniden
+kosulmasini gerektirir.
 
 ### Ara Sunum Konsolu
 
