@@ -205,6 +205,13 @@ scenario_info = {
         "why": "Sonucun yalnizca veri bozulmasindan mi, yoksa model farkindan mi geldigini kontrol eder.",
         "status": "Tamamlandi",
     },
+    "D5": {
+        "problem": "Kaynak / alan kaymasi",
+        "change": "Egitim seti yalnizca aaterm kaynagiyla sinirlandi (17.515 -> 11.064 kare); etiketler degismedi.",
+        "signal": "Egitimde gorulmeyen kaynaklarda recall duser; aaterm korunur.",
+        "why": "Tek kaynaktan veri toplamanin, dagitimda farkli sensor/sahnelerde yarattigi riski olcer.",
+        "status": "Tamamlandi",
+    },
     "D4": {
         "problem": "Kucuk nesne sinyal kaybi",
         "change": "Egitim etiketlerinden etkin boyutu 16 px altindaki 29.499 kutu silindi (%22,4).",

@@ -1,0 +1,40 @@
+{
+  "scenario": "D5_last",
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\experiments\\run_20260826_195557_D5_42\\weights\\last.pt",
+  "data": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\val_diagnostic\\data.yaml",
+  "imgsz": 768,
+  "mAP50": 0.33520026126240327,
+  "mAP50_95": 0.1907995839904567,
+  "precision": 0.38675441374781283,
+  "recall": 0.30090113612019265,
+  "class_names": [
+    "tasit",
+    "insan",
+    "UAP",
+    "UAI"
+  ],
+  "class_ap50": [
+    0.6867181262961513,
+    0.6540829187534618,
+    0.0,
+    0.0
+  ],
+  "class_ap50_95": [
+    0.44138513873260204,
+    0.3218131972292248,
+    0.0,
+    0.0
+  ],
+  "class_precision": [
+    0.7954942510810983,
+    0.7515234039101532,
+    0.0,
+    0.0
+  ],
+  "class_recall": [
+    0.617879746835443,
+    0.5857247976453275,
+    0.0,
+    0.0
+  ]
+}

@@ -27,6 +27,7 @@ SENARYO_BEKLENEN: dict[str, str] = {
     "v00_saglikli": "saglikli_referans",
     "D3b": "tasit_insan_sinif_karisikligi",
     "D4": "kucuk_nesne_sinyal_kaybi",
+    "D5": "kaynak_alani_kaymasi",
     "D1": "sinif_yetersizligi",
     "D2a": "lokalizasyon_etiket_gurultusu",
     "D2b": "eksik_etiket",
@@ -51,6 +52,7 @@ ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
     "uap_uai_sinif_karisikligi": (r"sinif|karis|uap|uai|id hatas|capraz|confusion", "UAP/UAI sinif karisikligi"),
     "tasit_insan_sinif_karisikligi": (r"sinif|karis|tasit|insan|id hatas|capraz|confusion", "tasit/insan sinif karisikligi"),
     "kucuk_nesne_sinyal_kaybi": (r"kucuk|boyut|small|olcek|piksel|cozunurluk|minik", "kucuk nesne sinyal kaybi"),
+    "kaynak_alani_kaymasi": (r"kaynak|alan|domain|dagilim|kayma|shift|sensor|cesitlilik", "kaynak/alan kaymasi"),
 }
 
 

@@ -30,6 +30,50 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-26 (6) — D5 tamamlandı: erken durdurmanın gizlediği alan kayması felaketi
+
+D5 (kaynak/alan kayması) koşuldu: eğitim seti yalnızca `aaterm` kaynağıyla
+sınırlandı (17.515 → 11.064 kare), etiketlere dokunulmadı. 11 epoch, 1,51
+saat.
+
+**Bu, projedeki tek senaryo ki `best.pt` ile `last.pt` tamamen farklı hikâye
+anlatıyor — ve ikisi de anlamlı.**
+
+`best.pt` (epoch 1) hipotezi desteklemiyor gibi görünüyor: eğitimde hiç
+görülmeyen `termal` kaynağı düşmek yerine +0.1386 yükseliyor (z=+6,98).
+Sebep, epoch 1'de modelin henüz tek kaynağa uyum sağlamamış olması; çalışma
+noktası daha permissive tarafa kaymış ve bu, taban recall'i en düşük kaynağa
+en çok yaramış.
+
+`last.pt` (epoch 11) ise hipotezi tam olarak doğruluyor:
+
+| Kaynak | Eğitimde | n | v00 | last | fark | z |
+|---|---|---:|---:|---:|---:|---:|
+| **aaterm** | **VAR** | 885 | 0.9107 | 0.8825 | -0.0282 | -1,95 (anlamsız) |
+| hituav | yok | 2.165 | 0.8402 | 0.3977 | **-0.4425** | **-29,98** |
+| tf2026 | yok | 106 | 0.9906 | 0.4245 | **-0.5661** | **-9,06** |
+| termal | yok | 858 | 0.7145 | 0.6480 | -0.0665 | -2,95 |
+
+Eğitimde tutulan tek kaynak korunuyor, diğerleri çöküyor. Genel mAP50
+0.9200'den **0.3352**'ye iniyor.
+
+**Pratik ders — projenin en uygulanabilir bulgusu:** kaynak çeşitliliği olan
+bir val setinde erken durdurma, bu felaketi önledi. Model 11 epoch boyunca
+tek kaynağa doğru çökerken, tüm kaynakları içeren val bunu fark etti ve en iyi
+checkpoint olarak epoch 1'i seçti.
+
+Tersi senaryo gerçek hayatta çok daha yaygın: bir ekip kendi topladığı tek
+kaynaktan veri toplar ve val setini de **aynı kaynaktan** ayırır. O durumda
+val çöküşü göremezdi (`aaterm` korunuyor!), eğitim yakınsayana kadar sürer ve
+dağıtılan model diğer sensörlerde catastrofik başarısız olurdu. Yani D5, veri
+toplama çeşitliliği kadar **validasyon setinin kaynak çeşitliliği** hakkında
+da bir uyarı.
+
+- README'ye "D5 Sonucu" bölümü, otoriter tabloya iki D5 satırı (best/last)
+  eklendi; her sayı kaynak JSON'dan programatik doğrulandı.
+- `results.csv`'ye `best.pt` kaydedildi (dağıtılacak model odur); `last.pt`
+  ölçümü latent kırılganlığı belgelediği için README'de birlikte raporlanıyor.
+
 ### 2026-08-26 (5) — D4 tamamlandı: projenin en temiz kontrollü deneyi
 
 D4 (küçük nesne sinyal kaybı) koşuldu: 11 epoch, 2,34 saat. Eğitim
@@ -538,7 +582,8 @@ Sonraki isler:
 - [x] D3 veri senaryosu.
 - [x] D3b sinif karisikligi (olculebilir surum).
 - [x] D4 kucuk nesne sinyal kaybi.
-- [ ] D5-D6b veri senaryolari.
+- [x] D5 kaynak/alan kaymasi.
+- [ ] D6a-D6b veri senaryolari.
 - [ ] E1-E4 egitim senaryolari.
 - [ ] Bootstrap guven araliklari ve ajan karar akisi.
 - [ ] Final test: sadece bir kez.
@@ -782,7 +827,7 @@ experiments/run_20260817_222323_D1_42 · reports/d1_sonuc/d1_metrics.json
 - [x] D2b eksik etiket.
 - [x] D3 UAP/UAI class 2-3 karisikligi.
 - [x] D4 kucuk nesne sinyal kaybi.
-- [ ] D5 kaynak/alani kaymasi.
+- [x] D5 kaynak/alani kaymasi.
 - [ ] D6a split sizintisi.
 - [ ] D6b tekrar agirligi ve efektif n.
 - [ ] E1 overfitting.
@@ -934,6 +979,81 @@ Ilk kosu (egitim val'i olarak kilitli tanı setini kullaniyordu, bu yuzden
 iyimser yanliydi; tarihsel kayit olarak korunuyor):
 experiments/run_D3_42_local · reports/d3_sonuc/d1_metrics.json
 - veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
+
+### D5 Sonucu — erken durdurmanin gizledigi felaket
+
+D5, egitim setini yalnizca **tek bir kaynakla** (`aaterm`) sinirlar:
+17.515 kareden 11.064'u kalir, 6.451'i cikarilir (hituav 2.292, termal 3.785,
+sentetik 273, tf2026 101). Etiketler hic degistirilmez; bu bir **veri secimi**
+bozulmasidir. val ve test kasitli olarak tum kaynaklari icermeye devam eder.
+Kosu: 11 epoch (erken durdu), 1,51 saat.
+
+Bu senaryo, projedeki tek senaryodur ki **`best.pt` ile `last.pt` tamamen
+farkli hikayeler anlatir** ve ikisi de anlamlidir.
+
+**`best.pt` (epoch 1) — dagitilacak model:**
+
+| Olcum | v00 | D5 best | fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9200 | 0.9092 | -0.0107 |
+| Precision | 0.9175 | 0.8813 | -0.0363 |
+| Recall | 0.8785 | 0.8301 | -0.0485 |
+
+Kaynak bazli bakildiginda hipotez **desteklenmiyor** gibi gorunur:
+
+| Kaynak | Egitimde | n | v00 | best | fark | z |
+|---|---|---:|---:|---:|---:|---:|
+| aaterm | VAR | 885 | 0.9107 | 0.9164 | +0.0057 | +0,42 |
+| hituav | yok | 2.165 | 0.8402 | 0.8162 | -0.0240 | -2,09 |
+| termal | yok | 858 | 0.7145 | 0.8531 | **+0.1386** | **+6,98** |
+| tf2026 | yok | 106 | 0.9906 | 0.9528 | -0.0378 | -1,66 |
+
+Egitimde hic gorulmeyen `termal` kaynagi **belirgin sekilde yukseliyor**.
+Sebep, epoch 1'de modelin henuz tek kaynaga uyum saglamamis olmasi; bunun
+yerine calisma noktasi daha permissive tarafa kaymis ve bu, taban recall'i en
+dusuk olan kaynaga (termal 0.7145) en cok yaramis.
+
+**`last.pt` (epoch 11) — egitimin dogal sonu:**
+
+| Olcum | v00 | D5 last | fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9200 | **0.3352** | **-0.5848** |
+| Precision | 0.9175 | 0.3868 | -0.5308 |
+| Recall | 0.8785 | 0.3009 | -0.5776 |
+
+Ve kaynak kirilimi hipotezi **tam olarak dogruluyor**:
+
+| Kaynak | Egitimde | n | v00 | last | fark | z |
+|---|---|---:|---:|---:|---:|---:|
+| **aaterm** | **VAR** | 885 | 0.9107 | 0.8825 | **-0.0282** | -1,95 (anlamli degil) |
+| hituav | yok | 2.165 | 0.8402 | 0.3977 | **-0.4425** | **-29,98** |
+| tf2026 | yok | 106 | 0.9906 | 0.4245 | **-0.5661** | **-9,06** |
+| termal | yok | 858 | 0.7145 | 0.6480 | -0.0665 | -2,95 |
+
+Egitimde tutulan **tek kaynak korunuyor** (istatistiksel olarak anlamli kayip
+yok), digerleri cokuyor. Bu, alan kaymasinin ders kitabi tanimidir.
+
+#### Bu senaryonun pratik dersi
+
+D5'in asil bulgusu su: **kaynak cesitliligi olan bir val setinde erken
+durdurma, alan kaymasi felaketini onledi.** Model 11 epoch boyunca yalnizca
+`aaterm` gordu ve o yone dogru cokerken, tum kaynaklari iceren val seti bunu
+fark etti ve en iyi checkpoint olarak epoch 1'i secti.
+
+Bunun tersi senaryo gercek hayatta cok daha yaygindir: bir ekip yalnizca kendi
+topladigi kaynaktan veri toplar, val setini de **ayni kaynaktan** ayirir. O
+durumda val, cokusu goremezdi (aaterm korunuyor!), egitim yakinsayana kadar
+surer ve dagitilan model diger sensorlerde/sahnelerde catastrofik sekilde
+basarisiz olurdu.
+
+Bu yuzden D5, "veri toplama cesitliligi" kadar **"validasyon setinin kaynak
+cesitliligi"** hakkinda da bir uyaridir. `results.csv`'ye `best.pt` kaydedildi
+(dagitilacak model odur), ancak `last.pt` olcumu latent kirilganligi
+belgeledigi icin burada birlikte raporlanir.
+
+- reports/d5_best_sonuc/d1_metrics.json · reports/d5_last_sonuc/d1_metrics.json
+- reports/boyut_analizi/D5.json · reports/boyut_analizi/D5_last.json
+- veri_surumleri/v07_d5_kaynak_alani_kaymasi/manifest.json
 
 ### D4 Sonucu — projenin en temiz kontrollu deneyi
 
@@ -1115,6 +1235,8 @@ gosterir.
 | D3 sinif karisikligi (nadir) | -0.0281 | -0.0215 | **-0.2047** | -0.0347 | guclu destek |
 | D3b sinif karisikligi (bol) | -0.0262 | +0.0042 | +0.0097 | -0.0495 | **yalnizca confusion matrix'te** |
 | D4 kucuk nesne sinyal kaybi | -0.0224 | -0.0006 | -0.0642 | -0.0349 | **yalnizca boyut kiriliminda** |
+| D5 kaynak kaymasi (`best.pt`) | -0.0107 | +0.0044 | -0.0363 | -0.0485 | best.pt'de gorunmez |
+| D5 kaynak kaymasi (`last.pt`) | **-0.5848** | -0.4799 | -0.5308 | -0.5776 | **kaynak kiriliminda net** |
 
 > **Son iki satir bu tablonun tek basina okunamayacaginin kanitidir.**
 > D3b'de metrikler neredeyse degismemis gorunur, ancak sabit esikli confusion
