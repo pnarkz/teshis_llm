@@ -1,0 +1,18 @@
+{
+  "kosu_01": {
+    "hidden_role": "baseline",
+    "expected": "saglikli_referans"
+  },
+  "kosu_02": {
+    "hidden_role": "D1",
+    "expected": "sinif_yetersizligi"
+  },
+  "kosu_03": {
+    "hidden_role": "D2a",
+    "expected": "lokalizasyon_etiket_gurultusu"
+  },
+  "kosu_04": {
+    "hidden_role": "D2b",
+    "expected": "eksik_etiket"
+  }
+}

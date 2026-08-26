@@ -116,7 +116,16 @@ def test_gecersiz_kosu_ajani_dusurmez(arac):
 
 
 @pytest.mark.parametrize("arac", YENI_ARACLAR)
-def test_baseline_kosusu_acik_hata_verir(arac):
-    """kosu_01 icin kirilim yok; sessizce bos donmek yerine acik hata vermeli."""
+def test_baseline_kosusu_kendi_kirilimini_dondurur(arac):
+    """kosu_01 saglikli referansin kendisidir; kirilimi calismali ve fark sifir olmali."""
     sonuc = ajan._arac_cagrisini_calistir(arac, {"kosu_id": "kosu_01"})
-    assert "hata" in sonuc
+    assert "hata" not in sonuc, sonuc
+
+
+def test_referans_kosusunda_farklar_sifir():
+    b = araclar.boyut_bazli_recall_getir("kosu_01")
+    for bant, deger in b["bantlar"].items():
+        assert deger["fark"] == 0.0, f"{bant} referansta sifir olmali: {deger['fark']}"
+    k = araclar.kaynak_bazli_recall_getir("kosu_01")
+    for ad, deger in k["kaynaklar"].items():
+        assert deger["fark"] == 0.0, f"{ad} referansta sifir olmali: {deger['fark']}"

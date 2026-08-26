@@ -30,6 +30,45 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-26 (8) — LLM deneme paketi yenilendi; ajanın karşılaştırma tabanı v00'a çevrildi
+
+Paket dokuz koşuya genişletildi ve her koşu için **kırılım kanıtları** (boyut
+bandı, kaynak grubu, sınıf karışıklığı) eklendi. Bunlar olmadan ajan D3b, D4
+ve D5'i teşhis edemezdi.
+
+**Ayrıca bir tutarsızlık düzeltildi.** Paket ve araçlar, farkları hâlâ eski
+baseline'a (fine-tune edilmemiş `main_model.pt`) göre veriyordu — oysa
+2026-08-26 (3) kaydında bu tabanın yanıltıcı olduğunu, her farkı
+`(bozulma etkisi) + (fine-tune etkisi)` toplamı yaptığını tespit etmiştik.
+Ajan yanlış tabana göre karşılaştırma yapıyordu; örneğin D1'in precision
+farkını **+0.0186** (yanıltıcı) görüyordu, doğrusu **-0.0015**.
+
+- `araclar.baseline_metriklerini_getir()` artık v00 koşusunu döndürüyor.
+- v00, ajanın teşhis edeceği senaryolar listesinden çıkarıldı: `kosu_01`
+  olarak karşılaştırma tabanı rolünü üstleniyor. Böylece hem taban doğru hem
+  de aynı koşu iki kez sunulmuyor.
+- `kosu_NN` numaraları yalnızca v00 sonrası koşularda kaydı; arşivlenen 4
+  koşuluk denemenin kullandığı `kosu_01`–`kosu_04` eşlemesi değişmedi.
+- Kırılım araçları artık `kosu_01` için de çalışıyor (farklar sıfır çıkar).
+
+**Arşivleme:** kırılım araçları eklenmeden önce yapılan 4 koşuluk Gemini
+denemesi (`mean_score` 0.833) `reports/llm_trial_arsiv_4kosu/` altına
+taşındı. O sonuç güncel paketle karşılaştırılamaz: paket artık dokuz koşu
+içeriyor ve kırılım kanıtları sunuyor.
+
+**Paketin durumu:** 9 koşu, 33 KB, sızıntı taraması temiz (kaynak adları
+`kaynak_a`/`kaynak_b` olarak anonim), her koşuda kırılım kanıtı mevcut.
+Sızıntı testi artık yalnızca `runs` bölümünü tarıyor — paketin görev tanımı
+("Termal drone YOLO diagnostigi") alanın kendisini anlattığı için `termal`
+kelimesi orada meşru olarak geçiyor.
+
+**Sıradaki adım kullanıcıda:** `GEMINI_API_KEY` ortam değişkeni ayarlanıp
+`python scripts/run_gemini_trial.py` çalıştırıldığında deneme yenilenir,
+ardından `python scripts/score_llm_trial.py` puanlar. Bu, projenin merkezi
+sorusunun ("bir LLM bu bozulmaları yeterli kanıtla teşhis edebilir mi?") ilk
+kez adil koşullarda sınanması olacak — ajan artık üç gizli senaryoyu da
+görebiliyor.
+
 ### 2026-08-26 (7) — Ajana kırılım araçları verildi; D3b'nin manşet bulgusu yanlış çıktı ve düzeltildi
 
 **Neden bu iş yapıldı.** Ajan yalnızca toplam mAP/precision/recall ve 4 sınıf

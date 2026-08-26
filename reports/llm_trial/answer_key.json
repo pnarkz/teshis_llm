@@ -1,6 +1,6 @@
 {
   "kosu_01": {
-    "hidden_role": "baseline",
+    "hidden_role": "Baseline",
     "expected": "saglikli_referans"
   },
   "kosu_02": {
@@ -14,5 +14,25 @@
   "kosu_04": {
     "hidden_role": "D2b",
     "expected": "eksik_etiket"
+  },
+  "kosu_05": {
+    "hidden_role": "D2b",
+    "expected": "eksik_etiket"
+  },
+  "kosu_06": {
+    "hidden_role": "D3",
+    "expected": "uap_uai_sinif_karisikligi"
+  },
+  "kosu_07": {
+    "hidden_role": "D3b",
+    "expected": "tasit_insan_sinif_karisikligi"
+  },
+  "kosu_08": {
+    "hidden_role": "D4",
+    "expected": "kucuk_nesne_sinyal_kaybi"
+  },
+  "kosu_09": {
+    "hidden_role": "D5",
+    "expected": "kaynak_alani_kaymasi"
   }
 }

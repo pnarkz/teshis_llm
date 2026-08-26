@@ -45,16 +45,37 @@ def _scenario_rows() -> pd.DataFrame:
     return pd.read_csv(RESULTS_CSV)
 
 
+REFERANS_SENARYO = "v00_saglikli"
+
+
+def _referans_satiri() -> "pd.Series":
+    """Saglikli referans kosusunun (v00) results.csv satiri."""
+    frame = _scenario_rows()
+    satir = frame[frame["scenario"] == REFERANS_SENARYO]
+    if satir.empty:
+        raise FileNotFoundError(
+            f"Saglikli referans ({REFERANS_SENARYO}) results.csv'de bulunamadi"
+        )
+    return satir.iloc[0]
+
+
 def anonim_kosu_haritasi() -> dict[str, str]:
     """kosu_NN -> gercek run_id eslemesi. YALNIZCA yerel puanlama/rapor icin; ajana verilmez.
 
     Numaralandirma results.csv satir sirasina (yani kosunun eklendigi
     kronolojik siraya) dayanir, boylece yeni bir senaryo eklendiginde eski
-    kosu_NN kimlikleri degismez. kosu_01 baseline'a ayrildigi icin senaryo
-    kosulari kosu_02'den baslar.
+    kosu_NN kimlikleri degismez.
+
+    kosu_01 saglikli referansa (v00) ayrildigi icin senaryo kosulari
+    kosu_02'den baslar ve v00'in kendisi bu haritaya DAHIL EDILMEZ: ajanin
+    teshis etmesi gereken bir senaryo degil, karsilastirma tabanidir.
     """
     frame = _scenario_rows()
-    return {f"kosu_{index + 2:02d}": str(run_id) for index, run_id in enumerate(frame["run_id"])}
+    senaryolar = frame[frame["scenario"] != REFERANS_SENARYO]
+    return {
+        f"kosu_{index + 2:02d}": str(run_id)
+        for index, run_id in enumerate(senaryolar["run_id"])
+    }
 
 
 def kosu_listesini_getir() -> list[str]:
@@ -63,17 +84,21 @@ def kosu_listesini_getir() -> list[str]:
 
 
 def baseline_metriklerini_getir() -> dict[str, Any]:
-    """Saglikli referans (kosu_01) metriklerini dondurur."""
-    veri = _read_json(BASELINE_JSON).get("aday")
-    if not veri:
-        raise FileNotFoundError(f"Baseline metrikleri bulunamadi: {BASELINE_JSON}")
+    """Saglikli referans (kosu_01) metriklerini dondurur.
+
+    Referans, veri hic bozulmadan senaryolarla **ayni protokolde** egitilmis
+    v00 kosusudur. Onceden burada fine-tune edilmemis main_model.pt
+    kullaniliyordu; o durumda her senaryo farki (bozulma etkisi) +
+    (fine-tune etkisi) toplami oluyordu ve ajan yanlis tabana gore
+    karsilastirma yapiyordu. Ayrinti: README "v00 Saglikli Referans".
+    """
+    row = _referans_satiri()
     return {
-        "mAP50": veri["mAP50"],
-        "mAP50_95": veri["mAP50_95"],
-        "precision": veri["precision"],
-        "recall": veri["recall"],
-        "class_AP50": {isim: veri["siniflar"][isim]["mAP50"] for isim in SINIFLAR},
-        "class_AP50_95": {isim: veri["siniflar"][isim]["mAP50_95"] for isim in SINIFLAR},
+        "mAP50": float(row["mAP50"]),
+        "mAP50_95": float(row["mAP50_95"]),
+        "precision": float(row["precision"]),
+        "recall": float(row["recall"]),
+        "class_AP50": {isim: float(row[f"AP_{isim}"]) for isim in SINIFLAR},
     }
 
 
@@ -117,10 +142,9 @@ def _kirilim_oku(kosu_id: str) -> dict[str, Any]:
     sizmaz.
     """
     if kosu_id == "kosu_01":
-        raise KeyError(
-            "kosu_01 (saglikli referans) icin kirilim analizi ayri tutulur; "
-            "karsilastirma icin bir senaryo kosusu secin."
-        )
+        # kosu_01 saglikli referansin kendisidir; kendi kirilimi dondurulur
+        # (bu durumda "fark" alanlari sifir cikar).
+        return _referans_kirilim()
     harita = anonim_kosu_haritasi()
     if kosu_id not in harita:
         raise KeyError(f"Bilinmeyen kosu_id: {kosu_id}")
@@ -132,11 +156,7 @@ def _kirilim_oku(kosu_id: str) -> dict[str, Any]:
 
 def _referans_kirilim() -> dict[str, Any]:
     """Saglikli referans (v00) kirilim analizini okur."""
-    frame = _scenario_rows()
-    v00 = frame[frame["scenario"] == "v00_saglikli"]
-    if v00.empty:
-        raise FileNotFoundError("Saglikli referans kosusu results.csv'de bulunamadi")
-    yol = KIRILIM_DIR / f"{v00.iloc[0]['run_id']}.json"
+    yol = KIRILIM_DIR / f"{_referans_satiri()['run_id']}.json"
     if not yol.is_file():
         raise FileNotFoundError("Saglikli referans icin kirilim analizi uretilmemis")
     return json.loads(yol.read_text(encoding="utf-8"))

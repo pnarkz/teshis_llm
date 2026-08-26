@@ -18,8 +18,30 @@ def test_kosu_listesi_baseline_ile_baslar():
 
 
 def test_kosu_listesi_uzunlugu_results_csv_ile_tutarli():
+    """Ajan, saglikli referans + her senaryo kosusunu gorur.
+
+    v00 referans kosusu results.csv'de bir satirdir ama ajana ayri bir senaryo
+    olarak sunulmaz; kosu_01 olarak karsilastirma tabani rolunu ustlenir.
+    """
     frame = pd.read_csv(araclar.RESULTS_CSV)
-    assert len(araclar.kosu_listesini_getir()) == len(frame) + 1
+    senaryo_sayisi = (frame["scenario"] != araclar.REFERANS_SENARYO).sum()
+    assert len(araclar.kosu_listesini_getir()) == senaryo_sayisi + 1
+
+
+def test_referans_kosusu_ajana_senaryo_olarak_sunulmaz():
+    """v00 anonim haritada bulunmamali; ajanin teshis edecegi bir senaryo degil."""
+    frame = pd.read_csv(araclar.RESULTS_CSV).set_index("run_id")
+    for run_id in araclar.anonim_kosu_haritasi().values():
+        assert frame.loc[run_id, "scenario"] != araclar.REFERANS_SENARYO
+
+
+def test_baseline_saglikli_referans_kosusundan_gelir():
+    """kosu_01 metrikleri, protokolle egitilmis v00 kosusuyla birebir ayni olmali."""
+    frame = pd.read_csv(araclar.RESULTS_CSV)
+    v00 = frame[frame["scenario"] == araclar.REFERANS_SENARYO].iloc[0]
+    taban = araclar.baseline_metriklerini_getir()
+    for alan in ("mAP50", "mAP50_95", "precision", "recall"):
+        assert abs(taban[alan] - float(v00[alan])) < 1e-9
 
 
 def test_anonim_harita_senaryo_adi_icermez():

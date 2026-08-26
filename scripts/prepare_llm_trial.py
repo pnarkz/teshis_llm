@@ -51,6 +51,23 @@ def build_packet() -> tuple[dict, dict]:
             name: round(metrics["class_AP50"][name] - reference[name], 6)
             for name in metrics["class_AP50"]
         }
+
+        # Kirilim kanitlari. Senaryolarin bir kismi (kucuk nesne kaybi, kaynak
+        # kaymasi, sinif karisikligi) toplam metriklerde GORUNMEZ; bu paketle
+        # tek atislik deneme yapildiginda ajanin dogru teshise ulasabilmesi
+        # icin kirilimlar da verilir. Function-calling ajani (teshis/ajan/ajan.py)
+        # ayni kirilimlari araclarla kendisi ister; orada test edilen soru
+        # "hangi kirilima bakmasi gerektigini bilebiliyor mu" olur.
+        for alan, getir in (
+            ("boyut_bandi_recall", araclar.boyut_bazli_recall_getir),
+            ("kaynak_grubu_recall", araclar.kaynak_bazli_recall_getir),
+            ("sinif_karisikligi", araclar.sinif_karisikligini_getir),
+        ):
+            try:
+                run[alan] = getir(kosu_id)
+            except (KeyError, FileNotFoundError):
+                # kosu_01 (baseline) ve kirilimi henuz uretilmemis kosular
+                run[alan] = None
         runs[kosu_id] = run
 
         # Cevap anahtari yalnizca yerelde tutulur; pakete girmez.
@@ -78,6 +95,12 @@ def build_packet() -> tuple[dict, dict]:
             f"UAP/UAI bbox sayisi {bbox_counts['UAP']} ve {bbox_counts['UAI']} oldugu icin "
             "bu siniflarda kesin genelleme yapma.",
             "delta_vs_kosu_01 alanlarini degisim kaniti olarak kullan; tek basina nedensellik kaniti sayma.",
+            "Toplam mAP/precision/recall bazi bozulmalari GIZLEYEBILIR. Genel metrikler "
+            "az degismisken boyut_bandi_recall, kaynak_grubu_recall veya sinif_karisikligi "
+            "alanlarinda buyuk fark varsa teshisi o kirilime dayandir.",
+            "sinif_karisikligi alaninda 'bulunamadi', o gercek kutunun hicbir tahminle "
+            "eslesmedigi anlamina gelir; baska bir sinif adi ise yanlis siniflandirma demektir.",
+            "Bir kirilimda bbox_n kucukse (orn. 20'nin altinda) oradan kesin sonuc cikarma.",
             "Kanıt yetersizse yetersiz_kanit de.",
         ],
         "required_output": {

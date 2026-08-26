@@ -1,0 +1,183 @@
+{
+  "task": "Termal drone YOLO diagnostigi",
+  "classes": [
+    "tasit",
+    "insan",
+    "UAP",
+    "UAI"
+  ],
+  "metric_definitions": {
+    "mAP50": "IoU esigi 0.50 altinda ortalama tespit basarisi",
+    "mAP50_95": "IoU 0.50-0.95 araliginda daha kati tespit basarisi",
+    "precision": "Tahminlerin ne kadarinin dogru oldugu",
+    "recall": "Gercek kutularin ne kadarinin yakalandigi"
+  },
+  "rules": [
+    "Kosu adlarindan senaryo tahmini yapma.",
+    "Her iddiayi en az iki sayisal kanitla destekle.",
+    "UAP/UAI bbox sayisi 15 ve 17 oldugu icin bu siniflerde kesin genelleme yapma.",
+    "delta_vs_kosu_01 alanlarini degisim kaniti olarak kullan; tek basina nedensellik kaniti sayma.",
+    "Kanıt yetersizse yetersiz_kanit de."
+  ],
+  "required_output": {
+    "diagnosis": "string",
+    "evidence": [
+      "string"
+    ],
+    "confidence": "dusuk|orta|yuksek",
+    "limitations": [
+      "string"
+    ],
+    "next_measurement": "string"
+  },
+  "runs": {
+    "kosu_01": {
+      "mAP50": 0.9331318952391595,
+      "mAP50_95": 0.6988126642356054,
+      "precision": 0.8974838546608503,
+      "recall": 0.8786312401588279,
+      "class_AP50": {
+        "tasit": 0.8926025482388978,
+        "insan": 0.8499250327177399,
+        "UAP": 0.995,
+        "UAI": 0.995
+      },
+      "class_AP50_95": {
+        "tasit": 0.5839418564070878,
+        "insan": 0.4562671338686674,
+        "UAP": 0.8933333333333333,
+        "UAI": 0.8617083333333333
+      },
+      "validation_images": 1056,
+      "bbox_counts": {
+        "tasit": 1264,
+        "insan": 2718,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": 0.0,
+        "mAP50_95": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": 0.0,
+        "insan": 0.0,
+        "UAP": 0.0,
+        "UAI": 0.0
+      }
+    },
+    "kosu_02": {
+      "mAP50": 0.9061409262252652,
+      "mAP50_95": 0.6702597889914355,
+      "precision": 0.8870378433344248,
+      "recall": 0.855811574014928,
+      "class_AP50": {
+        "tasit": 0.8711059930614306,
+        "insan": 0.8159577118396302,
+        "UAP": 0.995,
+        "UAI": 0.9424999999999999
+      },
+      "class_AP50_95": {
+        "tasit": 0.5620069406836187,
+        "insan": 0.4279905486154563,
+        "UAP": 0.8882333333333333,
+        "UAI": 0.8028083333333331
+      },
+      "validation_images": 1056,
+      "bbox_counts": {
+        "tasit": 1264,
+        "insan": 2718,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": -0.026991,
+        "mAP50_95": -0.028553,
+        "precision": -0.010446,
+        "recall": -0.02282
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": -0.021497,
+        "insan": -0.033967,
+        "UAP": 0.0,
+        "UAI": -0.0525
+      }
+    },
+    "kosu_03": {
+      "mAP50": 0.8877029188398001,
+      "mAP50_95": 0.6162382941155385,
+      "precision": 0.8854154331392133,
+      "recall": 0.8317076293002268,
+      "class_AP50": {
+        "tasit": 0.8408801968921213,
+        "insan": 0.8104584129663368,
+        "UAP": 0.995,
+        "UAI": 0.9044730655007424
+      },
+      "class_AP50_95": {
+        "tasit": 0.5150636904620512,
+        "insan": 0.4142241249898692,
+        "UAP": 0.8044103174603177,
+        "UAI": 0.7312550435499164
+      },
+      "validation_images": 1056,
+      "bbox_counts": {
+        "tasit": 1264,
+        "insan": 2718,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": -0.045429,
+        "mAP50_95": -0.082574,
+        "precision": -0.012068,
+        "recall": -0.046924
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": -0.051722,
+        "insan": -0.039467,
+        "UAP": 0.0,
+        "UAI": -0.090527
+      }
+    },
+    "kosu_04": {
+      "mAP50": 0.9069898807902037,
+      "mAP50_95": 0.6550038538151794,
+      "precision": 0.8088098414504179,
+      "recall": 0.9022517971359076,
+      "class_AP50": {
+        "tasit": 0.8343466462540188,
+        "insan": 0.8197239880179075,
+        "UAP": 0.995,
+        "UAI": 0.9788888888888888
+      },
+      "class_AP50_95": {
+        "tasit": 0.5266308541433744,
+        "insan": 0.4314451867423165,
+        "UAP": 0.8758000000000001,
+        "UAI": 0.786139374375027
+      },
+      "validation_images": 1056,
+      "bbox_counts": {
+        "tasit": 1264,
+        "insan": 2718,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": -0.026142,
+        "mAP50_95": -0.043809,
+        "precision": -0.088674,
+        "recall": 0.023621
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": -0.058256,
+        "insan": -0.030201,
+        "UAP": 0.0,
+        "UAI": -0.016111
+      }
+    }
+  }
+}

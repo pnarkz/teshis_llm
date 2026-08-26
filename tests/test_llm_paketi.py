@@ -65,13 +65,41 @@ def test_cevap_anahtari_anonim_haritayla_uyumlu():
 
 @pytest.mark.skipif(not LLM_INPUT.is_file(), reason="paket yok")
 def test_paket_ajana_senaryo_adi_sizdirmaz():
-    """llm_input.json icinde senaryo kodu veya veri surumu adi gecmemelidir."""
-    blob = LLM_INPUT.read_text(encoding="utf-8").lower()
-    yasakli = ["sinif_yetersizligi", "eksik_etiket", "lokalizasyon_etiket_gurultusu",
-               "uap_uai_sinif_karisikligi", "manifest", "v01_", "v02_", "v03_", "v04_",
-               "run_20", "best.pt"]
+    """Kosu verilerinde senaryo kodu, veri surumu veya gercek kaynak adi gecmemelidir.
+
+    Tarama yalnizca `runs` bolumunde yapilir: paketin ust duzey gorev tanimi
+    ("Termal drone YOLO diagnostigi") alanin kendisini anlatir ve `termal`
+    kelimesi orada mesru olarak gecer. Kaynak adlari ise kosu verilerinde
+    kaynak_a/kaynak_b diye anonimlestirilmis olmalidir.
+    """
+    packet = json.loads(LLM_INPUT.read_text(encoding="utf-8"))
+    blob = json.dumps(packet["runs"], ensure_ascii=False).lower()
+    yasakli = [
+        "sinif_yetersizligi", "eksik_etiket", "lokalizasyon_etiket_gurultusu",
+        "uap_uai_sinif_karisikligi", "kucuk_nesne", "kaynak_alani", "saglikli",
+        "manifest", "v00_", "v01_", "v02_", "v03_", "v04_", "v05_", "v06_", "v07_",
+        "run_20", "best.pt",
+        # gercek kaynak adlari
+        "aaterm", "hituav", "termal", "sentetik", "tf2026",
+    ]
     sizan = [word for word in yasakli if word in blob]
     assert not sizan, f"Paket ajana sizdiriyor: {sizan}"
+
+
+@pytest.mark.skipif(not LLM_INPUT.is_file(), reason="paket yok")
+def test_her_kosuda_kirilim_kaniti_var():
+    """Toplam metriklerde gorunmeyen senaryolar icin kirilim kaniti sart.
+
+    D3b/D4/D5 tam olarak toplam metriklerde gorunmez; kirilim alanlari
+    eksikse ajan bu senaryolari teshis edemez.
+    """
+    packet = json.loads(LLM_INPUT.read_text(encoding="utf-8"))
+    eksik = [
+        kosu_id
+        for kosu_id, run in packet["runs"].items()
+        if not run.get("boyut_bandi_recall") or not run.get("sinif_karisikligi")
+    ]
+    assert not eksik, f"Bu kosularda kirilim kaniti yok: {eksik}"
 
 
 @pytest.mark.skipif(not LLM_INPUT.is_file(), reason="paket yok")
