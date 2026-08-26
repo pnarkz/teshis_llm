@@ -30,7 +30,50 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
-### 2026-08-26 — D1 ortak protokolle yeniden koşuldu: genel kaybın çoğu protokol artefaktıymış
+### 2026-08-26 (2) — D3 sızıntısız yeniden koşuldu: gizlenen etki ortaya çıktı
+
+D3, düzeltilmiş config ile yeniden koşuldu (24 epoch, 5,6 saat). Tek fark:
+eğitim val'i artık operasyonel `dataset/images/val`; kilitli tanı seti
+eğitimde hiç kullanılmıyor. Veri bozulması değişmedi (aynı `v04` sürümü,
+aynı etiketler, seed=42).
+
+Sızıntı, D3'ün etkisini **gizliyormuş** — düzeltilince tablo tersine döndü:
+
+| Ölçüm | Sızıntılı koşu | Sızıntısız koşu | |
+|---|---:|---:|---|
+| Precision farkı | **+0.0110** | **-0.1846** | en çarpıcı değişim |
+| mAP50 farkı | -0.0258 | -0.0413 | |
+| mAP50-95 farkı | -0.0328 | -0.0497 | |
+| UAP AP50 farkı | -0.0622 | 0.0000 | |
+| UAI AP50 farkı | 0.0000 | -0.1359 | |
+
+Sızıntılı koşuda precision baseline'ın *üstünde* çıkıyordu — bir bozulma
+senaryosu için mantıksız bir sonuçtu ve zaten şüphe uyandırmıştı.
+Sızıntısız koşuda precision **18,5 puan düşüyor** ve bu, D3'ün en belirgin
+imzası hâline geliyor.
+
+Confusion matrix da çok daha net bir hikâye anlatıyor. Sızıntılı koşu
+çift yönlü, dağınık bir karışıklık gösteriyordu (UAP→UAI %73, UAI→UAP %41).
+Sızıntısız koşu ise **tek yönlü** bir kayma gösteriyor: gerçek UAI
+kutularının %65'i UAP olarak tahmin ediliyor, gerçek UAP'lerin tamamı doğru
+sınıflandırılıyor. Yani UAP bir "çekici sınıf" hâline gelmiş. Bu, iki sınıf
+bazlı metrikle birbirini doğruluyor: UAP precision 0.9417 → 0.4730 (UAI'ler
+UAP diye işaretleniyor), UAI recall 0.8286 → 0.6471 (gerçek UAI'ler
+kaçırılıyor).
+
+Ders: değerlendirme setinin checkpoint seçimine sızması sadece sonucu
+iyimser yapmakla kalmamış, **aranan etkiyi de maskelemiş**. `best.pt` tanı
+setinde en iyi görünen epoch'tan seçildiği için, bozulmanın o sette
+yarattığı hasar sistematik olarak küçültülmüş.
+
+- `results.csv` D3 satırı yeni koşuyla değiştirildi (satır sırası korundu,
+  ajan eşlemesi kaymadı). Sızıntılı koşu `experiments/run_D3_42_local` ve
+  `reports/d3_sonuc/` altında tarihsel kayıt olarak duruyor.
+- `demo/data_loader.py` D1 ve D3 için yeni rapor klasörlerine yönlendirildi.
+- README'deki D3 uyarı bloğu kaldırıldı; tablo sınıf bazlı precision/recall
+  ile genişletildi ve her sayı kaynak JSON'dan programatik doğrulandı.
+
+### 2026-08-26 (1) — D1 ortak protokolle yeniden koşuldu: genel kaybın çoğu protokol artefaktıymış
 
 D1, `senaryolar/egitim_protokolu.yaml` ortak protokolüyle (lr0=0.001,
 warmup_epochs=3) yeniden koşuldu. Yeni koşu eskisinden **yalnızca** bu iki
@@ -353,7 +396,7 @@ Aktif:
 - [x] Gemini pilotu gizli cevap anahtariyla otomatik puanlandi.
 - [x] Streamlit ara sunum demosu kuruldu ve localhost'ta dogrulandi.
 - [x] D3 UAP/UAI sinif karisikligi: veri surumu, yerel GPU egitimi ve
-  diagnostic degerlendirmesi tamamlandi.
+  diagnostic degerlendirmesi tamamlandi (sizintisiz config ile yeniden kosuldu).
 
 Sonraki isler:
 
@@ -681,56 +724,72 @@ kurulmamalidir.
 
 ### D3 Sonucu
 
-> **UYARI — bu sayisal tablo iyimser yanlidir, yeniden kosulmasi gerekiyor.**
-> Bu kosu, egitim val'i olarak kilitli tanı setini (`val_diagnostic`)
-> kullandi; yani `best.pt`, asagida raporlanan setin uzerinde secildi.
-> Diger tum senaryolar operasyonel `dataset/images/val` kullaniyor, bu yuzden
-> asagidaki sayilar D1/D2a/D2b ile adil karsilastirilamaz. Hata
-> `scripts/local_d3.py` icinde duzeltildi (bkz. Bakim Gunlugu 2026-08-25 (6)).
-> UAP<->UAI capraz karisiklik bulgusu confusion matrix'ten geldigi ve cok
-> belirgin oldugu icin niteliksel olarak gecerlidir; sayisal tablo yeniden
-> kosulmadan kesinlestirilmemelidir.
-
-- [x] Yerel GPU kosusu: experiments/run_D3_42_local (22 epoch, patience=10
-  ile erken durdu).
-- [x] Model: experiments/run_D3_42_local/weights/best.pt.
-- [x] Diagnostic degerlendirme: reports/d3_sonuc/d1_metrics.json.
+- [x] Yerel GPU kosusu: experiments/run_20260826_001456_D3_42 (24 epoch,
+  5,6 saat, patience=10 ile erken durdu).
+- [x] Model: experiments/run_20260826_001456_D3_42/weights/best.pt.
+- [x] Diagnostic degerlendirme: reports/d3_v2_sonuc/d1_metrics.json.
 - [x] Orijinal dataset degistirilmedi; train etiketlerinde UAP (2) ve UAI (3)
   satirlarinin %30'u (117/391 satir; 68 UAP->UAI, 49 UAI->UAP) kontrollu
   olarak yer degistirildi (seed=42).
+- [x] Egitim val'i operasyonel `dataset/images/val`; kilitli tanı seti
+  egitimde kullanilmadi.
 - [x] Test seti kullanilmadi.
 
 | Olcum | main_model baseline | D3 | Fark |
 |---|---:|---:|---:|
-| mAP50 | 0.9331 | 0.9073 | -0.0258 |
-| mAP50-95 | 0.6988 | 0.6660 | -0.0328 |
-| Precision | 0.8975 | 0.9085 | +0.0110 |
-| Recall | 0.8786 | 0.8646 | -0.0140 |
-| UAP AP50 | 0.9950 | 0.9328 | -0.0622 |
-| UAI AP50 | 0.9950 | 0.9950 | 0.0000 |
+| mAP50 | 0.9331 | 0.8919 | -0.0413 |
+| mAP50-95 | 0.6988 | 0.6492 | -0.0497 |
+| **Precision** | **0.8975** | **0.7129** | **-0.1846** |
+| Recall | 0.8786 | 0.8438 | -0.0348 |
+| UAP AP50 | 0.9950 | 0.9950 | 0.0000 |
+| UAI AP50 | 0.9950 | 0.8591 | -0.1359 |
 
-Sadece AP50'ye bakilirsa UAI hic etkilenmemis gibi gorunur; ancak
-val_diagnostic uzerindeki confusion matrix (varsayilan esikte, argmax
-sinifiyla) asagidaki capraz karisikligi gosteriyor:
+Sinif bazli precision/recall (bbox n ile birlikte, rule 8):
 
-| Gercek sinif (n) | UAP tahmin edildi | UAI tahmin edildi |
-|---|---:|---:|
-| UAP (15) | 4 (%27) | 11 (%73) |
-| UAI (17) | 7 (%41) | 10 (%59) |
+| Sinif | baseline P | D3 P | baseline R | D3 R | bbox n |
+|---|---:|---:|---:|---:|---:|
+| tasit | 0.8203 | 0.7538 | 0.8703 | 0.9161 | 1.264 |
+| insan | 0.8279 | 0.7265 | 0.8157 | 0.8120 | 2.718 |
+| **UAP** | **0.9417** | **0.4730** | 1.0000 | 1.0000 | 15 |
+| UAI | 1.0000 | 0.8983 | 0.8286 | 0.6471 | 17 |
 
-D3 hipotezi guclu bicimde destekleniyor: train etiketlerinin %30'unun
-UAP<->UAI arasinda kontrollu karistirilmasi, val_diagnostic'te bu iki
-sinif arasinda yogun capraz hataya yol acti (true UAP kutularinin
-%73'u UAI olarak tahmin edildi). AP50'nin UAI icin dusmemis gorunmesi,
-AP'nin esik-bagimsiz siralama metrigi olmasindan kaynaklaniyor olabilir;
-sabit-esikli confusion matrix, argmax sinifin sik sik yer degistirdigini
-gosteriyor. Bu, projenin kendi ilkesiyle (mAP tek basina yeterli degildir,
-confusion matrix ile birlikte okunmalidir) birebir ortusen bir bulgu.
-UAP/UAI bbox sayisi 15 ve 17 oldugu icin oranlar birkac ornekle
-degisebilir; guclu istatistiksel genelleme iddiasi kurulmaz.
+Kilitli tanı setindeki confusion matrix (sabit esik, argmax sinif):
 
-- reports/d3_sonuc/d1_metrics.json
-- reports/d3_sonuc/d3_val_diagnostic/confusion_matrix.png
+| Gercek sinif (n) | UAP tahmin | UAI tahmin | background |
+|---|---:|---:|---:|
+| UAP (15) | 15 (%100) | 0 | 0 |
+| UAI (17) | **11 (%65)** | 2 (%12) | 4 (%24) |
+
+**D3 hipotezi guclu bicimde desteklendi ve etkinin yonu net.** Train
+etiketlerinin %30'unun UAP<->UAI arasinda karistirilmasi, modelde tek yonlu
+bir kayma yaratti: gercek UAI kutularinin %65'i UAP olarak tahmin ediliyor,
+buna karsilik gercek UAP kutularinin tamami dogru siniflandiriliyor. Yani
+UAP bir "cekici sinif" haline gelmis.
+
+Bu kayma iki metrikte birden gorulur ve birbirini dogrular:
+
+- **UAP precision 0.9417 -> 0.4730.** Model UAP dedigi kutularin yarisindan
+  fazlasinda yaniliyor; cunku UAI'leri de UAP diye isaretliyor.
+- **UAI recall 0.8286 -> 0.6471.** Gercek UAI'lerin ucte biri kaciriliyor,
+  cunku UAP'a kaydiriliyorlar.
+
+Genel precision'in 18,5 puan dusmesi (0.8975 -> 0.7129) bu senaryonun en
+belirgin imzasidir ve D2b'nin (eksik etiket) precision dususunden farkli bir
+mekanizmadan gelir: D2b'de model fazladan kutu uretir, D3'te ise urettigi
+kutulara yanlis sinif etiketi yapistirir.
+
+UAP/UAI bbox sayisi 15 ve 17 oldugu icin bu oranlar birkac ornekle
+degisebilir; guclu istatistiksel genelleme iddiasi kurulmaz. Ancak etki
+buyuklugu (11/17 yanlis siniflandirma, precision'da 47 puanlik dusus) rastgele
+dalgalanmayla aciklanamayacak kadar buyuktur.
+
+- reports/d3_v2_sonuc/d1_metrics.json
+- reports/d3_v2_sonuc/d3_v2_val_diagnostic/confusion_matrix.png
+- veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
+
+Ilk kosu (egitim val'i olarak kilitli tanı setini kullaniyordu, bu yuzden
+iyimser yanliydi; tarihsel kayit olarak korunuyor):
+experiments/run_D3_42_local · reports/d3_sonuc/d1_metrics.json
 - veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
 
 ### Ara Sunum Konsolu

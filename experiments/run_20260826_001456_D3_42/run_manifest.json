@@ -1,0 +1,13 @@
+{
+  "format": "experiment_manifest_v1",
+  "created_at_utc": "2026-08-25T21:14:56.221929+00:00",
+  "scenario": "D3",
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\main_model.pt",
+  "data": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v04_d3_uap_uai_sinif_karisikligi\\data.yaml",
+  "device": "0",
+  "seed": 42,
+  "epochs": 30,
+  "batch": 8,
+  "imgsz": 768,
+  "test_evaluated_during_training": false
+}
