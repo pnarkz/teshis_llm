@@ -205,6 +205,13 @@ scenario_info = {
         "why": "Sonucun yalnizca veri bozulmasindan mi, yoksa model farkindan mi geldigini kontrol eder.",
         "status": "Tamamlandi",
     },
+    "D3b": {
+        "problem": "tasit/insan sinif karisikligi (olculebilir surum)",
+        "change": "Train etiketlerinde tasit (0) ve insan (1) siniflarinin %30'u karistirildi (39.393 satir).",
+        "signal": "AP/precision neredeyse degismez; capraz hata yalnizca sabit esikli confusion matrix'te gorunur.",
+        "why": "D3 ile ayni bozulmayi bol ornekli siniflara uygular; boylece etki 3.982 kutuyla olculebilir hale gelir.",
+        "status": "Tamamlandi",
+    },
     "D3": {
         "problem": "UAP/UAI sinif karisikligi",
         "change": "Train etiketlerinde UAP (2) ve UAI (3) siniflarinin %30'u kontrollu olarak birbirine karistirildi.",

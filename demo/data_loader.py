@@ -50,19 +50,23 @@ def load_results() -> pd.DataFrame:
 
 
 EVIDENCE_JSON = {
+    "v00_saglikli": ROOT / "reports/v00_sonuc/d1_metrics.json",
     "D1": ROOT / "reports/d1_v2_sonuc/d1_metrics.json",
     "D2a": ROOT / "reports/d2a_sonuc/d1_metrics.json",
     "D2b": ROOT / "reports/d2b_sonuc/d1_metrics.json",
     "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d1_metrics.json",
     "D3": ROOT / "reports/d3_v2_sonuc/d1_metrics.json",
+    "D3b": ROOT / "reports/d3b_sonuc/d1_metrics.json",
 }
 
 EVIDENCE_FOLDERS = {
+    "v00_saglikli": ROOT / "reports/v00_sonuc/v00_val_diagnostic",
     "D1": ROOT / "reports/d1_v2_sonuc/d1_v2_val_diagnostic",
     "D2a": ROOT / "reports/d2a_sonuc/d2a_val_diagnostic",
     "D2b": ROOT / "reports/d2b_sonuc/d2b_val_diagnostic",
     "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic",
     "D3": ROOT / "reports/d3_v2_sonuc/d3_v2_val_diagnostic",
+    "D3b": ROOT / "reports/d3b_sonuc/d3b_val_diagnostic",
 }
 
 
