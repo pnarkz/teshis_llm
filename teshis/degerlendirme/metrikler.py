@@ -1,4 +1,4 @@
-"""Sinif ve nesne boyutu bazli metrik hesaplari.
+"""Sinif, nesne boyutu ve kaynak grubu bazli metrik hesaplari.
 
 Toplam mAP, "model kucuk nesneleri kacirmaya basladi" gibi bir iddiayi
 gostermez: kucuk nesneler bbox sayisinin kucuk bir kismini olusturdugu icin
@@ -14,6 +14,11 @@ degildir. teshis/veri/istatistik.py ile ayni formul kullanilir:
 
 Bant sinirlari D4 senaryosunun esigiyle (16 px) hizalidir; boylece "egitimden
 cikarilan boyut bandi" ile "recall'i olculen bant" birebir ortusur.
+
+Kaynak grubu (aaterm, hituav, termal, sentetik, tf2026) dosya adindan
+`teshis/veri/istatistik.py::kaynak_adi` ile turetilir; ayni fonksiyon veri
+raporunda da kullanildigi icin gruplama iki yerde ayrisamaz. D5 (kaynak/alan
+kaymasi) senaryosunun hipotezi bu kirilimla test edilir.
 """
 
 from __future__ import annotations
@@ -22,7 +27,9 @@ import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
+
+from teshis.veri.istatistik import kaynak_adi
 
 SINIFLAR = {0: "tasit", 1: "insan", 2: "UAP", 3: "UAI"}
 GORUNTU_UZANTILARI = (".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp")
@@ -169,6 +176,8 @@ def boyut_bazli_recall(
     bant_sayaclari: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
     sinif_sayaclari: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
     sinif_bant: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
+    kaynak_sayaclari: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
+    kaynak_sinif: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
     toplam_tahmin = 0
 
     for baslangic in range(0, len(goruntuler), batch):
@@ -191,6 +200,7 @@ def boyut_bazli_recall(
                 )
             ]
             toplam_tahmin += len(tahminler)
+            kaynak = kaynak_adi(goruntu_yolu.name)
             eslesen = eslestir(gercek, tahminler, iou_esigi)
             for indis, hedef in enumerate(gercek):
                 sinif_adi = SINIFLAR.get(hedef["sinif"], str(hedef["sinif"]))
@@ -199,6 +209,8 @@ def boyut_bazli_recall(
                     (bant_sayaclari, hedef["bant"]),
                     (sinif_sayaclari, sinif_adi),
                     (sinif_bant, f"{sinif_adi}|{hedef['bant']}"),
+                    (kaynak_sayaclari, kaynak),
+                    (kaynak_sinif, f"{kaynak}|{sinif_adi}"),
                 ):
                     sayac[anahtar]["toplam"] += 1
                     sayac[anahtar]["eslesen"] += vurus
@@ -218,6 +230,8 @@ def boyut_bazli_recall(
         },
         "sinif_recall": _ozetle(sinif_sayaclari),
         "sinif_boyut_recall": _ozetle(sinif_bant),
+        "kaynak_recall": _ozetle(kaynak_sayaclari),
+        "kaynak_sinif_recall": _ozetle(kaynak_sinif),
     }
 
 
