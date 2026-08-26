@@ -1,0 +1,96 @@
+{
+  "metric_definition": "diagnosis, evidence and limitations each score 0..1; this is a pilot rubric, not a scientific benchmark",
+  "runs": [
+    {
+      "run_id": "kosu_01",
+      "expected": "saglikli_referans",
+      "expected_label": "saglikli referans",
+      "diagnosis_score": 1.0,
+      "evidence_score": 1.0,
+      "limitation_score": 1.0,
+      "total": 1.0,
+      "model_diagnosis": "referans_kosusu_saglikli"
+    },
+    {
+      "run_id": "kosu_02",
+      "expected": "sinif_yetersizligi",
+      "expected_label": "sinif yetersizligi",
+      "diagnosis_score": 0.0,
+      "evidence_score": 1.0,
+      "limitation_score": 1.0,
+      "total": 0.667,
+      "model_diagnosis": "performans_stabil_hafif_iyilesme"
+    },
+    {
+      "run_id": "kosu_03",
+      "expected": "lokalizasyon_etiket_gurultusu",
+      "expected_label": "lokalizasyon gurultusu",
+      "diagnosis_score": 0.0,
+      "evidence_score": 1.0,
+      "limitation_score": 0.0,
+      "total": 0.333,
+      "model_diagnosis": "cok_kucuk_nesne_ve_kaynak_a_tespit_kaybi"
+    },
+    {
+      "run_id": "kosu_04",
+      "expected": "eksik_etiket",
+      "expected_label": "eksik etiket",
+      "diagnosis_score": 0.0,
+      "evidence_score": 1.0,
+      "limitation_score": 0.0,
+      "total": 0.333,
+      "model_diagnosis": "hassasiyet_kaybi_ve_tasit_tespit_dususu"
+    },
+    {
+      "run_id": "kosu_05",
+      "expected": "eksik_etiket",
+      "expected_label": "eksik etiket",
+      "diagnosis_score": 0.0,
+      "evidence_score": 1.0,
+      "limitation_score": 0.0,
+      "total": 0.333,
+      "model_diagnosis": "hassasiyet_dusekligi_ve_kaynak_d_performans_kaybi"
+    },
+    {
+      "run_id": "kosu_06",
+      "expected": "uap_uai_sinif_karisikligi",
+      "expected_label": "UAP/UAI sinif karisikligi",
+      "diagnosis_score": 1.0,
+      "evidence_score": 1.0,
+      "limitation_score": 1.0,
+      "total": 1.0,
+      "model_diagnosis": "uai_uap_sinif_karisikligi_ve_ciddi_hassasiyet_kaybi"
+    },
+    {
+      "run_id": "kosu_07",
+      "expected": "tasit_insan_sinif_karisikligi",
+      "expected_label": "tasit/insan sinif karisikligi",
+      "diagnosis_score": 0.0,
+      "evidence_score": 1.0,
+      "limitation_score": 0.0,
+      "total": 0.333,
+      "model_diagnosis": "genel_duyarlilik_dususu_ve_kaynak_d_kaybi"
+    },
+    {
+      "run_id": "kosu_08",
+      "expected": "kucuk_nesne_sinyal_kaybi",
+      "expected_label": "kucuk nesne sinyal kaybi",
+      "diagnosis_score": 1.0,
+      "evidence_score": 1.0,
+      "limitation_score": 1.0,
+      "total": 1.0,
+      "model_diagnosis": "kucuk_nesne_ve_kaynak_a_kritik_tespit_kaybi"
+    },
+    {
+      "run_id": "kosu_09",
+      "expected": "kaynak_alani_kaymasi",
+      "expected_label": "kaynak/alan kaymasi",
+      "diagnosis_score": 1.0,
+      "evidence_score": 1.0,
+      "limitation_score": 0.0,
+      "total": 0.667,
+      "model_diagnosis": "kaynak_c_ve_kucuk_boyutlu_nesne_tespit_iyilesmesi"
+    }
+  ],
+  "mean_score": 0.63
+}
