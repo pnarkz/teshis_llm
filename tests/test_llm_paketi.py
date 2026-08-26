@@ -110,3 +110,45 @@ def test_paketteki_kosular_cevap_anahtariyla_ayni():
         "llm_input.json ve answer_key.json farkli kosu kumeleri iceriyor; "
         "puanlama eksik veya fazla kosu uzerinden yapilir."
     )
+
+
+def test_puanlayici_runid_eksikligini_yakalar():
+    """run_id'siz cevap sessizce 0 puan almamali; acik uyari uretmeli.
+
+    Gercek bir kosuda model 9 gecerli teshis uretti ama prompt run_id
+    istemedigi icin puanlama hepsini "missing" sayip 0 verdi. Bu, modelin
+    basarisiz oldugu izlenimi yaratiyordu.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("sc", ROOT / "scripts/score_llm_trial.py")
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+
+    cevap = [{"diagnosis": "bir sey", "evidence": ["1", "2"], "limitations": []}]
+    uyarilar = sc.eslesme_denetle(cevap, {"kosu_01": {"expected": "saglikli_referans"}})
+    assert any("run_id" in u for u in uyarilar)
+
+
+def test_puanlayici_eksik_ve_fazla_kosuyu_bildirir():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("sc", ROOT / "scripts/score_llm_trial.py")
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+
+    cevap = [{"run_id": "kosu_99", "diagnosis": "x", "evidence": [], "limitations": []}]
+    uyarilar = sc.eslesme_denetle(cevap, {"kosu_01": {"expected": "saglikli_referans"}})
+    metin = " ".join(uyarilar)
+    assert "kosu_01" in metin and "kosu_99" in metin
+
+
+def test_puanlayici_tam_eslesmede_uyari_vermez():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("sc", ROOT / "scripts/score_llm_trial.py")
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+
+    cevap = [{"run_id": "kosu_01", "diagnosis": "saglikli", "evidence": ["1", "2"], "limitations": []}]
+    assert sc.eslesme_denetle(cevap, {"kosu_01": {"expected": "saglikli_referans"}}) == []

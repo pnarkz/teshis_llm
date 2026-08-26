@@ -1,0 +1,110 @@
+[
+  {
+    "diagnosis": "referans_kosusu",
+    "evidence": [
+      "mAP50 degeri 0.9199649 ve mAP50_95 degeri 0.6706607 seviyesindedir.",
+      "precision degeri 0.9175451 ve recall degeri 0.8785459 olarak kaydedilmistir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAP (n=15) ve UAI (n=17) siniflarindaki bbox sayisi az oldugundan bu siniflarda performans genellenemez."
+    ],
+    "next_measurement": "Diger kosulardaki degisimlerin referans kosusu ile karsilastirmali analizi surdurulmelidir."
+  },
+  {
+    "diagnosis": "genel_performans_ve_insan_tespiti_iyilesmesi",
+    "evidence": [
+      "mAP50_95 degeri 0.6706607'den 0.6947089'a yukselmistir (+0.024048 delta).",
+      "insan class_AP50 degeri 0.806991'den 0.8329722'ye yukselmistir (+0.025981 delta)."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAP (n=15) ve UAI (n=17) bbox sayisi dusuk oldugundan bu siniflardaki degisimler belirleyici sayilamaz."
+    ],
+    "next_measurement": "Farkli esik degerlerinde ve olceklerde model kararliligi test edilmelidir."
+  },
+  {
+    "diagnosis": "kucuk_nesne_ve_tasit_tespiti_bozulmasi",
+    "evidence": [
+      "cok_kucuk_16_alti boyut bandi recall degeri 0.7446'dan 0.6538'e dusmustur (-0.0908 fark).",
+      "tasit class_AP50 degeri 0.8856465'ten 0.8408802'ye dusmus (-0.044766 delta) ve tasit bulunamadi kutu sayisi 131'den 225'e yukselmistir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAP ve UAI siniflarindaki veri kısıtlılığı nedeniyle bu siniflar bozulma analizine dahil edilmemistir."
+    ],
+    "next_measurement": "Görüntü çözünürlük kayıpları ve kucuk nesne ölçekleme parametreleri incelenmelidir."
+  },
+  {
+    "diagnosis": "kesinlik_kaybi_ve_orta_buyuk_nesne_duyarlilik_dususu",
+    "evidence": [
+      "Precision degeri 0.9175451'den 0.8088098'e dusmustur (-0.108735 delta).",
+      "orta_32_64 recall degeri 0.9308'den 0.8673'e (-0.0635 fark) ve buyuk_64_ustu recall degeri 0.9873'ten 0.9177'ye (-0.0696 fark) dusmustur."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAP (n=15) ve UAI (n=17) kucuk orneklem boyutu nedeniyle genellemeye dahil edilmemistir."
+    ],
+    "next_measurement": "Yanlış pozitif (FP) artışının nedenleri ve güven eşiği (confidence threshold) parametreleri analiz edilmelidir."
+  },
+  {
+    "diagnosis": "UAI_sinifi_ve_kaynak_d_duyarlilik_kaybi",
+    "evidence": [
+      "UAI class_AP50 degeri 0.9922222'den 0.8514164'e dusmustur (-0.140806 delta).",
+      "kaynak_d recall degeri 0.9906'dan 0.8774'e dusmustur (-0.1132 fark)."
+    ],
+    "confidence": "orta",
+    "limitations": [
+      "UAI bbox sayisi 17 ve kaynak_d bbox sayisi 106 oldugu icin tek basina kesin nedensellik cikarimi yapilamaz."
+    ],
+    "next_measurement": "kaynak_d veri grubundaki UAI ve diger nesne tespitleri uzerinde nitel görsel analiz yapilmalidir."
+  },
+  {
+    "diagnosis": "UAI_ve_UAP_siniflari_arasinda_sinif_karisikligi_ve_kesinlik_kaybi",
+    "evidence": [
+      "Precision degeri 0.9175451'den 0.712862'ye dusmustur (-0.204683 delta).",
+      "sinif_karisikligi verisinde 17 gercek UAI kutusunun 8 adedi UAP olarak yanlis siniflandirilmistir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI (n=17) ve UAP (n=15) bbox sayilari sinirli oldugu icin istatistiksel genelleme kısıtlıdır."
+    ],
+    "next_measurement": "UAP ve UAI sınıfları arasındaki özellik ayırt edilebilirliği ve sınıflandırma katmanı parametreleri incelenmelidir."
+  },
+  {
+    "diagnosis": "genel_duyarlilik_kaybi_ve_kaynak_d_bozulmasi",
+    "evidence": [
+      "Toplam recall degeri 0.8785459'dan 0.8290319'a dusmustur (-0.049514 delta).",
+      "kaynak_d recall degeri 0.9906'dan 0.8679'a dusmustur (-0.1227 fark)."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "kaynak_d (n=106) ve UAI/UAP sınıflarındaki örneklem sayısı sınırlıdır."
+    ],
+    "next_measurement": "kaynak_d veri kümesindeki kaçırılan tespitlerin arka plan ve gürültü özellikleri araştırılmalıdır."
+  },
+  {
+    "diagnosis": "cok_kucuk_nesne_ve_insan_tespitinde_kritik_duyarlilik_kaybi",
+    "evidence": [
+      "cok_kucuk_16_alti boyut bandi recall degeri 0.7446'dan 0.2922'ye dusmustur (-0.4524 fark).",
+      "kaynak_a recall degeri 0.8402'den 0.5954'e dusmus (-0.2448 fark) ve insan bulunamadi kutu sayisi 534'ten 1043'e yukselmistir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAP (n=15) ve UAI (n=17) verilerinin azlığı nedeniyle bu sınıflarda genelleme yapılmamıştır."
+    ],
+    "next_measurement": "Çok küçük nesnelerdeki odaklanma ve bulanıklık/pikselleşme parametreleri test edilmelidir."
+  },
+  {
+    "diagnosis": "kaynak_c_ve_kucuk_nesne_tespitinde_duyarlilik_iyilesmesi",
+    "evidence": [
+      "kaynak_c recall degeri 0.7145'ten 0.8531'e yukselmistir (+0.1386 fark).",
+      "kucuk_16_32 boyut bandi recall degeri 0.8344'ten 0.8812'ye yukselmis (+0.0468 fark) ve insan bulunamadi sayisi 534'ten 424'e dusmustur."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAP ve UAI sınıflarında veri sayısı yetersiz olduğundan iyileşme genellenemez."
+    ],
+    "next_measurement": "kaynak_c iyilesmesinin diger kaynak gruplarindaki hassasiyete etkileri izlenmelidir."
+  }
+]
