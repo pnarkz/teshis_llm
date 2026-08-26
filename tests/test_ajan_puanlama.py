@@ -85,3 +85,51 @@ def test_paketi_puanla_eksik_cevabi_missing_sayar():
     sonuc = puanlama.paketi_puanla([], {"kosu_01": {"expected": "saglikli_referans"}})
     assert sonuc["runs"][0]["model_diagnosis"] == "missing"
     assert sonuc["mean_score"] == 0.0
+
+
+def test_sinirlama_grup_adi_ve_sayi_ister():
+    """Mugla belirsizlik ifadeleri puan almamali; grup adi + sayi sart."""
+    assert puanlama.siniri_puanla({"limitations": ["UAP (n=15) ve UAI (n=17) azdir."]}) == 1.0
+    assert puanlama.siniri_puanla({"limitations": ["kaynak_d bbox sayisi 106 ile sinirlidir."]}) == 1.0
+    for mugla in ([], ["Belirsizlik var."], ["Az ornek var."], ["Veri sinirli."],
+                  ["UAP ve UAI siniflarinda ornek azdir."]):
+        assert puanlama.siniri_puanla({"limitations": mugla}) == 0.0, mugla
+
+
+def test_eksik_etikette_turkce_terimler_kismi_puan_alir():
+    """Model Turkce cevapladiginda 'hassasiyet/duyarlilik' da kabul edilmeli."""
+    puan, _ = puanlama.teshis_puani(
+        "eksik_etiket", {"diagnosis": "belirsiz ama hassasiyet ve duyarlilik degisti"}
+    )
+    assert puan == 0.5
+
+
+def test_tespit_edilemeyen_kosuda_degisim_yok_cevabi_kabul_edilir():
+    """Bozulmanin kanitta iz birakmadigi kosuda 'anlamli degisim yok' dogru sayilmali."""
+    cevap = {"diagnosis": "performans_stabil_hafif_iyilesme",
+             "evidence": ["mAP50 0.92", "recall 0.87"],
+             "limitations": ["UAP (n=15) ve UAI (n=17) azdir."]}
+    beklenen = {"expected": "sinif_yetersizligi", "hidden_role": "D1"}
+    sonuc = puanlama.kosuyu_puanla("kosu_02", beklenen, cevap)
+    assert sonuc["diagnosis_score"] == 0.0          # kati puan: bozulma adi soylenmedi
+    assert sonuc["diagnosis_score_tespit"] == 1.0   # tespit-farkindalikli: dogru
+    assert sonuc["tespit_edilebilir"] is False
+    assert sonuc["tespit_notu"]
+
+
+def test_tespit_edilebilir_kosuda_iki_puan_ayni():
+    """Bozulmanin gorundugu kosuda tespit-farkindalikli puan avantaj saglamamali."""
+    cevap = {"diagnosis": "alakasiz bir aciklama", "evidence": [], "limitations": []}
+    beklenen = {"expected": "kucuk_nesne_sinyal_kaybi", "hidden_role": "D4"}
+    sonuc = puanlama.kosuyu_puanla("kosu_08", beklenen, cevap)
+    assert sonuc["diagnosis_score"] == sonuc["diagnosis_score_tespit"] == 0.0
+    assert sonuc["tespit_edilebilir"] is True
+
+
+def test_paket_iki_ortalama_dondurur():
+    anahtar = {"kosu_02": {"expected": "sinif_yetersizligi", "hidden_role": "D1"}}
+    cevaplar = [{"run_id": "kosu_02", "diagnosis": "stabil",
+                 "evidence": ["a 1", "b 2"], "limitations": ["UAP (n=15)"]}]
+    sonuc = puanlama.paketi_puanla(cevaplar, anahtar)
+    assert "mean_score" in sonuc and "mean_score_tespit" in sonuc
+    assert sonuc["mean_score_tespit"] >= sonuc["mean_score"]

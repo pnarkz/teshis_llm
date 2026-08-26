@@ -53,6 +53,31 @@ ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
     "tasit_insan_sinif_karisikligi": (r"sinif|karis|tasit|insan|id hatas|capraz|confusion", "tasit/insan sinif karisikligi"),
     "kucuk_nesne_sinyal_kaybi": (r"kucuk|boyut|small|olcek|piksel|cozunurluk|minik", "kucuk nesne sinyal kaybi"),
     "kaynak_alani_kaymasi": (r"kaynak|alan|domain|dagilim|kayma|shift|sensor|cesitlilik", "kaynak/alan kaymasi"),
+    # Bozulmanin tanı setinde anlamli iz birakmadigi kosular icin gecerli cevap.
+    "anlamli_degisim_yok": (
+        r"stabil|degisim yok|fark yok|anlamli\w*\s*(degil|yok)|iyilesme|korunmus|"
+        r"saglikl|referans|bozulma yok|normal",
+        "anlamli degisim yok",
+    ),
+}
+
+# Kendi istatistiksel analizimize gore bozulmanin kilitli tanı setinde ANLAMLI
+# bir iz birakmadigi senaryolar (bkz. README "v00 Saglikli Referans" ve
+# "D3b Sonucu"). Bu kosularda "anlamli degisim yok" demek DOGRU cevaptir;
+# bozulmanin adini soylemek ise eldeki kanitin otesine gecmektir.
+#
+# Cevap anahtari "hangi bozulmayi uyguladik" bilgisini tutar; bu tablo ise
+# "o bozulma kanitta gorunuyor mu" sorusunu ayirir. Ikisi ayni sey degildir
+# ve karistirilirsa ajan, dogru cevap verdigi icin cezalandirilir.
+TESPIT_EDILEMEYEN: dict[str, str] = {
+    "D1": (
+        "insan recall -0.0147 (z=-1.22, anlamli degil); hicbir sinifta anlamli "
+        "fark yok. Bkz. README 2026-08-26 (3)."
+    ),
+    "D3b": (
+        "capraz sinif hatasi 2 -> 4 kutu; bozulma sogurulmus. "
+        "Bkz. README 2026-08-26 (7)."
+    ),
 }
 
 
@@ -76,10 +101,16 @@ def teshis_puani(beklenen_etiket: str, cevap: dict[str, Any]) -> tuple[float, st
     metin = str(cevap.get("diagnosis", "")).lower()
     if re.search(kalip, metin):
         return 1.0, etiket
-    # Eksik etikette model nedeni adlandiramasa bile precision/recall dengesizligini
-    # dogru tarif etmisse kismi puan alir.
-    if beklenen_etiket == "eksik_etiket" and "precision" in metin and "recall" in metin:
-        return 0.5, etiket
+    # Eksik etikette model nedeni adlandiramasa bile precision/recall
+    # dengesizligini dogru tarif etmisse kismi puan alir. Model Turkce
+    # cevapladigi icin karsiliklari da kabul edilir; onceki surum yalnizca
+    # Ingilizce terimleri ariyordu ve "hassasiyet kaybi" gibi dogru bir
+    # tarifi kaciriyordu.
+    if beklenen_etiket == "eksik_etiket":
+        kesinlik = re.search(r"precision|hassasiyet|kesinlik", metin)
+        duyarlilik = re.search(r"recall|duyarlilik|anma", metin)
+        if kesinlik and duyarlilik:
+            return 0.5, etiket
     return 0.0, etiket
 
 
@@ -92,24 +123,58 @@ def kaniti_puanla(cevap: dict[str, Any]) -> float:
 
 
 def siniri_puanla(cevap: dict[str, Any]) -> float:
-    """UAP/UAI bbox sayisinin (15, 17) sinirlamalar alaninda anildigini kontrol eder."""
-    metin = " ".join(str(oge) for oge in cevap.get("limitations", [])).lower()
-    return 1.0 if "uap" in metin and "uai" in metin and ("15" in metin or "17" in metin) else 0.0
+    """Modelin kucuk ornek belirsizligini bir SAYIYLA birlikte belirtip belirtmedigini olcer.
+
+    Onceki surum yalnizca UAP/UAI + (15|17) kalibini kabul ediyordu. Bu, kucuk
+    ornek uyarisinin baska bir grup icin gecerli oldugu kosularda (orn. kaynak
+    grubu n=106, ya da bir boyut bandi) dogru yazilmis sinirlamalari
+    cezalandiriyordu. Sart artik sudur: bir grup adlandirilmali ve yaninda bir
+    sayi verilmelidir; yani "az ornek var" demek yetmez, kac oldugu soylenmeli.
+    """
+    parcalar = [str(oge).lower() for oge in cevap.get("limitations", [])]
+    grup_kalibi = re.compile(r"uap|uai|kaynak_[a-z]|bant|bbox|n\s*=|ornek|kutu")
+    for parca in parcalar:
+        if grup_kalibi.search(parca) and re.search(r"\d", parca):
+            return 1.0
+    return 0.0
 
 
 def kosuyu_puanla(kosu_id: str, beklenen: dict[str, Any], cevap: dict[str, Any]) -> dict[str, Any]:
-    """Tek bir kosu icin diagnosis/evidence/limitation alt puanlarini ve toplami dondurur."""
-    teshis, beklenen_etiket = teshis_puani(str(beklenen.get("expected", "")), cevap)
+    """Tek bir kosu icin diagnosis/evidence/limitation alt puanlarini ve toplami dondurur.
+
+    Iki teshis puani hesaplanir:
+
+    - ``diagnosis_score``: kati puan. "Hangi bozulmayi uyguladik" sorusuna gore.
+    - ``diagnosis_score_tespit``: tespit-farkindalikli puan. Bozulmanin kanitta
+      anlamli iz birakmadigi kosularda (bkz. TESPIT_EDILEMEYEN) "anlamli
+      degisim yok" cevabi da dogru sayilir.
+
+    Ikisi ayri raporlanir; hangisinin kullanilacagi okuyucunun karari olur.
+    """
+    beklenen_etiket = str(beklenen.get("expected", ""))
+    teshis, etiket = teshis_puani(beklenen_etiket, cevap)
     kanit = kaniti_puanla(cevap)
     sinir = siniri_puanla(cevap)
+
+    senaryo = str(beklenen.get("hidden_role", ""))
+    gerekce = TESPIT_EDILEMEYEN.get(senaryo)
+    teshis_tespit = teshis
+    if gerekce is not None:
+        alternatif, _ = teshis_puani("anlamli_degisim_yok", cevap)
+        teshis_tespit = max(teshis, alternatif)
+
     return {
         "run_id": kosu_id,
         "expected": beklenen.get("expected"),
-        "expected_label": beklenen_etiket,
+        "expected_label": etiket,
         "diagnosis_score": teshis,
+        "diagnosis_score_tespit": teshis_tespit,
         "evidence_score": kanit,
         "limitation_score": sinir,
         "total": round((teshis + kanit + sinir) / 3, 3),
+        "total_tespit": round((teshis_tespit + kanit + sinir) / 3, 3),
+        "tespit_edilebilir": gerekce is None,
+        "tespit_notu": gerekce,
         "model_diagnosis": cevap.get("diagnosis", "missing"),
     }
 
@@ -126,6 +191,24 @@ def paketi_puanla(cevaplar: list[dict[str, Any]], cevap_anahtari: dict[str, Any]
             "diagnosis, evidence and limitations each score 0..1; "
             "this is a pilot rubric, not a scientific benchmark"
         ),
+        "mean_score_aciklama": {
+            "mean_score": (
+                "Kati puan: cevap, UYGULANAN bozulmanin adiyla eslesiyor mu? "
+                "Bozulmanin kanitta gorunmedigi kosularda model dogru cevap "
+                "verse bile (anlamli degisim yok) sifir alir."
+            ),
+            "mean_score_tespit": (
+                "Tespit-farkindalikli puan: bozulmanin kilitli tanı setinde "
+                "anlamli iz birakmadigi kosularda 'anlamli degisim yok' cevabi "
+                "da dogru sayilir. Hangi kosularin bu kapsamda oldugu "
+                "teshis/ajan/puanlama.py::TESPIT_EDILEMEYEN icinde, projenin "
+                "kendi istatistiksel analizine dayanarak listelenir."
+            ),
+        },
         "runs": satirlar,
         "mean_score": round(sum(satir["total"] for satir in satirlar) / len(satirlar), 3) if satirlar else 0.0,
+        "mean_score_tespit": (
+            round(sum(satir["total_tespit"] for satir in satirlar) / len(satirlar), 3)
+            if satirlar else 0.0
+        ),
     }

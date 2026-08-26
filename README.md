@@ -30,6 +30,80 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-26 (9) — İlk adil LLM denemesi koşuldu; rubriğin üç kusuru bulundu
+
+Dokuz koşuluk paket Gemini ile koşuldu. Cevabın tamamı şemaya uygun geldi.
+**Ham sonuç: `mean_score` 0.630** — değiştirilmemiş haliyle
+`reports/llm_trial/ham_kayit/` altında saklanıyor, çünkü ardından rubrikte
+düzeltmeler yapıldı ve "puan yükseltmek için kural değiştirildi" şüphesine
+karşı ilk kayıt sabitlenmeli.
+
+**Model üç senaryoyu tam isabetle teşhis etti:**
+
+| Koşu | Gizli senaryo | Modelin teşhisi |
+|---|---|---|
+| kosu_01 | sağlıklı referans | `referans_kosusu_saglikli` |
+| kosu_06 | D3 (UAP/UAI karışıklığı) | `uai_uap_sinif_karisikligi_ve_ciddi_hassasiyet_kaybi` |
+| kosu_08 | D4 (küçük nesne kaybı) | `kucuk_nesne_ve_kaynak_a_kritik_tespit_kaybi` |
+
+**D3 ve D4, kırılım araçları eklenmeden önce teşhis edilemezdi** — ikisi de
+toplam metriklerde görünmüyor. Araç katmanı yatırımı doğrudan karşılığını
+verdi.
+
+**Sonra rubrikte üç gerçek kusur çıktı:**
+
+1. **Cevap anahtarı "uygulanan bozulmayı" kodluyordu, "kanıtta görüneni"
+   değil.** D1 ve D3b için bu ikisi farklı: kendi istatistiksel analizimiz
+   D1'in anlamlı etkisi olmadığını (z=-1.22) ve D3b'nin bozulmasının
+   soğurulduğunu (çapraz hata 2→4) göstermişti. Model kosu_02 için
+   "performans stabil, hafif iyileşme" dedi ve **doğru sayıları** gösterdi
+   (mAP50-95 +0.024, insan AP50 +0.026) — yani doğru cevap verdiği için
+   cezalandırıldı.
+2. **Kısmi puan kuralı yalnızca İngilizce terim arıyordu.** Model Türkçe
+   cevaplıyor; D2b için "hassasiyet kaybı" dedi, kural `precision` aradığı
+   için kaçırdı.
+3. **Sınırlama kuralı yalnızca UAP/UAI + (15|17) kalıbını kabul ediyordu.**
+   kosu_04'ün "kaynak_d bbox sayısı 106'dır" gibi kusursuz bir küçük-örnek
+   uyarısı 0 alıyordu.
+
+**Yapılan düzeltmeler:**
+
+- Sınırlama kuralı artık "bir grup adlandır + yanında sayı ver" istiyor.
+  Kalibrasyon testli: "Az örnek var", "Veri sınırlı", hatta "UAP ve UAI
+  sınıflarında örnek azdır" (sayısız) hâlâ 0 alıyor.
+- Kısmi puan kuralı Türkçe karşılıkları da kabul ediyor.
+- `TESPIT_EDILEMEYEN` tablosu eklendi: bozulmanın kilitli tanı setinde
+  anlamlı iz bırakmadığı koşullar, projenin **kendi yayımlanmış istatistiksel
+  analizine** dayanarak listeleniyor. O koşullarda "anlamlı değişim yok"
+  cevabı da doğru sayılıyor.
+- **İki skor birlikte raporlanıyor**, hangisinin kullanılacağı okuyucunun
+  kararı: `mean_score` (katı — uygulanan bozulmanın adı) ve
+  `mean_score_tespit` (tespit-farkındalıklı).
+
+**Sonuçlar:**
+
+| Rubrik | mean_score |
+|---|---:|
+| İlk hali (üç kusurlu) | 0.630 |
+| Kusurlar düzeltilmiş, katı | **0.815** |
+| Tespit-farkındalıklı | **0.852** |
+
+0.630 → 0.815 artışının büyük kısmı sınırlama kuralının düzeltilmesinden
+geliyor; modelin dokuz sınırlamasının tamamı gerçekten grup adı ve sayı
+içeriyordu.
+
+**Kalan gerçek eksikler** (rubrik düzeltmesiyle kapanmayanlar): model D2a'yı
+(lokalizasyon gürültüsü) ve D2b'yi (eksik etiket) **nedeniyle**
+adlandıramadı; belirtiyi doğru tarif etti ama nedene ulaşamadı. D2b için
+mAP50-95'in mAP50'den daha çok düşmesi gibi ayırt edici imzalar pakette var
+ancak model bunları nedene bağlamadı. Bu, ajan katmanının bir sonraki
+geliştirme alanıdır.
+
+**Metodolojik not:** bu deneme tek atışlık (tüm kanıt önceden veriliyor).
+`teshis/ajan/ajan.py` içindeki function-calling sürümünde soru daha zor
+olacak: ajan **hangi kırılıma bakması gerektiğini kendisi seçmek** zorunda.
+İki ölçüm birlikte okunmalıdır.
+
 ### 2026-08-26 (8) — LLM deneme paketi yenilendi; ajanın karşılaştırma tabanı v00'a çevrildi
 
 Paket dokuz koşuya genişletildi ve her koşu için **kırılım kanıtları** (boyut
