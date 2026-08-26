@@ -1,0 +1,36 @@
+{
+  "format": "dataset_manifest_v1",
+  "scenario": "D3b",
+  "version": "v05_d3b_tasit_insan_karisikligi",
+  "created_at_utc": "2026-08-26T07:53:13.920914+00:00",
+  "source_dataset": "C:\\Users\\ASUS\\Desktop\\HYZ\\dataset",
+  "source_dataset_unchanged": true,
+  "seed": 42,
+  "parameters": {
+    "swap_ratio": 0.3,
+    "class_ids": [
+      0,
+      1
+    ],
+    "class_names": [
+      "tasit",
+      "insan"
+    ]
+  },
+  "counts": {
+    "train_images": 17515,
+    "missing_images": 0,
+    "target_rows_before": 131309,
+    "changed_rows": 39393,
+    "changed_by_class": {
+      "tasit_to_insan": 25209,
+      "insan_to_tasit": 14184
+    }
+  },
+  "val_diagnostic_modified": false,
+  "source_train_labels_sha256": "1a03814b24755b2bce6f43992f68f8ceba1f1963f477ef2f3d4ccd0f249d1a34",
+  "files": {
+    "data_yaml": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v05_d3b_tasit_insan_karisikligi\\data.yaml",
+    "output_dataset": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v05_d3b_tasit_insan_karisikligi"
+  }
+}
