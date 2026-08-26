@@ -30,6 +30,66 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-26 (10) — Function-calling ajanı çalıştırıldı; ilk gözlem alındı, üç hata düzeltildi
+
+Ajan ilk kez canlı API ile koşuldu. **Deneme tamamlanamadı** (günlük API kotası
+bitti) ancak ilk beş koşu başarıyla çalıştı ve projenin merkezi sorusuna dair
+ilk gözlemi verdi.
+
+**Gözlem — ajan doğru kanıta kendiliğinden yöneliyor.** Konsol çıktısındaki
+araç kayıtları:
+
+| Koşu | Araç çağrısı | Kırılım araçları |
+|---|---:|---|
+| kosu_01 | 6 | üçü de çağrıldı |
+| kosu_02 | 7 | üçü de çağrıldı |
+| kosu_03 | 7 | üçü de çağrıldı |
+| kosu_04 | 6 | üçü de çağrıldı |
+| kosu_05 | 7 | üçü de çağrıldı |
+
+Ajan her koşuda `boyut_bazli_recall_getir`, `kaynak_bazli_recall_getir` ve
+`sinif_karisikligini_getir` araçlarının **hepsini** çağırdı. Bu, tek atışlık
+denemeden farklı bir yetenek: orada kanıt önüne konuyordu, burada kendisi
+istedi. Ancak seçici değil **kapsamlı** davranıyor — her koşuda hepsini
+çağırıyor; "hangi kırılıma bakmalı" sorusunu eleyerek değil, hepsini alarak
+çözüyor. Bu, koşu başına ~7 API isteği demek ve kota tüketiminin ana sebebi.
+
+> **Not:** Bu gözlem konsol çıktısından alınmıştır; beş koşunun teşhis
+> **verileri kaydedilemedi** (aşağıdaki 1 numaralı hata). Sayısal sonuç,
+> deneme yarın tamamlandığında raporlanacaktır.
+
+**Üç hata bulundu ve düzeltildi:**
+
+1. **Kısmi sonuç kaybı (en kritik).** Sonuçlar yalnızca döngünün sonunda
+   diske yazılıyordu. Günlük kotanın büyük kısmını harcamış beş başarılı
+   koşu, çalışma ortada kesilince tamamen kayboldu. Artık **her koşudan
+   sonra** kaydediliyor.
+2. **`Infinity` → geçersiz JSON.** Boyut bandı tanımındaki üst sınır
+   `float("inf")` idi ve JSON'a `Infinity` olarak yazılıyordu; bu RFC 8259'a
+   göre geçersizdir ve Gemini gövdeyi `400 INVALID_ARGUMENT` ile reddediyordu.
+   İlk denemede dokuz koşunun tamamı bu yüzden düştü. Tek atışlık deneme
+   çalışıyordu çünkü paket orada prompt **metnine** gömülüyor, JSON gövde
+   alanı olarak gönderilmiyordu — hata ancak function-calling'de ortaya çıktı.
+   Üç katmanda düzeltildi: kaynak (`metrikler.bant_araliklari()` okunabilir
+   metin aralığı üretiyor), ajan (`json_guvenli()` tüm araç çıktılarını
+   temizliyor) ve diskteki 13 analiz dosyası (yeniden çıkarım yapılmadan;
+   bant tanımı ölçüm değil sabittir).
+3. **Günlük/dakikalık kota ayrımı yoktu.** Ücretsiz katmanda iki sınır var:
+   dakikada 5 ve **günde 20** istek. Retry mantığı ikisini ayırt etmiyordu;
+   günlük kota bittiğinde de "60 sn bekle, tekrar dene" döngüsüne giriyordu.
+   Artık `GunlukKotaBitti` ile ayırt ediliyor: beklemeden durur, tamamlananı
+   kaydeder ve devam komutunu yazdırır.
+
+**`--devam` bayrağı eklendi.** Koşu başına ~7 istek ve günde 20 istek
+sınırıyla dokuz koşuluk deneme tek güne sığmıyor; birden fazla güne
+yayılabilmesi gerekiyor. Tamamlanmış koşular atlanır, başarısızlar yeniden
+denenir.
+
+**Kalan iş:** kota yenilendiğinde `python -m teshis.ajan.ajan --devam` ile
+deneme tamamlanacak, ardından iki deneme (tek atışlık vs ajan) aynı rubrikle
+karşılaştırılacak. İlgi çekici soru: kanıtı kendisi isteyen ajan, kanıt
+önüne konan modelden daha iyi teşhis koyabiliyor mu?
+
 ### 2026-08-26 (9) — İlk adil LLM denemesi koşuldu; rubriğin üç kusuru bulundu
 
 Dokuz koşuluk paket Gemini ile koşuldu. Cevabın tamamı şemaya uygun geldi.
@@ -723,8 +783,12 @@ Aktif:
 - [x] D1 ile saglikli model farki raporlandi.
 - [x] D2a lokalizasyon gurultusu kosusu ve diagnostic raporu tamamlandi.
 - [x] D2b eksik etiket kosusu iki baslangic modeliyle tamamlandi.
-- [x] Gemini 3.6 Flash ile anonim LLM pilotu yapildi.
-- [x] Gemini pilotu gizli cevap anahtariyla otomatik puanlandi.
+- [x] Gemini 3.6 Flash ile anonim LLM pilotu yapildi (once 4, sonra 9 kosu).
+- [x] LLM pilotu gizli cevap anahtariyla otomatik puanlandi
+  (kati 0.815 / tespit-farkindalikli 0.852).
+- [x] v00 saglikli referans uretildi ve ortak protokolle egitildi; tum
+  senaryo karsilastirmalari buna gore yeniden hesaplandi.
+- [x] Ajana boyut / kaynak / sinif-karisikligi kirilim araclari eklendi.
 - [x] Streamlit ara sunum demosu kuruldu ve localhost'ta dogrulandi.
 - [x] D3 UAP/UAI sinif karisikligi: veri surumu, yerel GPU egitimi ve
   diagnostic degerlendirmesi tamamlandi (sizintisiz config ile yeniden kosuldu).
@@ -738,9 +802,14 @@ Sonraki isler:
 - [x] D3b sinif karisikligi (olculebilir surum).
 - [x] D4 kucuk nesne sinyal kaybi.
 - [x] D5 kaynak/alan kaymasi.
+- [ ] Function-calling ajan denemesi: 5/9 kosu kosuldu, gunluk API kotasi
+  bitti. `python -m teshis.ajan.ajan --devam` ile tamamlanacak.
 - [ ] D6a-D6b veri senaryolari.
 - [ ] E1-E4 egitim senaryolari.
-- [ ] Bootstrap guven araliklari ve ajan karar akisi.
+- [ ] D1'in yolo26n.pt'den yeniden kosulmasi (mevcut kurguda hipotez
+  desteklenmiyor; bkz. Bakim Gunlugu 2026-08-26 (3)).
+- [ ] teshis/servis/ (Asama 2) - hala bos iskelet.
+- [ ] Bootstrap guven araliklari.
 - [ ] Final test: sadece bir kez.
 
 ## 3. Degismez Kurallar
@@ -1774,10 +1843,22 @@ kosullarda guvenilirligini kaybettigini olcmeye calismasidir.
 
 ## Sonraki Tek Adim
 
-1. D1 hata galerisi uret ve insan kacirma orneklerini incele.
-2. Hata galerisi sonucunu rapora ekle.
-3. D1 checklist kutularini tamamla.
-4. D2a'ya gec.
+Gunluk Gemini kotasi yenilendiginde:
+
+```
+python -m teshis.ajan.ajan --devam
+```
+
+Bu, function-calling denemesinin kalan kosularini tamamlar (tamamlanmis
+kosular atlanir). Ardindan:
+
+```
+python scripts/score_llm_trial.py --response reports/llm_trial/ajan_response.json --output reports/llm_trial/ajan_score.json
+```
+
+Sonra iki deneme ayni rubrikle karsilastirilir: kanit onune konan model
+(tek atislik) ile kaniti kendisi isteyen ajan. Kirilim araci kullanim orani
+`reports/llm_trial/ajan_arac_kaydi.json` icinde kaydedilir.
 
 ## Kaggle D2a Calistirma
 
