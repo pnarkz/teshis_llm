@@ -1,0 +1,38 @@
+{
+  "format": "dataset_manifest_v1",
+  "scenario": "D4",
+  "version": "v06_d4_kucuk_nesne_sinyal_kaybi",
+  "created_at_utc": "2026-08-26T14:19:02.717877+00:00",
+  "source_dataset": "C:\\Users\\ASUS\\Desktop\\HYZ\\dataset",
+  "source_dataset_unchanged": true,
+  "parameters": {
+    "etkin_sqrt_alan_esigi_px": 16.0,
+    "olcum_formulu": "teshis.degerlendirme.metrikler.etkin_sqrt_alan",
+    "referans_uzun_kenar": 640
+  },
+  "counts": {
+    "train_images": 17515,
+    "missing_images": 0,
+    "kept_bbox_rows": 102201,
+    "removed_bbox_rows": 29499,
+    "invalid_rows_preserved": 0,
+    "removed_by_class": {
+      "tasit": 7084,
+      "insan": 22415
+    },
+    "removed_by_band": {
+      "cok_kucuk_16_alti": 29499
+    },
+    "kept_by_band": {
+      "kucuk_16_32": 52213,
+      "orta_32_64": 33556,
+      "buyuk_64_ustu": 16432
+    }
+  },
+  "val_test_modified": false,
+  "source_train_labels_sha256": "1a03814b24755b2bce6f43992f68f8ceba1f1963f477ef2f3d4ccd0f249d1a34",
+  "files": {
+    "data_yaml": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v06_d4_kucuk_nesne_sinyal_kaybi\\data.yaml",
+    "output_dataset": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v06_d4_kucuk_nesne_sinyal_kaybi"
+  }
+}

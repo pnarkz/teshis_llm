@@ -1,0 +1,6 @@
+path: C:/Users/ASUS/Desktop/termal_teshis/veri_surumleri/v06_d4_kucuk_nesne_sinyal_kaybi
+train: images/train
+val: C:/Users/ASUS/Desktop/HYZ/dataset/images/val
+test: C:/Users/ASUS/Desktop/HYZ/dataset/images/test
+nc: 4
+names: [tasit, insan, UAP, UAI]
