@@ -172,6 +172,21 @@ def _kota_hatasi_mi(hata: Exception) -> bool:
     return "429" in metin or "RESOURCE_EXHAUSTED" in metin
 
 
+def _gunluk_kota_mi(hata: Exception) -> bool:
+    """Gunluk kotanin bittigini ayirt eder.
+
+    Ucretsiz katmanda iki ayri sinir var: dakikada 5 istek ve GUNDE 20 istek.
+    Dakikalik sinirda beklemek ise yarar, gunluk sinirda YARAMAZ - kota ertesi
+    gun yenilenir. Ayrim yapilmazsa ajan her kosu icin bosuna dakikalarca
+    bekler ve calisma saatlerce surunur.
+    """
+    return "PerDay" in str(hata)
+
+
+class GunlukKotaBitti(RuntimeError):
+    """Gunluk API kotasi tukendi; beklemek ise yaramaz."""
+
+
 def _istek_gonder(client, model: str, contents, config, deneme: int = 4):
     """generate_content cagrisini yapar; kota hatasinda bekleyip yeniden dener.
 
@@ -184,11 +199,17 @@ def _istek_gonder(client, model: str, contents, config, deneme: int = 4):
         try:
             return client.models.generate_content(model=model, contents=contents, config=config)
         except Exception as hata:  # noqa: BLE001
+            if _gunluk_kota_mi(hata):
+                raise GunlukKotaBitti(
+                    "Gunluk API kotasi tukendi (ucretsiz katman: 20 istek/gun). "
+                    "Beklemek ise yaramaz; kota ertesi gun yenilenir. Tamamlanan "
+                    "kosular kaydedildi, kalanlar --devam ile surdurulebilir."
+                ) from hata
             if not _kota_hatasi_mi(hata) or sira == deneme:
                 raise
             son_hata = hata
             sure = _bekleme_suresi(hata)
-            print(f"      kota siniri, {sure:.0f} sn bekleniyor ({sira}/{deneme - 1})...")
+            print(f"      dakikalik kota siniri, {sure:.0f} sn bekleniyor ({sira}/{deneme - 1})...")
             time.sleep(sure)
     raise son_hata  # pragma: no cover - dongu her zaman doner veya firlatir
 
@@ -269,38 +290,87 @@ def teshis_uret(
     )
 
 
+def _basarili_mi(teshis: dict[str, Any]) -> bool:
+    return not teshis.get("_hata") and teshis.get("diagnosis") not in (None, "hata")
+
+
+def _kaydet(cikti: Path, log_yolu: Path, sonuclar: dict, kayitlar: dict) -> None:
+    """Sonuclari diske yazar. Her kosudan sonra cagrilir."""
+    cikti.parent.mkdir(parents=True, exist_ok=True)
+    sirali = [sonuclar[k] for k in araclar.kosu_listesini_getir() if k in sonuclar]
+    cikti.write_text(json.dumps(sirali, indent=2, ensure_ascii=False), encoding="utf-8")
+    log_yolu.write_text(json.dumps(kayitlar, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def _mevcut_sonuclari_oku(cikti: Path, log_yolu: Path) -> tuple[dict, dict]:
+    """Onceki calismadan kalan sonuclari okur (--devam icin)."""
+    sonuclar: dict[str, Any] = {}
+    kayitlar: dict[str, Any] = {}
+    if cikti.is_file():
+        for oge in json.loads(cikti.read_text(encoding="utf-8")):
+            if oge.get("run_id"):
+                sonuclar[oge["run_id"]] = oge
+    if log_yolu.is_file():
+        kayitlar = json.loads(log_yolu.read_text(encoding="utf-8"))
+    return sonuclar, kayitlar
+
+
 def kor_deneme_calistir(
     model: str = "gemini-3.6-flash",
     cikti: Path = VARSAYILAN_CIKTI,
     log_yolu: Path = VARSAYILAN_LOG,
     bekleme_sn: float = 8.0,
+    devam: bool = False,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Tum anonim kosular icin teshis uretir; tek kosunun hatasi digerlerini dusurmez."""
-    sonuclar: list[dict[str, Any]] = []
-    kayitlar: dict[str, Any] = {}
+    """Tum anonim kosular icin teshis uretir.
+
+    Sonuclar HER KOSUDAN SONRA diske yazilir. Onceki surum yalnizca dongunun
+    sonunda yaziyordu; gunluk API kotasi ortada bitince tamamlanmis kosular da
+    kayboluyordu (ve kotanin buyuk kismini onlar harcamis oluyordu).
+
+    ``devam=True`` ile onceden basariyla tamamlanmis kosular atlanir; gunde 20
+    istekle sinirli ucretsiz katmanda deneme birden fazla gune yayilabilir.
+    """
+    sonuclar, kayitlar = _mevcut_sonuclari_oku(cikti, log_yolu) if devam else ({}, {})
+    if devam and sonuclar:
+        tamam = sorted(k for k, v in sonuclar.items() if _basarili_mi(v))
+        print(f"devam modu: {len(tamam)} kosu zaten tamamlanmis, atlaniyor -> {tamam}")
 
     for kosu_id in araclar.kosu_listesini_getir():
+        if devam and kosu_id in sonuclar and _basarili_mi(sonuclar[kosu_id]):
+            continue
         try:
             teshis, arac_kaydi = teshis_uret(kosu_id, model=model)
             hatalar = semalar.teshis_dogrula(teshis)
             if hatalar:
                 teshis["_sema_hatalari"] = hatalar
                 print(f"  {kosu_id}: UYARI sema hatalari {hatalar}")
-            sonuclar.append(teshis)
+            sonuclar[kosu_id] = teshis
             kayitlar[kosu_id] = {"arac_cagrilari": arac_kaydi, "hata": None}
             araclar_ozeti = ", ".join(dict.fromkeys(k["arac"] for k in arac_kaydi)) or "(yok)"
             print(f"  {kosu_id}: {len(arac_kaydi)} arac cagrisi -> {araclar_ozeti}")
+        except GunlukKotaBitti as hata:
+            print(f"  {kosu_id}: {hata}")
+            _kaydet(cikti, log_yolu, sonuclar, kayitlar)
+            tamamlanan = sum(1 for v in sonuclar.values() if _basarili_mi(v))
+            print(
+                f"\nDURDURULDU: gunluk kota bitti. {tamamlanan} kosu tamamlandi ve KAYDEDILDI.\n"
+                f"Yarin su komutla kaldigi yerden devam edin:\n"
+                f"  python -m teshis.ajan.ajan --devam"
+            )
+            break
         except Exception as hata:  # noqa: BLE001 - bir kosu duserse digerleri devam etsin
             print(f"  {kosu_id}: BASARISIZ ({type(hata).__name__}: {hata})")
-            sonuclar.append({"run_id": kosu_id, "diagnosis": "hata", "_hata": str(hata)})
+            sonuclar[kosu_id] = {"run_id": kosu_id, "diagnosis": "hata", "_hata": str(hata)}
             kayitlar[kosu_id] = {"arac_cagrilari": [], "hata": str(hata)}
+        # Her kosudan sonra kaydet: kota ortada bitse bile is kaybolmasin.
+        _kaydet(cikti, log_yolu, sonuclar, kayitlar)
         if bekleme_sn:
             time.sleep(bekleme_sn)
 
-    cikti.parent.mkdir(parents=True, exist_ok=True)
-    cikti.write_text(json.dumps(sonuclar, indent=2, ensure_ascii=False), encoding="utf-8")
-    log_yolu.write_text(json.dumps(kayitlar, indent=2, ensure_ascii=False), encoding="utf-8")
-    return sonuclar, kayitlar
+    _kaydet(cikti, log_yolu, sonuclar, kayitlar)
+    sirali = [sonuclar[k] for k in araclar.kosu_listesini_getir() if k in sonuclar]
+    return sirali, kayitlar
 
 
 def arac_kullanim_ozeti(kayitlar: dict[str, Any]) -> dict[str, Any]:
@@ -340,6 +410,8 @@ def main() -> None:
     parser.add_argument("--kosu", default=None, help="Yalnizca tek bir kosu calistir (orn. kosu_02)")
     parser.add_argument("--bekleme", type=float, default=8.0,
                         help="Kosular arasi bekleme (sn). Ucretsiz katman 5 istek/dk sinirlidir.")
+    parser.add_argument("--devam", action="store_true",
+                        help="Onceden tamamlanmis kosulari atla (gunluk kota bittiginde kullanin).")
     args = parser.parse_args()
 
     if args.kosu:
@@ -349,7 +421,8 @@ def main() -> None:
 
     print(f"ajan denemesi basliyor: model={args.model}")
     sonuclar, kayitlar = kor_deneme_calistir(
-        model=args.model, cikti=args.output, log_yolu=args.log, bekleme_sn=args.bekleme
+        model=args.model, cikti=args.output, log_yolu=args.log,
+        bekleme_sn=args.bekleme, devam=args.devam,
     )
     ozet = arac_kullanim_ozeti(kayitlar)
     print(f"\nsaved={args.output.resolve()}")

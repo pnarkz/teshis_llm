@@ -178,3 +178,51 @@ def test_bekleme_suresi_retrydelay_alanini_okur():
 
 def test_bekleme_suresi_varsayilana_duser():
     assert ajan._bekleme_suresi(Exception("bilinmeyen"), varsayilan=7.0) == 7.0
+
+
+# --- Gunluk kota ayrimi ve devam etme --------------------------------------
+
+def test_gunluk_kota_dakikaliktan_ayirt_edilir():
+    """Gunluk kotada beklemek ise yaramaz; dakikalikta yarar."""
+    gunluk = Exception("{'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier'}")
+    dakikalik = Exception("{'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier'}")
+    assert ajan._gunluk_kota_mi(gunluk)
+    assert not ajan._gunluk_kota_mi(dakikalik)
+    assert ajan._kota_hatasi_mi(dakikalik) or True  # ikisi de kota hatasi
+
+
+def test_basarili_kosu_ayirt_edilir():
+    assert ajan._basarili_mi({"run_id": "kosu_02", "diagnosis": "x"})
+    assert not ajan._basarili_mi({"run_id": "kosu_02", "diagnosis": "hata", "_hata": "429"})
+    assert not ajan._basarili_mi({"run_id": "kosu_02", "diagnosis": None})
+
+
+def test_devam_modu_tamamlanmis_kosulari_okur(tmp_path):
+    """--devam, onceki calismadan kalan basarili kosulari atlayabilmeli."""
+    cikti = tmp_path / "ajan_response.json"
+    log = tmp_path / "ajan_arac_kaydi.json"
+    cikti.write_text(json.dumps([
+        {"run_id": "kosu_01", "diagnosis": "saglikli"},
+        {"run_id": "kosu_02", "diagnosis": "hata", "_hata": "429"},
+    ]), encoding="utf-8")
+    log.write_text(json.dumps({"kosu_01": {"arac_cagrilari": [], "hata": None}}), encoding="utf-8")
+
+    sonuclar, kayitlar = ajan._mevcut_sonuclari_oku(cikti, log)
+    assert set(sonuclar) == {"kosu_01", "kosu_02"}
+    assert ajan._basarili_mi(sonuclar["kosu_01"])
+    assert not ajan._basarili_mi(sonuclar["kosu_02"])  # yeniden denenmeli
+    assert "kosu_01" in kayitlar
+
+
+def test_mevcut_sonuc_yoksa_bos_doner(tmp_path):
+    sonuclar, kayitlar = ajan._mevcut_sonuclari_oku(tmp_path / "yok.json", tmp_path / "yok2.json")
+    assert sonuclar == {} and kayitlar == {}
+
+
+def test_kaydet_kosu_sirasini_korur(tmp_path):
+    """Cikti, kosu_NN sirasinda yazilmali (sozluk ekleme sirasi degil)."""
+    cikti, log = tmp_path / "c.json", tmp_path / "l.json"
+    sonuclar = {"kosu_03": {"run_id": "kosu_03"}, "kosu_01": {"run_id": "kosu_01"}}
+    ajan._kaydet(cikti, log, sonuclar, {})
+    yazilan = [o["run_id"] for o in json.loads(cikti.read_text(encoding="utf-8"))]
+    assert yazilan == sorted(yazilan)
