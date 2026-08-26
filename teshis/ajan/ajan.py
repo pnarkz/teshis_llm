@@ -1,22 +1,19 @@
-"""LLM tabanli teshis ajani giris noktasi.
+"""Function-calling tabanli teshis ajani.
 
-Onceki durum: ``scripts/run_gemini_trial.py`` Gemini'ye tum kosularin
-metriklerini tek bir buyuk JSON blogu halinde, tek seferlik bir prompt
-icinde veriyordu. Model hicbir arac cagirmiyordu; bu bir "ajan" degil, tek
-seferlik bir metin-ozetleme cagrisiydi.
+``scripts/run_gemini_trial.py`` tek atislik bir denemedir: tum kanit
+onceden verilir ve yalnizca **yorumlama** olculur. Bu modul daha zor
+soruyu sorar: ajan, hangi kanita bakmasi gerektigini **kendisi secebiliyor
+mu?** Model veriyi dogrudan gormez; yalnizca ``araclar.py`` fonksiyonlarini
+cagirarak okuyabilir.
 
-Bu modul gercek function-calling kullanir: model once ``araclar.py``
-icindeki fonksiyonlari (kosu listesi, metrikler, baseline farki, bbox
-sayilari) cagirir, sonra ``semalar.TESHIS_SEMASI``'na uygun bir JSON teshis
-uretir. Cikti ``semalar.teshis_dogrula`` ile programatik olarak dogrulanir.
+Bu ayrim projenin merkezi sorusu icin onemlidir, cunku senaryolarin bir
+kismi (D3b, D4, D5) toplam metriklerde GORUNMEZ; yalnizca dogru kirilim
+araci cagrildiginda ortaya cikar. Bu yuzden her kosu icin **hangi araclarin
+cagrildigi da kaydedilir** ve rapora girer.
 
-Onemli sinirlama: ``teshis_uret`` ve ``kor_deneme_calistir`` gercekten
-Gemini API'sine internet uzerinden baglanir ve ``GEMINI_API_KEY`` gerektirir.
-Bu kod tabaninda ucdan uca (canli API ile) test edilmemistir; google-genai
-SDK'sinin function-calling akisi (Content/Part/FunctionResponse rolleri)
-kullanmadan once gercek bir API anahtariyla dogrulanmalidir. Buna karsin
-``araclar.py`` ve ``semalar.py`` tamamen yerel/offline calisir ve
-tests/test_ajan_araclar.py ile test edilir.
+Cikti formati ``scripts/score_llm_trial.py`` ile ayni oldugu icin iki deneme
+ayni rubrikle puanlanabilir; karsilastirilabilmeleri icin ayri dosyalara
+yazilirlar (tek atislik: gemini_response.json, ajan: ajan_response.json).
 """
 
 from __future__ import annotations
@@ -24,13 +21,18 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
+import time
 from pathlib import Path
 from typing import Any, Callable
 
 from . import araclar, semalar
 
 ROOT = Path(__file__).resolve().parents[2]
-VARSAYILAN_CIKTI = ROOT / "reports/llm_trial/gemini_response.json"
+# Tek atislik denemenin ciktisini EZMEMEK icin ayri dosya. Onceki surum
+# gemini_response.json'a yaziyordu ve iki deneme birbirini siliyordu.
+VARSAYILAN_CIKTI = ROOT / "reports/llm_trial/ajan_response.json"
+VARSAYILAN_LOG = ROOT / "reports/llm_trial/ajan_arac_kaydi.json"
 
 # Arac adi -> gercek Python fonksiyonu. semalar.ARAC_BILDIRIMLERI ile birebir eslesmelidir.
 ARAC_UYGULAMALARI: dict[str, Callable[..., Any]] = {
@@ -46,18 +48,34 @@ ARAC_UYGULAMALARI: dict[str, Callable[..., Any]] = {
 
 SISTEM_TALIMATI = """
 Sen termal drone YOLO nesne tespit modelinin teshis ajanisin. Sana veri
-dogrudan verilmez; yalnizca sana taninan araclari cagirarak anonim kosu
-metriklerini okuyabilirsin.
+dogrudan verilmez; yalnizca sana taninan araclari cagirarak okuyabilirsin.
+kosu_01 saglikli referanstir (veri hic bozulmadan, digerleriyle ayni
+protokolde egitilmistir).
+
+Yontem:
+- Once genel metrikleri ve baseline farkini al.
+- ONEMLI: Toplam mAP/precision/recall bazi bozulmalari TAMAMEN GIZLEYEBILIR.
+  Genel metrikler az degismis olsa bile, teshise varmadan once su uc kirilimi
+  de kontrol et:
+    * boyut_bazli_recall_getir  -> nesne boyutuna gore recall
+    * kaynak_bazli_recall_getir -> veri kaynagi grubuna gore recall
+    * sinif_karisikligini_getir -> gercek sinif hangi sinif olarak tahmin edilmis
+  Bunlardan birinde belirgin fark varsa teshisi ona dayandir.
+- sinif_karisikligini_getir ciktisinda "bulunamadi", o gercek kutunun hicbir
+  tahminle eslesmedigi anlamina gelir; baska bir sinif adi ise yanlis
+  siniflandirmadir.
 
 Kurallar:
-- kosu_01, kosu_02, ... gibi kimliklerden hangi senaryoya ait olduklarini
-  TAHMIN ETMEYE CALISMA; yalnizca metrik farklarina dayan.
+- kosu_01, kosu_02, ... kimliklerinden hangi senaryoya ait olduklarini TAHMIN
+  ETMEYE CALISMA; yalnizca sayilara dayan.
 - Her iddiayi en az iki sayisal kanitla destekle.
-- bbox_sayilarini_getir ile bir sinifin ornek sayisi cok dusukse (orn. 15-20
-  bbox) o sinif icin kesin genelleme yapma; bunu limitations alaninda belirt.
-- Kanit yetersizse diagnosis alaninda tam olarak "yetersiz_kanit" yaz.
-- Analizini bitirdiginde SADECE asagidaki JSON semasina uygun tek bir nesne
-  dondur; baska aciklama metni ekleme:
+- Bir grubun ornek sayisi dusukse (orn. 20 bbox altinda) kesin genelleme
+  yapma; bunu limitations alaninda GRUP ADI VE SAYISIYLA birlikte belirt.
+- Kanit gercekten yetersizse diagnosis alaninda "yetersiz_kanit" yaz. Ancak
+  metrikler saglikli gorunuyorsa bunu da soyleyebilirsin; olmayan bir
+  bozulmayi uydurma.
+- Analizini bitirdiginde SADECE asagidaki alanlara sahip tek bir JSON nesnesi
+  dondur; baska aciklama metni veya markdown ekleme:
 
 {sema}
 """.strip()
@@ -68,22 +86,60 @@ def _arac_tanimlari():
     from google.genai import types
 
     return types.Tool(
-        function_declarations=[types.FunctionDeclaration(**bildirim) for bildirim in semalar.ARAC_BILDIRIMLERI]
+        function_declarations=[
+            types.FunctionDeclaration(**bildirim) for bildirim in semalar.ARAC_BILDIRIMLERI
+        ]
     )
 
 
 def _arac_cagrisini_calistir(ad: str, argumanlar: dict[str, Any]) -> dict[str, Any]:
+    """Araci calistirir; hata olursa ajani dusurmek yerine modele hata dondurur."""
     fonksiyon = ARAC_UYGULAMALARI.get(ad)
     if fonksiyon is None:
         return {"hata": f"bilinmeyen_arac:{ad}"}
     try:
-        return fonksiyon(**argumanlar)
-    except Exception as hata:  # noqa: BLE001 - arac hatasi modele geri bildirilir, ajani dusurmez
+        sonuc = fonksiyon(**argumanlar)
+    except Exception as hata:  # noqa: BLE001 - arac hatasi modele geri bildirilir
         return {"hata": str(hata)}
+    # FunctionResponse.response bir sozluk olmalidir; liste donen araclari sar.
+    return sonuc if isinstance(sonuc, dict) else {"sonuc": sonuc}
 
 
-def teshis_uret(kosu_id: str, model: str = "gemini-3.6-flash", max_tur: int = 6) -> dict[str, Any]:
-    """Tek bir anonim kosu icin Gemini'ye arac erisimi vererek teshis uretir ve dogrular."""
+def json_ayikla(metin: str) -> dict[str, Any]:
+    """Model ciktisindan JSON nesnesini cikarir.
+
+    Model bazen JSON'u ```json ... ``` blogu icinde veya kisa bir aciklama
+    metniyle birlikte dondurur. Onceki surum dogrudan json.loads cagirdigi
+    icin bu durumda cokerdi.
+    """
+    ham = (metin or "").strip()
+    if not ham:
+        raise ValueError("model bos cevap dondu")
+    blok = re.search(r"```(?:json)?\s*(.+?)\s*```", ham, re.DOTALL)
+    if blok:
+        ham = blok.group(1).strip()
+    try:
+        return json.loads(ham)
+    except json.JSONDecodeError:
+        pass
+    # Son care: ilk '{' ile son '}' arasini dene.
+    bas, son = ham.find("{"), ham.rfind("}")
+    if bas >= 0 and son > bas:
+        return json.loads(ham[bas : son + 1])
+    raise ValueError(f"cevapta gecerli JSON bulunamadi: {ham[:200]}")
+
+
+def teshis_uret(
+    kosu_id: str,
+    model: str = "gemini-3.6-flash",
+    max_tur: int = 8,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Tek kosu icin arac erisimli teshis uretir.
+
+    Dondurur: (teshis, arac_kaydi). arac_kaydi, modelin hangi araci hangi
+    argumanla ve kacinci turda cagirdigini icerir; "ajan dogru kanita
+    yonelebiliyor mu" sorusu bu kayitla olculur.
+    """
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError(
@@ -96,54 +152,149 @@ def teshis_uret(kosu_id: str, model: str = "gemini-3.6-flash", max_tur: int = 6)
 
     client = genai.Client(api_key=api_key)
     sema_metni = json.dumps(semalar.TESHIS_SEMASI["properties"], ensure_ascii=False, indent=2)
-    talimat = SISTEM_TALIMATI.format(sema=sema_metni)
-    config = types.GenerateContentConfig(tools=[_arac_tanimlari()], system_instruction=talimat)
+    config = types.GenerateContentConfig(
+        tools=[_arac_tanimlari()],
+        system_instruction=SISTEM_TALIMATI.format(sema=sema_metni),
+        # Modelin araclari kendisi secmesini istiyoruz; otomatik cagri kapali
+        # olmalidir ki her cagriyi biz calistirip kaydedebilelim.
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+    )
 
     contents: list[Any] = [
-        types.Content(role="user", parts=[types.Part(text=f"Incelenecek kosu: {kosu_id}")]),
+        types.Content(
+            role="user",
+            parts=[types.Part(text=f"Incelenecek kosu: {kosu_id}. Teshisini uret.")],
+        )
     ]
+    arac_kaydi: list[dict[str, Any]] = []
 
-    for _ in range(max_tur):
+    for tur in range(1, max_tur + 1):
         response = client.models.generate_content(model=model, contents=contents, config=config)
+        if not response.candidates:
+            raise ValueError(f"{kosu_id}: model aday cevap dondurmedi")
         aday = response.candidates[0]
         contents.append(aday.content)
 
-        cagrilar = [parca.function_call for parca in aday.content.parts if getattr(parca, "function_call", None)]
+        parcalar = list(aday.content.parts or [])
+        cagrilar = [p.function_call for p in parcalar if getattr(p, "function_call", None)]
+
         if not cagrilar:
-            metin = (response.text or "").strip()
-            cevap = json.loads(metin)
-            hatalar = semalar.teshis_dogrula(cevap)
-            if hatalar:
-                raise ValueError(f"{kosu_id}: ajan ciktisi semaya uymuyor: {hatalar}")
+            cevap = json_ayikla(response.text or "")
             cevap["run_id"] = kosu_id
-            return cevap
+            return cevap, arac_kaydi
 
         yanit_parcalari = []
         for cagri in cagrilar:
-            sonuc = _arac_cagrisini_calistir(cagri.name, dict(cagri.args or {}))
-            yanit_parcalari.append(
-                types.Part(function_response=types.FunctionResponse(name=cagri.name, response=sonuc))
+            argumanlar = dict(cagri.args or {})
+            sonuc = _arac_cagrisini_calistir(cagri.name, argumanlar)
+            arac_kaydi.append(
+                {
+                    "tur": tur,
+                    "arac": cagri.name,
+                    "argumanlar": argumanlar,
+                    "hata": sonuc.get("hata") if isinstance(sonuc, dict) else None,
+                }
             )
-        contents.append(types.Content(role="tool", parts=yanit_parcalari))
+            yanit_parcalari.append(
+                types.Part.from_function_response(name=cagri.name, response=sonuc)
+            )
+        contents.append(types.Content(role="user", parts=yanit_parcalari))
 
-    raise RuntimeError(f"{kosu_id}: {max_tur} turda semaya uygun bir JSON teshis alinamadi")
+    raise RuntimeError(
+        f"{kosu_id}: {max_tur} turda teshis alinamadi ({len(arac_kaydi)} arac cagrisi yapildi)"
+    )
 
 
-def kor_deneme_calistir(model: str = "gemini-3.6-flash", cikti: Path = VARSAYILAN_CIKTI) -> list[dict[str, Any]]:
-    """Tum anonim kosular icin teshis uretir; mevcut demo/puanlama formatinda yazar."""
-    sonuclar = [teshis_uret(kosu_id, model=model) for kosu_id in araclar.kosu_listesini_getir()]
+def kor_deneme_calistir(
+    model: str = "gemini-3.6-flash",
+    cikti: Path = VARSAYILAN_CIKTI,
+    log_yolu: Path = VARSAYILAN_LOG,
+    bekleme_sn: float = 0.0,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Tum anonim kosular icin teshis uretir; tek kosunun hatasi digerlerini dusurmez."""
+    sonuclar: list[dict[str, Any]] = []
+    kayitlar: dict[str, Any] = {}
+
+    for kosu_id in araclar.kosu_listesini_getir():
+        try:
+            teshis, arac_kaydi = teshis_uret(kosu_id, model=model)
+            hatalar = semalar.teshis_dogrula(teshis)
+            if hatalar:
+                teshis["_sema_hatalari"] = hatalar
+                print(f"  {kosu_id}: UYARI sema hatalari {hatalar}")
+            sonuclar.append(teshis)
+            kayitlar[kosu_id] = {"arac_cagrilari": arac_kaydi, "hata": None}
+            araclar_ozeti = ", ".join(dict.fromkeys(k["arac"] for k in arac_kaydi)) or "(yok)"
+            print(f"  {kosu_id}: {len(arac_kaydi)} arac cagrisi -> {araclar_ozeti}")
+        except Exception as hata:  # noqa: BLE001 - bir kosu duserse digerleri devam etsin
+            print(f"  {kosu_id}: BASARISIZ ({type(hata).__name__}: {hata})")
+            sonuclar.append({"run_id": kosu_id, "diagnosis": "hata", "_hata": str(hata)})
+            kayitlar[kosu_id] = {"arac_cagrilari": [], "hata": str(hata)}
+        if bekleme_sn:
+            time.sleep(bekleme_sn)
+
     cikti.parent.mkdir(parents=True, exist_ok=True)
     cikti.write_text(json.dumps(sonuclar, indent=2, ensure_ascii=False), encoding="utf-8")
-    return sonuclar
+    log_yolu.write_text(json.dumps(kayitlar, indent=2, ensure_ascii=False), encoding="utf-8")
+    return sonuclar, kayitlar
+
+
+def arac_kullanim_ozeti(kayitlar: dict[str, Any]) -> dict[str, Any]:
+    """Hangi araclarin ne siklikta cagrildigini ozetler."""
+    sayim: dict[str, int] = {}
+    kosu_basina: dict[str, int] = {}
+    for kosu_id, kayit in kayitlar.items():
+        adlar = [c["arac"] for c in kayit.get("arac_cagrilari", [])]
+        kosu_basina[kosu_id] = len(adlar)
+        for ad in adlar:
+            sayim[ad] = sayim.get(ad, 0) + 1
+    kirilim_araclari = {
+        "boyut_bazli_recall_getir",
+        "kaynak_bazli_recall_getir",
+        "sinif_karisikligini_getir",
+    }
+    kirilim_kullanan = [
+        kosu_id
+        for kosu_id, kayit in kayitlar.items()
+        if kirilim_araclari & {c["arac"] for c in kayit.get("arac_cagrilari", [])}
+    ]
+    return {
+        "arac_cagri_sayisi": dict(sorted(sayim.items(), key=lambda x: -x[1])),
+        "kosu_basina_cagri": kosu_basina,
+        "kirilim_araci_kullanan_kosular": sorted(kirilim_kullanan),
+        "kirilim_araci_kullanim_orani": (
+            round(len(kirilim_kullanan) / len(kayitlar), 3) if kayitlar else 0.0
+        ),
+    }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Function-calling tabanli LLM teshis ajani")
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--model", default="gemini-3.6-flash")
     parser.add_argument("--output", type=Path, default=VARSAYILAN_CIKTI)
+    parser.add_argument("--log", type=Path, default=VARSAYILAN_LOG)
+    parser.add_argument("--kosu", default=None, help="Yalnizca tek bir kosu calistir (orn. kosu_02)")
+    parser.add_argument("--bekleme", type=float, default=0.0, help="Kosular arasi bekleme (sn)")
     args = parser.parse_args()
-    sonuclar = kor_deneme_calistir(model=args.model, cikti=args.output)
-    print(json.dumps(sonuclar, indent=2, ensure_ascii=False))
+
+    if args.kosu:
+        teshis, kayit = teshis_uret(args.kosu, model=args.model)
+        print(json.dumps({"teshis": teshis, "arac_cagrilari": kayit}, indent=2, ensure_ascii=False))
+        return
+
+    print(f"ajan denemesi basliyor: model={args.model}")
+    sonuclar, kayitlar = kor_deneme_calistir(
+        model=args.model, cikti=args.output, log_yolu=args.log, bekleme_sn=args.bekleme
+    )
+    ozet = arac_kullanim_ozeti(kayitlar)
+    print(f"\nsaved={args.output.resolve()}")
+    print(f"log  ={args.log.resolve()}")
+    print("\narac kullanimi:")
+    print(json.dumps(ozet, indent=2, ensure_ascii=False))
+    basarisiz = [s["run_id"] for s in sonuclar if s.get("_hata")]
+    if basarisiz:
+        print(f"\nUYARI basarisiz kosular: {basarisiz}")
+    print(f"\nsonraki adim: python scripts/score_llm_trial.py --response {args.output}")
 
 
 if __name__ == "__main__":
