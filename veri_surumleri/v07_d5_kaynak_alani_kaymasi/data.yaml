@@ -1,0 +1,8 @@
+# D5: yalnizca train goruntu listesi daraltilir; etiketler degismez,
+# goruntu kopyalanmaz. val/test kaynak dataset'in operasyonel bolmeleridir.
+path: C:/Users/ASUS/Desktop/HYZ/dataset
+train: C:/Users/ASUS/Desktop/termal_teshis/veri_surumleri/v07_d5_kaynak_alani_kaymasi/train_images.txt
+val: C:/Users/ASUS/Desktop/HYZ/dataset/images/val
+test: C:/Users/ASUS/Desktop/HYZ/dataset/images/test
+nc: 4
+names: [tasit, insan, UAP, UAI]

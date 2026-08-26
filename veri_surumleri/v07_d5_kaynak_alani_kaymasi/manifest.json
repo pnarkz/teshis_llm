@@ -1,0 +1,40 @@
+{
+  "format": "dataset_manifest_v1",
+  "scenario": "D5",
+  "version": "v07_d5_kaynak_alani_kaymasi",
+  "created_at_utc": "2026-08-26T16:55:30.765034+00:00",
+  "source_dataset": "C:\\Users\\ASUS\\Desktop\\HYZ\\dataset",
+  "source_dataset_unchanged": true,
+  "copy_mode": "manifest_only",
+  "labels_modified": false,
+  "parameters": {
+    "izinli_kaynaklar": [
+      "aaterm"
+    ],
+    "kaynak_fonksiyonu": "teshis.veri.istatistik.kaynak_adi"
+  },
+  "counts": {
+    "train_frames_before": 17515,
+    "train_frames_after": 11064,
+    "train_frames_removed": 6451,
+    "kept_bbox": 97614,
+    "removed_bbox": 34086,
+    "labels_without_images": 0,
+    "frames_by_source_before": {
+      "aaterm": 11064,
+      "tf2026": 101,
+      "hituav": 2292,
+      "sentetik": 273,
+      "termal": 3785
+    },
+    "frames_by_source_after": {
+      "aaterm": 11064
+    }
+  },
+  "val_test_modified": false,
+  "source_train_labels_sha256": "1a03814b24755b2bce6f43992f68f8ceba1f1963f477ef2f3d4ccd0f249d1a34",
+  "files": {
+    "data_yaml": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v07_d5_kaynak_alani_kaymasi\\data.yaml",
+    "train_images_list": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v07_d5_kaynak_alani_kaymasi\\train_images.txt"
+  }
+}
