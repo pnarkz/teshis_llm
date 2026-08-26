@@ -1,0 +1,27 @@
+kod: D3b
+ad: tasit_insan_sinif_karisikligi
+kaynak_surum: v00_saglikli
+hedef_split: train
+parametreler:
+  sinif_ciftii: [0, 1]
+  takas_orani: 0.30
+seed: 42
+beklenen_kanit: tasit ve insan arasinda capraz karisiklik; her iki sinifta precision dususu
+
+gerekce: >
+  D3 ayni bilimsel soruyu (sinif ID etiket hatasinin etkisi) UAP/UAI uzerinde
+  soruyor, ancak bu iki sinif tum dataset'te yalnizca 268 ve 194 bbox'a sahip
+  ve kilitli tanı setinde 15 ve 17 kutuyla temsil ediliyor. Bu ornek sayisinda
+  bir oran tahmininin %95 guven araligi ~0,41 genisliginde oluyor; yani etkinin
+  yonu gorulebiliyor ama buyuklugu hakkinda kesin sayisal iddia kurulamiyor.
+
+  D3b ayni bozulmayi (ayni takas orani, ayni seed, ayni protokol) bol ornekli
+  tasit ve insan siniflarina uygular. Tanı setinde 1.264 + 2.718 = 3.982 kutu
+  ile olculur; ayni buyuklukteki bir etkinin guven araligi ~0,036 genisligine
+  iner.
+
+  Bu iki senaryo birlikte okunmalidir: ayni bozulma, nadir siniflarda
+  olculemezken bol siniflarda net olculur. Bu, projenin "mAP tek basina
+  yeterli degildir, bbox n ve belirsizlik ile birlikte raporlanir" ilkesinin
+  dogrudan gosterimidir ve ajanin "yetersiz_kanit" karari vermesi gereken
+  gercek bir durum uretir.

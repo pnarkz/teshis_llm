@@ -1,0 +1,8 @@
+# v00: saglikli referans. Kaynak dataset hicbir sekilde degistirilmez;
+# bu surum yalnizca ortak protokolle egitilecek temiz referansi tanimlar.
+path: C:/Users/ASUS/Desktop/HYZ/dataset
+train: C:/Users/ASUS/Desktop/HYZ/dataset/images/train
+val: C:/Users/ASUS/Desktop/HYZ/dataset/images/val
+test: C:/Users/ASUS/Desktop/HYZ/dataset/images/test
+nc: 4
+names: [tasit, insan, UAP, UAI]

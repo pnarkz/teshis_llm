@@ -1,0 +1,18 @@
+{
+  "format": "dataset_manifest_v1",
+  "version": "v00_saglikli",
+  "scenario": "v00",
+  "created_at_utc": "2026-08-26T05:13:07.221171+00:00",
+  "source_dataset": "C:\\Users\\ASUS\\Desktop\\HYZ\\dataset",
+  "source_dataset_unchanged": true,
+  "copy_mode": "manifest_only",
+  "bozulma": null,
+  "counts": {
+    "train_label_files": 17515,
+    "train_bbox": 131700
+  },
+  "source_train_labels_sha256": "1a03814b24755b2bce6f43992f68f8ceba1f1963f477ef2f3d4ccd0f249d1a34",
+  "files": {
+    "data_yaml": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v00_saglikli\\data.yaml"
+  }
+}

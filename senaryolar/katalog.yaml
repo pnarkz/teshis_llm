@@ -22,6 +22,10 @@ senaryolar:
     ad: uap_uai_sinif_karisikligi
     tur: veri
     config: veri/d3_uap_uai_karisikligi.yaml
+  - kod: D3b
+    ad: tasit_insan_sinif_karisikligi
+    tur: veri
+    config: veri/d3b_tasit_insan_karisikligi.yaml
   - kod: D4
     ad: kucuk_nesne_sinyal_kaybi
     tur: veri
