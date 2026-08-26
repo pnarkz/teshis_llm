@@ -30,6 +30,64 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-26 (7) — Ajana kırılım araçları verildi; D3b'nin manşet bulgusu yanlış çıktı ve düzeltildi
+
+**Neden bu iş yapıldı.** Ajan yalnızca toplam mAP/precision/recall ve 4 sınıf
+AP50'si görüyordu. Ama D3b, D4 ve D5'in tamamı tam olarak o veride görünmüyor.
+Yani ajan bu üç senaryoyu **yapısal olarak teşhis edemezdi** — LLM yetersiz
+olduğu için değil, kanıtı ona vermediğimiz için. Projenin merkezi sorusu
+("bir LLM bunu yeterli kanıtla teşhis edebilir mi?") bozuk aletle sınanıyordu.
+
+**Yapılanlar:**
+
+- `metrikler.py`'ye **sınıf-bağımsız eşleştirme** ve sayısal karışıklık
+  matrisi eklendi. Mevcut `eslestir()` aynı sınıf şartı aradığı için "doğru
+  yerde bulundu ama yanlış sınıf verildi" durumunu göremiyordu.
+- Üç yeni ajan aracı: `boyut_bazli_recall_getir`, `kaynak_bazli_recall_getir`,
+  `sinif_karisikligini_getir`. Her biri kırılımı sağlıklı referans ve farkla
+  birlikte döndürür.
+- Kaynak grupları `kaynak_a`, `kaynak_b` … olarak anonimleştirildi; takma
+  adlar bbox sayısına göre sabit sıralanır, böylece aynı takma ad tüm
+  koşularda aynı kaynağı gösterir (test doğruluyor).
+- Dokuz koşunun tamamı için kırılım analizi üretildi (`reports/kirilim/`).
+- 20 yeni test; anonimlik sızıntısı taraması dahil.
+
+**Ve bu iş bir hatayı ortaya çıkardı.** Bağımsız karışıklık ölçümü devreye
+girince, 2026-08-26 (4) kaydındaki D3b manşet bulgusu doğrulanamadı:
+
+| Kaynak | taşıt doğru tespit |
+|---|---:|
+| Ultralytics'in raporladığı `tasit` recall (0.8275 × 1264) | ~1.046 |
+| Ultralytics `confusion_matrix.png` | 755 |
+| Bağımsız ölçüm (`metrikler.py`) | 1.081 |
+
+Ultralytics'in görseli **kendi raporladığı recall ile çelişiyor**; bağımsız
+ölçüm ise tutarlı. Fark, conf eşiği ve IoU/güven sıralı eşleştirme
+varyantları denenerek yeniden üretilmeye çalışıldı, hiçbiri 358 rakamını
+vermedi (en yüksek 30).
+
+**Düzeltilmiş D3b bulgusu** — ve bu, öncekinden bilimsel olarak daha
+sağlam: etiketlerin %30'u karıştırılmasına rağmen çapraz sınıf hatası
+neredeyse hiç artmıyor (taşıt 2 → 4 kutu; insan 4 → 4). Model bunun yerine
+biraz daha temkinli oluyor (kaçırılan kutu 131 → 179 ve 534 → 574). Simetrik
+etiket gürültüsü bol veriyle ortalamada sönümleniyor.
+
+**D3 ile kontrast asıl bulgu:** aynı %30 takas, 391 eğitim satırı olan
+UAP/UAI'de sınıfı çökertiyor (UAI doğru: 17/17 → 8/17), 131.309 satırı olan
+taşıt/insanda soğuruluyor. Etiket gürültüsüne dayanıklılık bozulmanın
+oranıyla değil **sınıfın örnek sayısıyla** belirleniyor.
+
+D3'ün kendi bulgusu bağımsız ölçümle **doğrulandı** (yön ve büyüklük aynı;
+görsel 11/17 diyordu, bağımsız ölçüm 8/17 — ikisi de sınıfın çöktüğünü
+gösteriyor).
+
+**Ders, projeye kalıcı olarak eklendi:** türetilmiş bir görsel, kendi ürettiği
+sayısal metriklerle çapraz kontrol edilmeden manşet bulgu yapılmamalı.
+Karışıklık iddialarının tamamı artık `metrikler.py`'nin sınıf-bağımsız
+eşleştirmesinden üretiliyor ve aynı fonksiyon ajanın aracını da besliyor.
+Hatalı ilk bölüm silinmedi; "D3b Sonucu (ILK, HATALI SURUM)" başlığıyla
+tarihsel kayıt olarak duruyor.
+
 ### 2026-08-26 (6) — D5 tamamlandı: erken durdurmanın gizlediği alan kayması felaketi
 
 D5 (kaynak/alan kayması) koşuldu: eğitim seti yalnızca `aaterm` kaynağıyla
@@ -115,42 +173,26 @@ sayısını azaltır.
   etiketlere dokunmuyor, görüntü kopyalamıyor.
 - `results.csv`, demo ve ajan puanlaması D4'ü tanıyacak şekilde güncellendi.
 
-### 2026-08-26 (4) — D3b tamamlandı: mAP'in tamamen gizlediği bir bozulma bulundu
+### 2026-08-26 (4) — D3b tamamlandı  ⚠ bulgusu (7)'de düzeltildi
 
 D3b (taşıt↔insan sınıf karışıklığı) koşuldu: 30 epoch, 6,12 saat, `best.pt`
-epoch 11'den seçildi. D3 ile birebir aynı bozulma (%30 takas, seed=42, aynı
-protokol), sadece bol örnekli sınıf çiftine uygulandı — 39.393 satır değişti.
+epoch 11'den seçildi. D3 ile birebir aynı bozulma (%30 takas, seed=42), sadece
+bol örnekli sınıf çiftine uygulandı — 39.393 satır değişti.
 
-**Beklenmedik ve projenin en değerli bulgusu çıktı.** Metrikler bozulmayı
-göstermiyor: taşıt recall -0.0063 (z=-0.42), insan recall +0.0099 (z=+0.84),
-insan precision +0.0015 — hiçbiri anlamlı değil. Bu tabloya bakan biri
-"bozulma etkisiz kalmış" derdi.
+**Bu kaydın ilk hali hatalı bir manşet bulgu içeriyordu** ("gerçek taşıtların
+%28'i insan olarak tahmin ediliyor"). O rakam Ultralytics'in
+`confusion_matrix.png` görselinden okunmuştu ve bağımsız ölçümle
+doğrulanamadı. Düzeltme ve gerekçesi için aşağıdaki **2026-08-26 (7)**
+kaydına, güncel sonuçlar için README'deki "D3b Sonucu" bölümüne bakın.
 
-Ama sabit eşikli confusion matrix bambaşka bir tablo veriyor:
-
-| Gerçek sınıf | v00 | D3b | kat | z |
-|---|---:|---:|---:|---:|
-| taşıt (n=1264) | 2/1264 (%0,16) | **358/1264 (%28,3)** | 179× | +20,3 |
-| insan (n=2718) | 5/2718 (%0,18) | **163/2718 (%6,0)** | 33× | +12,4 |
-
-Gerçek taşıtların %28'i insan olarak tahmin ediliyor — dev ve ezici derecede
-anlamlı bir etki. Sebep: AP eşikten bağımsız bir **sıralama** metriği; model
-doğru kutuyu hâlâ yüksek skorla sıralıyor, bu yüzden AP korunuyor. Ama
-herhangi bir sabit çalışma eşiğinde, yani gerçek kullanımda, sınıfı %28
-oranında yanlış söylüyor.
-
-Bu, projenin kendi ilkesinin ("mAP tek başına yeterli değildir") en güçlü
-somut kanıtı. Dağıtımda yalnızca mAP izleyen bir ekip bu arızayı hiç fark
-etmezdi.
-
-**D3 + D3b çifti belirsizliğin rolünü de somutlaştırdı:** aynı bozulma, nadir
-sınıflarda %95 GA genişliği 0,414 (yön görülür, büyüklük belirsiz); bol
-sınıflarda 0,050 (hem yön hem büyüklük kesin). Ajanın `yetersiz_kanit` demesi
-gereken durum ile kesin teşhis koyabileceği durum artık somut olarak ayrılmış
-durumda.
+Doğru olan kısımlar: genel metrikler bozulmayı göstermiyor (taşıt recall
+-0.0063 z=-0.42; insan recall +0.0099 z=+0.84; insan precision +0.0015).
+Genel recall düşüşü (-0.0495) neredeyse tamamen hiç dokunulmamış UAI
+sınıfından geliyor (17 bbox, katkısı -0.0504) — Ultralytics recall'i makro
+ortalama olduğu için 17 örnekli sınıf 2.718 örnekli sınıfla eşit ağırlık
+taşıyor.
 
 - `results.csv`'ye D3b satırı sona eklendi (ajan eşlemesi kaymasın diye).
-- README'ye "D3b Sonucu" bölümü ve otoriter tabloya D3b satırı + uyarı eklendi.
 - `demo/data_loader.py` ve `demo/app.py` D3b ve v00'ı tanıyacak şekilde
   güncellendi.
 
@@ -948,6 +990,23 @@ Kilitli tanı setindeki confusion matrix (sabit esik, argmax sinif):
 | UAP (15) | 15 (%100) | 0 | 0 |
 | UAI (17) | **11 (%65)** | 2 (%12) | 4 (%24) |
 
+Bu tablo Ultralytics gorselinden okunmustur. Bagimsiz olcum
+(`teshis/degerlendirme/metrikler.py`, sinif-bagimsiz eslestirme) ayni yonu
+biraz farkli buyuklukle dogruluyor:
+
+| Gercek sinif (n) | | UAP tahmin | UAI tahmin | bulunamadi |
+|---|---|---:|---:|---:|
+| UAP (15) | v00 | 0 | 15 | 0 |
+| UAP (15) | D3 | 0 | 15 | 0 |
+| UAI (17) | v00 | 0 | **17** | 0 |
+| UAI (17) | D3 | **8** | **8** | 1 |
+
+Iki olcum de ayni sonuca varir: UAI sinifi cokmustur (17/17 dogru -> 8/17).
+D3b'de ayni capraz kontrol yapildiginda gorsel ile bagimsiz olcum
+**celiskili** cikti; ayrinti icin "D3b Sonucu" bolumundeki "Olcum notu"na
+bakin. Bu nedenle projedeki karisiklik iddialari artik bagimsiz olcume
+dayandirilmaktadir.
+
 **D3 hipotezi guclu bicimde desteklendi ve etkinin yonu net.** Train
 etiketlerinin %30'unun UAP<->UAI arasinda karistirilmasi, modelde tek yonlu
 bir kayma yaratti: gercek UAI kutularinin %65'i UAP olarak tahmin ediliyor,
@@ -1120,15 +1179,22 @@ yalnizca ornek sayisini azaltir.
 - reports/boyut_analizi/v00.json · reports/boyut_analizi/D4.json
 - veri_surumleri/v06_d4_kucuk_nesne_sinyal_kaybi/manifest.json
 
-### D3b Sonucu — mAP'in tamamen gizledigi bir bozulma
+### D3b Sonucu — bol ornekli siniflar simetrik etiket gurultusunu soguruyor
+
+> **DUZELTME (2026-08-26).** Bu bolumun ilk hali, Ultralytics'in urettigi
+> `confusion_matrix.png` gorselinden okunan "gercek tasit kutularinin %28'i
+> insan olarak tahmin edildi" bulgusuna dayaniyordu. Ajanin arac katmanina
+> bagimsiz bir karisiklik olcumu eklendiginde bu rakam dogrulanamadi ve
+> **hatali oldugu anlasildi**. Asagidaki bolum duzeltilmis olcumlere gore
+> yeniden yazildi; yanlis bulgunun nasil ortaya cikip nasil yakalandigi
+> "Olcum notu" basliginda aciklanmistir.
 
 D3b, D3 ile **ayni bozulmayi** (ayni takas orani 0.30, ayni seed, ayni
 protokol) bol ornekli `tasit` ve `insan` siniflarina uygular. Train'de 131.309
-hedef satirin 39.393'u degistirildi (25.209 tasit->insan, 14.184 insan->tasit;
-asimetri sinif dengesizliginden geliyor). Kosu: 30 epoch, 6,12 saat,
-`best.pt` epoch 11'den secildi.
+hedef satirin 39.393'u degistirildi (25.209 tasit->insan, 14.184 insan->tasit).
+Kosu: 30 epoch, 6,12 saat, `best.pt` epoch 11'den secildi.
 
-**Once metriklere bakalim (v00'a gore):**
+**Genel metrikler (v00'a gore):**
 
 | Olcum | fark |
 |---|---:|
@@ -1138,61 +1204,83 @@ asimetri sinif dengesizliginden geliyor). Kosu: 30 epoch, 6,12 saat,
 | Recall (genel) | -0.0495 |
 | tasit recall | -0.0063 (z=-0.42, anlamli degil) |
 | insan recall | +0.0099 (z=+0.84, anlamli degil) |
-| tasit precision | +0.0297 |
-| insan precision | +0.0015 |
 
-Genel recall'daki -0.0495'lik dususe aldanmamak gerekir: bu dusus **neredeyse
-tamamen UAI sinifindan** geliyor (recall 0.9412 -> 0.7395), yani D3b'de hic
-dokunulmamis, 17 bbox'lik bir siniftan. Ultralytics'in "recall" degeri
-siniflarin makro ortalamasi oldugu icin, 17 ornekli bir sinifin birkac
-kutuluk dalgalanmasi 2.718 ornekli sinifla esit agirlik tasiyor. Bu da
-dengesiz sinif dagiliminda makro ortalamanin neden tek basina okunmamasi
-gerektiginin ayri bir ornegi.
+**Sinif karisikligi (bagimsiz olcum, `teshis/degerlendirme/metrikler.py`):**
 
-Bu tabloya bakan biri **"bozulma etkisiz kalmis"** sonucuna varirdi. Etiketlerin
-%30'u karistirilmis olmasina ragmen karistirilan siniflarin AP, precision ve
-recall degerleri neredeyse hic degismemis.
+| Gercek sinif | n | | dogru | capraz | bulunamadi |
+|---|---:|---|---:|---:|---:|
+| tasit | 1.264 | v00 | 1.131 | 2 | 131 |
+| tasit | 1.264 | **D3b** | **1.081** | **4** | **179** |
+| insan | 2.718 | v00 | 2.180 | 4 | 534 |
+| insan | 2.718 | **D3b** | **2.140** | **4** | **574** |
 
-**Simdi sabit esikli confusion matrix'e bakalim:**
+**Bulgu: bozulma sogurulmus.** Egitim etiketlerinin %30'u karistirilmis
+olmasina ragmen, tanı setinde capraz sinif hatasi neredeyse hic artmiyor
+(tasit icin 2 -> 4 kutu, insan icin 4 -> 4). Model bunun yerine biraz daha
+temkinli davraniyor: kacirilan kutu sayisi artiyor (131 -> 179 ve 534 -> 574).
 
-| Gercek sinif | v00 capraz hata | D3b capraz hata | kat | z |
-|---|---:|---:|---:|---:|
-| tasit (n=1264) | 2/1264 (%0,16) | **358/1264 (%28,3)** | 179x | +20,3 |
-| insan (n=2718) | 5/2718 (%0,18) | **163/2718 (%6,0)** | 33x | +12,4 |
+Sebep, simetrik etiket gurultusunun bol veriyle **ortalamada sonumlenmesidir**.
+`tasit` ve `insan` icin egitimde sirasiyla 83.600 ve 47.709 satir var; %30'u
+bozulsa bile %70'i dogru kaliyor ve iki sinif termal goruntude belirgin sekilde
+farkli oldugu icin model dogru esleme ogrenmeye devam ediyor.
 
-Gercek tasit kutularinin **%28'i insan olarak tahmin ediliyor.** Etki dev ve
-istatistiksel olarak ezici (z=20,3). Asimetri de beklendigi gibi: egitimde
-daha cok tasit->insan takasi yapildigi icin model daha cok tasiti insana
-kaydiriyor.
-
-**Bu senaryonun asil bulgusu budur:** AP tabanli metrikler, modelin
-siniflandirma davranisindaki felaket boyutundaki bir bozulmayi **tamamen
-gizleyebiliyor.** Sebep, AP'nin esikten bagimsiz bir *siralama* metrigi
-olmasi: model dogru kutuyu hala yuksek skorla siraliyor, bu yuzden AP
-korunuyor. Ancak herhangi bir sabit calisma esiginde — yani gercek kullanimda
-— kutunun sinifini %28 oraninda yanlis soyluyor.
-
-Bu, projenin kendi ilkesinin ("mAP tek basina yeterli degildir; sinif AP,
-recall, bbox n ve confusion matrix ile birlikte okunur") en guclu somut
-kanitidir. Dagitimda yalnizca mAP izleyen bir ekip bu arizayi hic fark etmezdi.
-
-**D3 ile D3b birlikte okundugunda — belirsizligin rolu:**
+**D3 ile karsilastirma — asil bulgu bu:**
 
 | | D3 (UAP/UAI) | D3b (tasit/insan) |
 |---|---|---|
-| tanı setindeki bbox n | 15 / 17 | 1.264 / 2.718 |
-| capraz hata orani | %65 (UAI->UAP) | %28 (tasit->insan) |
-| %95 guven araligi genisligi | **0,414** | **0,050** |
-| sonuc | yon gorulur, buyukluk belirsiz | hem yon hem buyukluk kesin |
+| egitimdeki hedef satir | 391 | 131.309 |
+| takas orani | %30 | %30 |
+| tanı setinde bbox n | 15 / 17 | 1.264 / 2.718 |
+| capraz hata (v00 -> senaryo) | UAI: 0/17 -> **8/17** | tasit: 2/1264 -> **4/1264** |
+| sonuc | **sinif cokuyor** | **bozulma soguruluyor** |
 
-Ayni bozulma, nadir siniflarda genis ve guvenilmez bir tahmin; bol siniflarda
-dar ve kesin bir olcum uretiyor. Ajanin `yetersiz_kanit` demesi gereken durum
-ile kesin teshis koyabilecegi durum, bu iki senaryoyla somut olarak ayrilmis
-oluyor.
+Ayni bozulma orani, nadir siniflarda sinifi yok ederken bol siniflarda
+neredeyse etkisiz kaliyor. Etiket gurultusune dayaniklilik, bozulmanin
+oraniyla degil **sinifin ornek sayisiyla** belirleniyor. Bu, D3'un neden
+UAP/UAI'de bu kadar sert bir etki urettigini de aciklar: 391 satirin 117'si
+bozulunca modelin ogrenecek dogru sinyali kalmiyor.
+
+#### Olcum notu — Ultralytics confusion matrix gorseline neden guvenilmedi
+
+Bu senaryonun ilk raporu, `confusion_matrix.png` gorselinden okunan
+"tasit: 755 dogru, 358 insan, 151 bulunamadi" degerlerine dayaniyordu.
+Bagimsiz olcum bunu dogrulamadi ve **Ultralytics'in gorseli kendi
+metrikleriyle celisiyor**:
+
+| Kaynak | tasit dogru tespit |
+|---|---:|
+| Ultralytics'in raporladigi `tasit` recall (0.8275 x 1264) | ~1.046 |
+| Ultralytics `confusion_matrix.png` | 755 |
+| Bagimsiz olcum (`metrikler.py`) | 1.081 |
+
+Gorsel, ayni kosunun raporladigi recall ile tutarli degil; bagimsiz olcum ise
+tutarli. Fark, conf esigi veya IoU/guven sirali eslestirme denenerek
+yeniden uretilmeye calisildi ancak hicbiri 358 rakamini vermedi (en yuksek 30).
+Bu nedenle rapor, ic tutarliligi dogrulanabilen bagimsiz olcume dayandirildi.
+
+Ders: **turetilmis bir gorsel, kendi urettigi sayisal metriklerle capraz
+kontrol edilmeden manset bulgu yapilmamalidir.** Projedeki karisiklik
+iddialarinin tamami artik `metrikler.py`'nin sinif-bagimsiz eslestirmesiyle
+uretiliyor ve ayni fonksiyon ajanin `sinif_karisikligini_getir` aracini da
+besliyor.
 
 - reports/d3b_sonuc/d1_metrics.json
-- reports/d3b_sonuc/d3b_val_diagnostic/confusion_matrix.png
+- reports/kirilim/d3b_20260826.json (bagimsiz karisiklik olcumu)
 - veri_surumleri/v05_d3b_tasit_insan_karisikligi/manifest.json
+
+### D3b Sonucu (ILK, HATALI SURUM — tarihsel kayit)
+
+> Bu bolum, Ultralytics confusion matrix gorselinin yanlis okunmasina
+> dayanan ilk raporun kaydidir. Icerigi **gecersizdir**; yukaridaki
+> duzeltilmis D3b bolumu gecerlidir. Hatanin nasil yakalandigi orada
+> "Olcum notu" basliginda anlatiliyor. Kayit, bulgunun nasil duzeltildigini
+> izlenebilir kilmak icin silinmeden birakildi.
+
+Ilk raporun manset iddiasi: "gercek tasit kutularinin %28'i (358/1264)
+insan olarak tahmin ediliyor (z=20,3); AP tabanli metrikler bu felaketi
+tamamen gizliyor." Bagimsiz olcum bu rakami dogrulamadi (gercek deger
+4/1264) ve Ultralytics gorselinin kendi raporladigi recall ile celistigi
+goruldu.
 
 ### v00 Saglikli Referans ve Senaryo Karsilastirmasi (OTORITER TABLO)
 
@@ -1233,19 +1321,18 @@ gosterir.
 | D2a lokalizasyon gurultusu | -0.0323 | **-0.0544** | -0.0321 | -0.0468 | desteklendi |
 | D2b eksik etiket | -0.0130 | -0.0157 | **-0.1087** | +0.0237 | desteklendi |
 | D3 sinif karisikligi (nadir) | -0.0281 | -0.0215 | **-0.2047** | -0.0347 | guclu destek |
-| D3b sinif karisikligi (bol) | -0.0262 | +0.0042 | +0.0097 | -0.0495 | **yalnizca confusion matrix'te** |
+| D3b sinif karisikligi (bol) | -0.0262 | +0.0042 | +0.0097 | -0.0495 | **bozulma soguruldu** |
 | D4 kucuk nesne sinyal kaybi | -0.0224 | -0.0006 | -0.0642 | -0.0349 | **yalnizca boyut kiriliminda** |
 | D5 kaynak kaymasi (`best.pt`) | -0.0107 | +0.0044 | -0.0363 | -0.0485 | best.pt'de gorunmez |
 | D5 kaynak kaymasi (`last.pt`) | **-0.5848** | -0.4799 | -0.5308 | -0.5776 | **kaynak kiriliminda net** |
 
-> **Son iki satir bu tablonun tek basina okunamayacaginin kanitidir.**
-> D3b'de metrikler neredeyse degismemis gorunur, ancak sabit esikli confusion
-> matrix gercek tasit kutularinin %28'inin insan olarak tahmin edildigini
-> gosterir (z=20,3). D4'te de toplam degerler mutevazidir, ancak boyut
-> kirilimi 16 px altindaki bandin 45 puan coktugunu gosterir (z=-21,87);
-> diger uc bantta degisim yoktur. Her iki bozulma da yalnizca dogru kirilimla
-> bakildiginda gorunur hale geliyor. Ayrinti icin yukaridaki "D4 Sonucu" ve
-> "D3b Sonucu" bolumlerine bakin.
+> **Bu tablo tek basina okunmamalidir.** D4'te toplam degerler mutevazidir,
+> ancak boyut kirilimi 16 px altindaki bandin 45 puan coktugunu gosterir
+> (z=-21,87); diger uc bantta degisim yoktur. D5'te `best.pt` neredeyse temiz
+> gorunur, ancak `last.pt` kaynak kiriliminda catastrofik bir alan kaymasi
+> ortaya cikar. D3b'de ise metriklerdeki durgunluk **gercek**: bozulma
+> gercekten sogurulmustur (capraz hata 2 -> 4 kutu). Uc senaryonun dogru
+> yorumu da yalnizca ilgili kirilim bolumu okunarak yapilabilir.
 
 **Sinif bazli recall farki (v00'a gore, * = p<0.05 iki oran testi):**
 

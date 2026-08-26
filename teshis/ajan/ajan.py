@@ -39,6 +39,9 @@ ARAC_UYGULAMALARI: dict[str, Callable[..., Any]] = {
     "kosu_metriklerini_getir": araclar.kosu_metriklerini_getir,
     "baseline_farkini_getir": araclar.baseline_farkini_getir,
     "bbox_sayilarini_getir": araclar.bbox_sayilarini_getir,
+    "boyut_bazli_recall_getir": araclar.boyut_bazli_recall_getir,
+    "kaynak_bazli_recall_getir": araclar.kaynak_bazli_recall_getir,
+    "sinif_karisikligini_getir": araclar.sinif_karisikligini_getir,
 }
 
 SISTEM_TALIMATI = """

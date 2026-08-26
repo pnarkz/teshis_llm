@@ -115,4 +115,48 @@ ARAC_BILDIRIMLERI: list[dict[str, Any]] = [
         ),
         "parameters": {"type": "OBJECT", "properties": {}},
     },
+    {
+        "name": "boyut_bazli_recall_getir",
+        "description": (
+            "Nesne boyutu bandi basina recall'i, saglikli referansla ve fark ile "
+            "birlikte dondurur. Toplam mAP kucuk nesne kaybini gizleyebilir; "
+            "genel metrikler mutevazi degisirken belirli bir boyut bandinda buyuk "
+            "dusus varsa bu araci kullanin."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {"kosu_id": {"type": "STRING", "description": "Ornegin kosu_03."}},
+            "required": ["kosu_id"],
+        },
+    },
+    {
+        "name": "kaynak_bazli_recall_getir",
+        "description": (
+            "Veri kaynagi grubu basina recall'i, saglikli referansla ve fark ile "
+            "birlikte dondurur. Kaynak gruplari anonimdir (kaynak_a, kaynak_b ...). "
+            "Bazi kaynaklarda recall korunurken digerlerinde cokuyorsa bu, egitim "
+            "verisinin kaynak cesitliligiyle ilgili bir sorunu isaret eder."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {"kosu_id": {"type": "STRING", "description": "Ornegin kosu_03."}},
+            "required": ["kosu_id"],
+        },
+    },
+    {
+        "name": "sinif_karisikligini_getir",
+        "description": (
+            "Her gercek sinif icin modelin hangi sinifi tahmin ettigini sayilarla "
+            "dondurur; saglikli referansin ayni dagilimi da gelir. 'bulunamadi', o "
+            "kutunun hicbir tahminle eslesmedigi anlamina gelir. Sinif AP ve recall "
+            "degerleri 'dogru yerde bulundu ama yanlis sinif verildi' durumunu "
+            "gizleyebilir; sinif metrikleri normal gorunurken bu matriste capraz "
+            "gecis varsa etiket sinifi sorunu olabilir."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {"kosu_id": {"type": "STRING", "description": "Ornegin kosu_03."}},
+            "required": ["kosu_id"],
+        },
+    },
 ]

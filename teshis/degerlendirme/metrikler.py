@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -111,6 +111,39 @@ def eslestir(
     return eslesen
 
 
+def sinif_bagimsiz_eslestir(
+    gercek: list[dict[str, Any]],
+    tahminler: list[dict[str, Any]],
+    iou_esigi: float = 0.5,
+) -> list[tuple[int, int]]:
+    """Kutulari SINIFTAN BAGIMSIZ eslestirir; (gercek_indis, tahmin_indis) ciftleri dondurur.
+
+    Karisiklik matrisi icin gereklidir: "dogru yerde bulundu ama yanlis sinif
+    verildi" durumunu yakalayabilmek icin eslestirme yalnizca konuma (IoU)
+    bakmalidir. eslestir() ise ayni sinif sartini arar ve bu durumu goremez.
+
+    D3b tam olarak bu ayrimla ortaya cikti: sinif bazli recall/AP neredeyse
+    degismemisken, gercek tasit kutularinin %28'i insan olarak tahmin
+    ediliyordu.
+    """
+    ciftler: list[tuple[int, int]] = []
+    kullanilan: set[int] = set()
+    for tahmin_indis, _ in sorted(
+        enumerate(tahminler), key=lambda oge: -oge[1]["conf"]
+    ):
+        en_iyi_indis, en_iyi_iou = -1, iou_esigi
+        for indis, hedef in enumerate(gercek):
+            if indis in kullanilan:
+                continue
+            deger = iou(hedef["kutu"], tahminler[tahmin_indis]["kutu"])
+            if deger >= en_iyi_iou:
+                en_iyi_indis, en_iyi_iou = indis, deger
+        if en_iyi_indis >= 0:
+            kullanilan.add(en_iyi_indis)
+            ciftler.append((en_iyi_indis, tahmin_indis))
+    return ciftler
+
+
 def etiketleri_oku(etiket_yolu: Path, goruntu_w: int, goruntu_h: int) -> list[dict[str, Any]]:
     """Bir YOLO etiket dosyasini piksel kutulari + boyut bandi olarak okur."""
     if not etiket_yolu.is_file():
@@ -178,6 +211,8 @@ def boyut_bazli_recall(
     sinif_bant: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
     kaynak_sayaclari: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
     kaynak_sinif: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
+    # karisiklik["gercek_sinif"]["tahmin_sinifi" | "bulunamadi"] = adet
+    karisiklik: dict[str, Counter[str]] = defaultdict(Counter)
     toplam_tahmin = 0
 
     for baslangic in range(0, len(goruntuler), batch):
@@ -215,6 +250,18 @@ def boyut_bazli_recall(
                     sayac[anahtar]["toplam"] += 1
                     sayac[anahtar]["eslesen"] += vurus
 
+            # Karisiklik matrisi: sinif bagimsiz eslestirme ile "dogru yerde
+            # bulundu ama yanlis sinif" durumunu yakala.
+            eslesme_haritasi = dict(sinif_bagimsiz_eslestir(gercek, tahminler, iou_esigi))
+            for indis, hedef in enumerate(gercek):
+                gercek_ad = SINIFLAR.get(hedef["sinif"], str(hedef["sinif"]))
+                tahmin_indis = eslesme_haritasi.get(indis)
+                if tahmin_indis is None:
+                    karisiklik[gercek_ad]["bulunamadi"] += 1
+                else:
+                    tahmin_sinif = tahminler[tahmin_indis]["sinif"]
+                    karisiklik[gercek_ad][SINIFLAR.get(tahmin_sinif, str(tahmin_sinif))] += 1
+
     bant_sirasi = [ad for _, ad in BANTLAR]
     return {
         "model": str(model_yolu.resolve()),
@@ -232,6 +279,9 @@ def boyut_bazli_recall(
         "sinif_boyut_recall": _ozetle(sinif_bant),
         "kaynak_recall": _ozetle(kaynak_sayaclari),
         "kaynak_sinif_recall": _ozetle(kaynak_sinif),
+        "karisiklik_matrisi": {
+            gercek: dict(sayimlar) for gercek, sayimlar in sorted(karisiklik.items())
+        },
     }
 
 

@@ -1,0 +1,204 @@
+{
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\experiments\\run_D2a_42\\weights\\best.pt\r",
+  "evaluation_set": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\val_diagnostic",
+  "imgsz": 768,
+  "conf": 0.25,
+  "iou_esigi": 0.5,
+  "goruntu": 1056,
+  "toplam_tahmin": 3965,
+  "bant_tanimi": {
+    "cok_kucuk_16_alti": 16.0,
+    "kucuk_16_32": 32.0,
+    "orta_32_64": 64.0,
+    "buyuk_64_ustu": Infinity
+  },
+  "boyut_bandi_recall": {
+    "cok_kucuk_16_alti": {
+      "gercek_kutu": 1167,
+      "yakalanan": 763,
+      "recall": 0.6538
+    },
+    "kucuk_16_32": {
+      "gercek_kutu": 2011,
+      "yakalanan": 1604,
+      "recall": 0.7976
+    },
+    "orta_32_64": {
+      "gercek_kutu": 520,
+      "yakalanan": 487,
+      "recall": 0.9365
+    },
+    "buyuk_64_ustu": {
+      "gercek_kutu": 316,
+      "yakalanan": 314,
+      "recall": 0.9937
+    }
+  },
+  "sinif_recall": {
+    "insan": {
+      "gercek_kutu": 2718,
+      "yakalanan": 2103,
+      "recall": 0.7737
+    },
+    "tasit": {
+      "gercek_kutu": 1264,
+      "yakalanan": 1037,
+      "recall": 0.8204
+    },
+    "UAP": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "UAI": {
+      "gercek_kutu": 17,
+      "yakalanan": 13,
+      "recall": 0.7647
+    }
+  },
+  "sinif_boyut_recall": {
+    "insan|kucuk_16_32": {
+      "gercek_kutu": 1574,
+      "yakalanan": 1337,
+      "recall": 0.8494
+    },
+    "insan|cok_kucuk_16_alti": {
+      "gercek_kutu": 1129,
+      "yakalanan": 752,
+      "recall": 0.6661
+    },
+    "insan|orta_32_64": {
+      "gercek_kutu": 15,
+      "yakalanan": 14,
+      "recall": 0.9333
+    },
+    "tasit|orta_32_64": {
+      "gercek_kutu": 480,
+      "yakalanan": 452,
+      "recall": 0.9417
+    },
+    "tasit|buyuk_64_ustu": {
+      "gercek_kutu": 310,
+      "yakalanan": 308,
+      "recall": 0.9935
+    },
+    "tasit|kucuk_16_32": {
+      "gercek_kutu": 436,
+      "yakalanan": 266,
+      "recall": 0.6101
+    },
+    "UAP|orta_32_64": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "UAI|kucuk_16_32": {
+      "gercek_kutu": 1,
+      "yakalanan": 1,
+      "recall": 1.0
+    },
+    "UAI|orta_32_64": {
+      "gercek_kutu": 10,
+      "yakalanan": 6,
+      "recall": 0.6
+    },
+    "UAI|buyuk_64_ustu": {
+      "gercek_kutu": 6,
+      "yakalanan": 6,
+      "recall": 1.0
+    },
+    "tasit|cok_kucuk_16_alti": {
+      "gercek_kutu": 38,
+      "yakalanan": 11,
+      "recall": 0.2895
+    }
+  },
+  "kaynak_recall": {
+    "aaterm": {
+      "gercek_kutu": 885,
+      "yakalanan": 786,
+      "recall": 0.8881
+    },
+    "tf2026": {
+      "gercek_kutu": 106,
+      "yakalanan": 100,
+      "recall": 0.9434
+    },
+    "hituav": {
+      "gercek_kutu": 2165,
+      "yakalanan": 1659,
+      "recall": 0.7663
+    },
+    "termal": {
+      "gercek_kutu": 858,
+      "yakalanan": 623,
+      "recall": 0.7261
+    }
+  },
+  "kaynak_sinif_recall": {
+    "aaterm|insan": {
+      "gercek_kutu": 834,
+      "yakalanan": 739,
+      "recall": 0.8861
+    },
+    "aaterm|tasit": {
+      "gercek_kutu": 51,
+      "yakalanan": 47,
+      "recall": 0.9216
+    },
+    "tf2026|tasit": {
+      "gercek_kutu": 59,
+      "yakalanan": 57,
+      "recall": 0.9661
+    },
+    "tf2026|UAP": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "tf2026|insan": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "tf2026|UAI": {
+      "gercek_kutu": 17,
+      "yakalanan": 13,
+      "recall": 0.7647
+    },
+    "hituav|tasit": {
+      "gercek_kutu": 1154,
+      "yakalanan": 933,
+      "recall": 0.8085
+    },
+    "hituav|insan": {
+      "gercek_kutu": 1011,
+      "yakalanan": 726,
+      "recall": 0.7181
+    },
+    "termal|insan": {
+      "gercek_kutu": 858,
+      "yakalanan": 623,
+      "recall": 0.7261
+    }
+  },
+  "karisiklik_matrisi": {
+    "UAI": {
+      "UAI": 13,
+      "bulunamadi": 4
+    },
+    "UAP": {
+      "UAP": 15
+    },
+    "insan": {
+      "insan": 2103,
+      "bulunamadi": 612,
+      "tasit": 3
+    },
+    "tasit": {
+      "tasit": 1037,
+      "bulunamadi": 225,
+      "insan": 2
+    }
+  }
+}

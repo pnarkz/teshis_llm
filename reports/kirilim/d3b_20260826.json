@@ -1,0 +1,204 @@
+{
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\experiments\\run_20260826_105547_D3b_42\\weights\\best.pt\r",
+  "evaluation_set": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\val_diagnostic",
+  "imgsz": 768,
+  "conf": 0.25,
+  "iou_esigi": 0.5,
+  "goruntu": 1056,
+  "toplam_tahmin": 3898,
+  "bant_tanimi": {
+    "cok_kucuk_16_alti": 16.0,
+    "kucuk_16_32": 32.0,
+    "orta_32_64": 64.0,
+    "buyuk_64_ustu": Infinity
+  },
+  "boyut_bandi_recall": {
+    "cok_kucuk_16_alti": {
+      "gercek_kutu": 1167,
+      "yakalanan": 859,
+      "recall": 0.7361
+    },
+    "kucuk_16_32": {
+      "gercek_kutu": 2011,
+      "yakalanan": 1618,
+      "recall": 0.8046
+    },
+    "orta_32_64": {
+      "gercek_kutu": 520,
+      "yakalanan": 471,
+      "recall": 0.9058
+    },
+    "buyuk_64_ustu": {
+      "gercek_kutu": 316,
+      "yakalanan": 305,
+      "recall": 0.9652
+    }
+  },
+  "sinif_recall": {
+    "insan": {
+      "gercek_kutu": 2718,
+      "yakalanan": 2142,
+      "recall": 0.7881
+    },
+    "tasit": {
+      "gercek_kutu": 1264,
+      "yakalanan": 1081,
+      "recall": 0.8552
+    },
+    "UAP": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "UAI": {
+      "gercek_kutu": 17,
+      "yakalanan": 15,
+      "recall": 0.8824
+    }
+  },
+  "sinif_boyut_recall": {
+    "insan|kucuk_16_32": {
+      "gercek_kutu": 1574,
+      "yakalanan": 1285,
+      "recall": 0.8164
+    },
+    "insan|cok_kucuk_16_alti": {
+      "gercek_kutu": 1129,
+      "yakalanan": 846,
+      "recall": 0.7493
+    },
+    "insan|orta_32_64": {
+      "gercek_kutu": 15,
+      "yakalanan": 11,
+      "recall": 0.7333
+    },
+    "tasit|orta_32_64": {
+      "gercek_kutu": 480,
+      "yakalanan": 437,
+      "recall": 0.9104
+    },
+    "tasit|buyuk_64_ustu": {
+      "gercek_kutu": 310,
+      "yakalanan": 299,
+      "recall": 0.9645
+    },
+    "tasit|kucuk_16_32": {
+      "gercek_kutu": 436,
+      "yakalanan": 332,
+      "recall": 0.7615
+    },
+    "UAP|orta_32_64": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "UAI|kucuk_16_32": {
+      "gercek_kutu": 1,
+      "yakalanan": 1,
+      "recall": 1.0
+    },
+    "UAI|orta_32_64": {
+      "gercek_kutu": 10,
+      "yakalanan": 8,
+      "recall": 0.8
+    },
+    "UAI|buyuk_64_ustu": {
+      "gercek_kutu": 6,
+      "yakalanan": 6,
+      "recall": 1.0
+    },
+    "tasit|cok_kucuk_16_alti": {
+      "gercek_kutu": 38,
+      "yakalanan": 13,
+      "recall": 0.3421
+    }
+  },
+  "kaynak_recall": {
+    "aaterm": {
+      "gercek_kutu": 885,
+      "yakalanan": 784,
+      "recall": 0.8859
+    },
+    "tf2026": {
+      "gercek_kutu": 106,
+      "yakalanan": 92,
+      "recall": 0.8679
+    },
+    "hituav": {
+      "gercek_kutu": 2165,
+      "yakalanan": 1786,
+      "recall": 0.8249
+    },
+    "termal": {
+      "gercek_kutu": 858,
+      "yakalanan": 591,
+      "recall": 0.6888
+    }
+  },
+  "kaynak_sinif_recall": {
+    "aaterm|insan": {
+      "gercek_kutu": 834,
+      "yakalanan": 739,
+      "recall": 0.8861
+    },
+    "aaterm|tasit": {
+      "gercek_kutu": 51,
+      "yakalanan": 45,
+      "recall": 0.8824
+    },
+    "tf2026|tasit": {
+      "gercek_kutu": 59,
+      "yakalanan": 48,
+      "recall": 0.8136
+    },
+    "tf2026|UAP": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "tf2026|insan": {
+      "gercek_kutu": 15,
+      "yakalanan": 14,
+      "recall": 0.9333
+    },
+    "tf2026|UAI": {
+      "gercek_kutu": 17,
+      "yakalanan": 15,
+      "recall": 0.8824
+    },
+    "hituav|tasit": {
+      "gercek_kutu": 1154,
+      "yakalanan": 988,
+      "recall": 0.8562
+    },
+    "hituav|insan": {
+      "gercek_kutu": 1011,
+      "yakalanan": 798,
+      "recall": 0.7893
+    },
+    "termal|insan": {
+      "gercek_kutu": 858,
+      "yakalanan": 591,
+      "recall": 0.6888
+    }
+  },
+  "karisiklik_matrisi": {
+    "UAI": {
+      "UAI": 15,
+      "bulunamadi": 2
+    },
+    "UAP": {
+      "UAP": 15
+    },
+    "insan": {
+      "insan": 2140,
+      "bulunamadi": 574,
+      "tasit": 4
+    },
+    "tasit": {
+      "tasit": 1081,
+      "bulunamadi": 179,
+      "insan": 4
+    }
+  }
+}

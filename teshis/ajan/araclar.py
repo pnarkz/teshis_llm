@@ -29,6 +29,8 @@ VAL_DIAGNOSTIC_BBOX_N: dict[str, int] = {"tasit": 1264, "insan": 2718, "UAP": 15
 
 RESULTS_CSV = ROOT / "results.csv"
 BASELINE_JSON = ROOT / "reports/model_karsilastirma_fair/model_karsilastirma.json"
+# teshis/degerlendirme/metrikler.py ciktilari: run_id basina bir dosya.
+KIRILIM_DIR = ROOT / "reports/kirilim"
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -105,3 +107,113 @@ def baseline_farkini_getir(kosu_id: str) -> dict[str, float]:
 def bbox_sayilarini_getir() -> dict[str, int]:
     """val_diagnostic uzerindeki sinif basina bbox sayisini dondurur (belirsizlik notu icin)."""
     return dict(VAL_DIAGNOSTIC_BBOX_N)
+
+
+def _kirilim_oku(kosu_id: str) -> dict[str, Any]:
+    """Bir kosunun kirilim analizini okur; dosya adi anonim kimlikten turetilmez.
+
+    Kirilim dosyalari gercek run_id ile isimlendirildigi icin esleme burada
+    yapilir ve ajana yalnizca sayilar doner; dosya yolu veya run_id disari
+    sizmaz.
+    """
+    if kosu_id == "kosu_01":
+        raise KeyError(
+            "kosu_01 (saglikli referans) icin kirilim analizi ayri tutulur; "
+            "karsilastirma icin bir senaryo kosusu secin."
+        )
+    harita = anonim_kosu_haritasi()
+    if kosu_id not in harita:
+        raise KeyError(f"Bilinmeyen kosu_id: {kosu_id}")
+    yol = KIRILIM_DIR / f"{harita[kosu_id]}.json"
+    if not yol.is_file():
+        raise FileNotFoundError(f"{kosu_id} icin kirilim analizi henuz uretilmemis")
+    return json.loads(yol.read_text(encoding="utf-8"))
+
+
+def _referans_kirilim() -> dict[str, Any]:
+    """Saglikli referans (v00) kirilim analizini okur."""
+    frame = _scenario_rows()
+    v00 = frame[frame["scenario"] == "v00_saglikli"]
+    if v00.empty:
+        raise FileNotFoundError("Saglikli referans kosusu results.csv'de bulunamadi")
+    yol = KIRILIM_DIR / f"{v00.iloc[0]['run_id']}.json"
+    if not yol.is_file():
+        raise FileNotFoundError("Saglikli referans icin kirilim analizi uretilmemis")
+    return json.loads(yol.read_text(encoding="utf-8"))
+
+
+def boyut_bazli_recall_getir(kosu_id: str) -> dict[str, Any]:
+    """Nesne boyutu bandi basina recall'i, saglikli referansla birlikte dondurur.
+
+    Toplam mAP kucuk nesne kaybini gizleyebilir; bu kirilim onu gorunur kilar.
+    """
+    kosu, referans = _kirilim_oku(kosu_id), _referans_kirilim()
+    sonuc: dict[str, Any] = {}
+    for bant, deger in kosu["boyut_bandi_recall"].items():
+        taban = referans["boyut_bandi_recall"].get(bant, {})
+        sonuc[bant] = {
+            "bbox_n": deger["gercek_kutu"],
+            "recall": deger["recall"],
+            "referans_recall": taban.get("recall"),
+            "fark": (
+                round(deger["recall"] - taban["recall"], 4)
+                if deger["recall"] is not None and taban.get("recall") is not None
+                else None
+            ),
+        }
+    return {"bant_tanimi_px": kosu.get("bant_tanimi", {}), "bantlar": sonuc}
+
+
+def kaynak_bazli_recall_getir(kosu_id: str) -> dict[str, Any]:
+    """Veri kaynagi grubu basina recall'i, saglikli referansla birlikte dondurur.
+
+    Kaynak gruplari anonimdir (kaynak_a, kaynak_b ...): gercek kaynak adlari
+    (aaterm, hituav ...) ajana verilmez, cunku senaryo tahminine yardim
+    edebilir. Gruplama sirasi bbox sayisina gore sabittir.
+    """
+    kosu, referans = _kirilim_oku(kosu_id), _referans_kirilim()
+    sirali = sorted(
+        referans["kaynak_recall"].items(), key=lambda oge: -oge[1]["gercek_kutu"]
+    )
+    takma = {gercek: f"kaynak_{chr(97 + i)}" for i, (gercek, _) in enumerate(sirali)}
+    sonuc: dict[str, Any] = {}
+    for gercek_ad, taban in sirali:
+        deger = kosu["kaynak_recall"].get(gercek_ad)
+        if deger is None:
+            continue
+        sonuc[takma[gercek_ad]] = {
+            "bbox_n": deger["gercek_kutu"],
+            "recall": deger["recall"],
+            "referans_recall": taban["recall"],
+            "fark": (
+                round(deger["recall"] - taban["recall"], 4)
+                if deger["recall"] is not None and taban["recall"] is not None
+                else None
+            ),
+        }
+    return {
+        "aciklama": "Kaynak gruplari anonimlestirilmistir; sira bbox sayisina gore sabittir.",
+        "kaynaklar": sonuc,
+    }
+
+
+def sinif_karisikligini_getir(kosu_id: str) -> dict[str, Any]:
+    """Gercek sinif basina, modelin hangi sinifi tahmin ettigini dondurur.
+
+    Sinif bazli AP ve recall, "dogru yerde bulundu ama yanlis sinif verildi"
+    durumunu gizleyebilir; bu matris onu gorunur kilar. "bulunamadi", o gercek
+    kutunun hicbir tahminle eslesmedigi anlamina gelir.
+    """
+    kosu, referans = _kirilim_oku(kosu_id), _referans_kirilim()
+    sonuc: dict[str, Any] = {}
+    for gercek_sinif, sayimlar in kosu["karisiklik_matrisi"].items():
+        taban = referans["karisiklik_matrisi"].get(gercek_sinif, {})
+        toplam = sum(sayimlar.values())
+        sonuc[gercek_sinif] = {
+            "toplam_gercek_kutu": toplam,
+            "tahminler": dict(sorted(sayimlar.items(), key=lambda oge: -oge[1])),
+            "referans_tahminler": dict(
+                sorted(taban.items(), key=lambda oge: -oge[1])
+            ),
+        }
+    return sonuc
