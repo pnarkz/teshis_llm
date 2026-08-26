@@ -26,6 +26,7 @@ SENARYO_BEKLENEN: dict[str, str] = {
     # referans. Ajan icin de saglikli referans olarak puanlanir.
     "v00_saglikli": "saglikli_referans",
     "D3b": "tasit_insan_sinif_karisikligi",
+    "D4": "kucuk_nesne_sinyal_kaybi",
     "D1": "sinif_yetersizligi",
     "D2a": "lokalizasyon_etiket_gurultusu",
     "D2b": "eksik_etiket",
@@ -49,6 +50,7 @@ ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
     "eksik_etiket": (r"eksik|etiket|anot|annotation|yanlis pozitif|false positive", "eksik etiket"),
     "uap_uai_sinif_karisikligi": (r"sinif|karis|uap|uai|id hatas|capraz|confusion", "UAP/UAI sinif karisikligi"),
     "tasit_insan_sinif_karisikligi": (r"sinif|karis|tasit|insan|id hatas|capraz|confusion", "tasit/insan sinif karisikligi"),
+    "kucuk_nesne_sinyal_kaybi": (r"kucuk|boyut|small|olcek|piksel|cozunurluk|minik", "kucuk nesne sinyal kaybi"),
 }
 
 

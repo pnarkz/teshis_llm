@@ -205,6 +205,13 @@ scenario_info = {
         "why": "Sonucun yalnizca veri bozulmasindan mi, yoksa model farkindan mi geldigini kontrol eder.",
         "status": "Tamamlandi",
     },
+    "D4": {
+        "problem": "Kucuk nesne sinyal kaybi",
+        "change": "Egitim etiketlerinden etkin boyutu 16 px altindaki 29.499 kutu silindi (%22,4).",
+        "signal": "Yalnizca <16 px bandinda recall coker; diger bantlar degismez.",
+        "why": "Toplam mAP'in gizledigi boyut-ozgu bir bozulmayi olcer; D1'den ayrimi sinif x boyut kirilimiyla yapilir.",
+        "status": "Tamamlandi",
+    },
     "D3b": {
         "problem": "tasit/insan sinif karisikligi (olculebilir surum)",
         "change": "Train etiketlerinde tasit (0) ve insan (1) siniflarinin %30'u karistirildi (39.393 satir).",

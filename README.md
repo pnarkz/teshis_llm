@@ -30,6 +30,47 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-26 (5) — D4 tamamlandı: projenin en temiz kontrollü deneyi
+
+D4 (küçük nesne sinyal kaybı) koşuldu: 11 epoch, 2,34 saat. Eğitim
+etiketlerinden etkin boyutu 16 px altındaki 29.499 kutu silindi (%22,4).
+
+**Sonuç ders kitabı düzeyinde temiz:**
+
+| Boyut bandı | n | v00 | D4 | fark | z |
+|---|---:|---:|---:|---:|---:|
+| **<16 px (silinen bant)** | 1.167 | 0.7446 | 0.2922 | **-0.4524** | **-21,87** |
+| 16-32 px | 2.011 | 0.8344 | 0.8364 | +0.0020 | +0,17 |
+| 32-64 px | 520 | 0.9308 | 0.9192 | -0.0116 | -0,71 |
+| >64 px | 316 | 0.9873 | 0.9873 | 0.0000 | 0,00 |
+
+Bozulan bant 45 puan çöküyor, diğer üç bantta anlamlı değişim yok. Etki tam
+olarak hedeflenen yere düşüyor, hiçbir yere sızmıyor. Bu, bozulma eşiğinin ve
+ölçüm bandının aynı fonksiyondan türemesi sayesinde mümkün oldu.
+
+**D4 ile D1 ayrımı sınıf × boyut kırılımında ortaya çıkıyor.** D4'te silinen
+kutuların %76'sı `insan`, yani D4 de D1 gibi ağırlıkla insan'ı etkiliyor.
+Ama D4 yalnızca **küçük** insan kutularını kaçırıyor (-0.4650); aynı sınıfın
+16-32 px bandında kayıp yok (+0.0082). Sınıf yetersizliği olsaydı kayıp tüm
+boyutlara yayılırdı. Ajanın iki senaryoyu ayırt edebilmesi için gereken kanıt
+budur ve yalnızca boyut-katmanlı ölçümle görünür.
+
+Toplam insan recall'i: v00 0.7391 → D1 0.7244 (-0.0147, z=-1,22, anlamsız) →
+D4 `best.pt` 0.5746 (-0.1645, z=-12,78) → D4 `last.pt` 0.4522 (-0.2869,
+z=-21,55). D4'ün `best.pt`'si de epoch 1'den seçildi, yani bu etki bozulmaya
+1 epoch maruz kalmış ağırlıklarla bile oluşuyor. Bu, D1 ile farkın maruziyet
+süresinden değil bozulmanın **türünden** geldiğini doğruluyor: D4 modele "bu
+nesneler arka plandır" diye aktif yanlış bilgi öğretir; D1 yalnızca örnek
+sayısını azaltır.
+
+- README'ye "D4 Sonucu" bölümü eklendi, otoriter tabloya D4 satırı ve son iki
+  satırın (D3b, D4) neden tek başına okunamayacağına dair uyarı eklendi.
+- `metrikler.py`'ye kaynak grubu kırılımı eklendi (modül sözleşmesinin
+  eksik üçüncü boyutu); D5 için hazır.
+- `scripts/local_d5.py` + 10 test yazıldı. D5 manifest-only çalışıyor:
+  etiketlere dokunmuyor, görüntü kopyalamıyor.
+- `results.csv`, demo ve ajan puanlaması D4'ü tanıyacak şekilde güncellendi.
+
 ### 2026-08-26 (4) — D3b tamamlandı: mAP'in tamamen gizlediği bir bozulma bulundu
 
 D3b (taşıt↔insan sınıf karışıklığı) koşuldu: 30 epoch, 6,12 saat, `best.pt`
@@ -495,7 +536,9 @@ Sonraki isler:
 - [x] D2a veri senaryosu.
 - [x] D2b veri senaryosu.
 - [x] D3 veri senaryosu.
-- [ ] D4-D6b veri senaryolari.
+- [x] D3b sinif karisikligi (olculebilir surum).
+- [x] D4 kucuk nesne sinyal kaybi.
+- [ ] D5-D6b veri senaryolari.
 - [ ] E1-E4 egitim senaryolari.
 - [ ] Bootstrap guven araliklari ve ajan karar akisi.
 - [ ] Final test: sadece bir kez.
@@ -738,7 +781,7 @@ experiments/run_20260817_222323_D1_42 · reports/d1_sonuc/d1_metrics.json
 - [x] D2a lokalizasyon gurultusu.
 - [x] D2b eksik etiket.
 - [x] D3 UAP/UAI class 2-3 karisikligi.
-- [ ] D4 kucuk nesne sinyal kaybi.
+- [x] D4 kucuk nesne sinyal kaybi.
 - [ ] D5 kaynak/alani kaymasi.
 - [ ] D6a split sizintisi.
 - [ ] D6b tekrar agirligi ve efektif n.
@@ -892,6 +935,71 @@ iyimser yanliydi; tarihsel kayit olarak korunuyor):
 experiments/run_D3_42_local · reports/d3_sonuc/d1_metrics.json
 - veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
 
+### D4 Sonucu — projenin en temiz kontrollu deneyi
+
+D4, egitim etiketlerinden etkin piksel boyutu **16 px'in altinda** kalan
+29.499 kutuyu siler (tum train kutularinin %22,4'u; %76'si `insan`).
+Goruntuler ve diger kutular dokunulmaz, yani model bu nesneleri arka plan
+olarak ogrenir. Kosu: 11 epoch (erken durdu), 2,34 saat.
+
+Uretim asamasinda dogrulandi: **silinen kutularin tamami** `cok_kucuk_16_alti`
+bandinda cikti. Bunun sebebi bozulma esiginin ve olcum bandinin ayni
+fonksiyondan (`teshis/degerlendirme/metrikler.py::etkin_sqrt_alan`) turemesi;
+boylece "egitimden cikarilan bant" ile "recall'i olculen bant" birebir
+ortusuyor.
+
+**Boyut bandi bazli recall (v00'a gore):**
+
+| Boyut bandi | bbox n | v00 | D4 | fark | z |
+|---|---:|---:|---:|---:|---:|
+| **cok_kucuk (<16 px)** | 1.167 | 0.7446 | 0.2922 | **-0.4524** | **-21,87** |
+| kucuk (16-32 px) | 2.011 | 0.8344 | 0.8364 | +0.0020 | +0,17 |
+| orta (32-64 px) | 520 | 0.9308 | 0.9192 | -0.0116 | -0,71 |
+| buyuk (>64 px) | 316 | 0.9873 | 0.9873 | 0.0000 | 0,00 |
+
+**Bu, projedeki en temiz sonuctur.** Bozulan bant 45 puan cokuyor (z=-21,87)
+ve diger uc bandin hicbirinde istatistiksel olarak anlamli degisim yok. Etki
+tam olarak hedeflenen yere dusuyor, hicbir yere sizmiyor.
+
+#### D4 ile D1 nasil ayirt edilir
+
+D4'te silinen kutularin %76'si `insan` sinifindan; yani D4 de D1 gibi
+agirlikla insan'i etkiliyor. Toplam sinif metrikleri ikisini ayirt etmeye
+yetmez — ayrim **sinif x boyut** kiriliminda ortaya cikar:
+
+| Kirilim | bbox n | v00 | D4 | fark |
+|---|---:|---:|---:|---:|
+| insan, <16 px | 1.129 | 0.7564 | 0.2914 | **-0.4650** |
+| insan, 16-32 px | 1.574 | 0.8355 | 0.8437 | **+0.0082** |
+| tasit, 16-32 px | 436 | 0.8303 | 0.8096 | -0.0207 |
+| tasit, 32-64 px | 480 | 0.9333 | 0.9229 | -0.0104 |
+
+D4 yalnizca **kucuk** insan kutularini kaciriyor; ayni sinifin buyuk
+kutularinda hicbir kayip yok (hatta +0,008). Sinif yetersizligi olsaydi
+(D1'in iddiasi) kayip tum boyutlara yayilirdi. Bu, ajanin iki senaryoyu
+birbirinden ayirabilmesi icin gereken ayirt edici kanittir ve yalnizca
+boyut-katmanli olcumle gorunur.
+
+Karsilastirma icin insan recall'inin toplam degeri:
+
+| Kosu | insan recall | v00'a gore fark | z |
+|---|---:|---:|---:|
+| v00 (referans) | 0.7391 | — | — |
+| D1 | 0.7244 | -0.0147 | -1,22 (anlamli degil) |
+| D4 `best.pt` | 0.5746 | **-0.1645** | **-12,78** |
+| D4 `last.pt` | 0.4522 | **-0.2869** | **-21,55** |
+
+D4'un `best.pt`'si de epoch 1'den secildi (v00/D1/D2a gibi), yani bu etki
+bozulmaya yalnizca 1 epoch maruz kalmis agirliklarla bile olusuyor. `last.pt`
+(epoch 11) ile etki neredeyse ikiye katlaniyor. Bu, D1 ile arasindaki farkin
+maruziyet suresinden degil, bozulmanin **turunden** kaynaklandigini gosterir:
+D4 modele "bu nesneler arka plandir" diye aktif yanlis bilgi ogretir; D1 ise
+yalnizca ornek sayisini azaltir.
+
+- reports/d4_best_sonuc/d1_metrics.json
+- reports/boyut_analizi/v00.json · reports/boyut_analizi/D4.json
+- veri_surumleri/v06_d4_kucuk_nesne_sinyal_kaybi/manifest.json
+
 ### D3b Sonucu — mAP'in tamamen gizledigi bir bozulma
 
 D3b, D3 ile **ayni bozulmayi** (ayni takas orani 0.30, ayni seed, ayni
@@ -1006,12 +1114,16 @@ gosterir.
 | D2b eksik etiket | -0.0130 | -0.0157 | **-0.1087** | +0.0237 | desteklendi |
 | D3 sinif karisikligi (nadir) | -0.0281 | -0.0215 | **-0.2047** | -0.0347 | guclu destek |
 | D3b sinif karisikligi (bol) | -0.0262 | +0.0042 | +0.0097 | -0.0495 | **yalnizca confusion matrix'te** |
+| D4 kucuk nesne sinyal kaybi | -0.0224 | -0.0006 | -0.0642 | -0.0349 | **yalnizca boyut kiriliminda** |
 
-> D3b satiri yaniltici gorunur: metrikler neredeyse degismemis. Ancak sabit
-> esikli confusion matrix gercek tasit kutularinin %28'inin insan olarak
-> tahmin edildigini gosteriyor (z=20,3). Ayrinti icin yukaridaki "D3b Sonucu"
-> bolumune bakin. Bu satir, tablonun tek basina okunmamasi gerektiginin
-> kanitidir.
+> **Son iki satir bu tablonun tek basina okunamayacaginin kanitidir.**
+> D3b'de metrikler neredeyse degismemis gorunur, ancak sabit esikli confusion
+> matrix gercek tasit kutularinin %28'inin insan olarak tahmin edildigini
+> gosterir (z=20,3). D4'te de toplam degerler mutevazidir, ancak boyut
+> kirilimi 16 px altindaki bandin 45 puan coktugunu gosterir (z=-21,87);
+> diger uc bantta degisim yoktur. Her iki bozulma da yalnizca dogru kirilimla
+> bakildiginda gorunur hale geliyor. Ayrinti icin yukaridaki "D4 Sonucu" ve
+> "D3b Sonucu" bolumlerine bakin.
 
 **Sinif bazli recall farki (v00'a gore, * = p<0.05 iki oran testi):**
 

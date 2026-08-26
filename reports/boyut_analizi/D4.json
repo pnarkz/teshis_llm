@@ -1,0 +1,185 @@
+{
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\experiments\\run_20260826_171939_D4_42\\weights\\best.pt",
+  "evaluation_set": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\val_diagnostic",
+  "imgsz": 768,
+  "conf": 0.25,
+  "iou_esigi": 0.5,
+  "goruntu": 1056,
+  "toplam_tahmin": 3543,
+  "bant_tanimi": {
+    "cok_kucuk_16_alti": 16.0,
+    "kucuk_16_32": 32.0,
+    "orta_32_64": 64.0,
+    "buyuk_64_ustu": Infinity
+  },
+  "boyut_bandi_recall": {
+    "cok_kucuk_16_alti": {
+      "gercek_kutu": 1167,
+      "yakalanan": 341,
+      "recall": 0.2922
+    },
+    "kucuk_16_32": {
+      "gercek_kutu": 2011,
+      "yakalanan": 1682,
+      "recall": 0.8364
+    },
+    "orta_32_64": {
+      "gercek_kutu": 520,
+      "yakalanan": 478,
+      "recall": 0.9192
+    },
+    "buyuk_64_ustu": {
+      "gercek_kutu": 316,
+      "yakalanan": 312,
+      "recall": 0.9873
+    }
+  },
+  "sinif_recall": {
+    "insan": {
+      "gercek_kutu": 2718,
+      "yakalanan": 1669,
+      "recall": 0.6141
+    },
+    "tasit": {
+      "gercek_kutu": 1264,
+      "yakalanan": 1114,
+      "recall": 0.8813
+    },
+    "UAP": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "UAI": {
+      "gercek_kutu": 17,
+      "yakalanan": 15,
+      "recall": 0.8824
+    }
+  },
+  "sinif_boyut_recall": {
+    "insan|kucuk_16_32": {
+      "gercek_kutu": 1574,
+      "yakalanan": 1328,
+      "recall": 0.8437
+    },
+    "insan|cok_kucuk_16_alti": {
+      "gercek_kutu": 1129,
+      "yakalanan": 329,
+      "recall": 0.2914
+    },
+    "insan|orta_32_64": {
+      "gercek_kutu": 15,
+      "yakalanan": 12,
+      "recall": 0.8
+    },
+    "tasit|orta_32_64": {
+      "gercek_kutu": 480,
+      "yakalanan": 443,
+      "recall": 0.9229
+    },
+    "tasit|buyuk_64_ustu": {
+      "gercek_kutu": 310,
+      "yakalanan": 306,
+      "recall": 0.9871
+    },
+    "tasit|kucuk_16_32": {
+      "gercek_kutu": 436,
+      "yakalanan": 353,
+      "recall": 0.8096
+    },
+    "UAP|orta_32_64": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "UAI|kucuk_16_32": {
+      "gercek_kutu": 1,
+      "yakalanan": 1,
+      "recall": 1.0
+    },
+    "UAI|orta_32_64": {
+      "gercek_kutu": 10,
+      "yakalanan": 8,
+      "recall": 0.8
+    },
+    "UAI|buyuk_64_ustu": {
+      "gercek_kutu": 6,
+      "yakalanan": 6,
+      "recall": 1.0
+    },
+    "tasit|cok_kucuk_16_alti": {
+      "gercek_kutu": 38,
+      "yakalanan": 12,
+      "recall": 0.3158
+    }
+  },
+  "kaynak_recall": {
+    "aaterm": {
+      "gercek_kutu": 885,
+      "yakalanan": 815,
+      "recall": 0.9209
+    },
+    "tf2026": {
+      "gercek_kutu": 106,
+      "yakalanan": 100,
+      "recall": 0.9434
+    },
+    "hituav": {
+      "gercek_kutu": 2165,
+      "yakalanan": 1289,
+      "recall": 0.5954
+    },
+    "termal": {
+      "gercek_kutu": 858,
+      "yakalanan": 609,
+      "recall": 0.7098
+    }
+  },
+  "kaynak_sinif_recall": {
+    "aaterm|insan": {
+      "gercek_kutu": 834,
+      "yakalanan": 769,
+      "recall": 0.9221
+    },
+    "aaterm|tasit": {
+      "gercek_kutu": 51,
+      "yakalanan": 46,
+      "recall": 0.902
+    },
+    "tf2026|tasit": {
+      "gercek_kutu": 59,
+      "yakalanan": 56,
+      "recall": 0.9492
+    },
+    "tf2026|UAP": {
+      "gercek_kutu": 15,
+      "yakalanan": 15,
+      "recall": 1.0
+    },
+    "tf2026|insan": {
+      "gercek_kutu": 15,
+      "yakalanan": 14,
+      "recall": 0.9333
+    },
+    "tf2026|UAI": {
+      "gercek_kutu": 17,
+      "yakalanan": 15,
+      "recall": 0.8824
+    },
+    "hituav|tasit": {
+      "gercek_kutu": 1154,
+      "yakalanan": 1012,
+      "recall": 0.8769
+    },
+    "hituav|insan": {
+      "gercek_kutu": 1011,
+      "yakalanan": 277,
+      "recall": 0.274
+    },
+    "termal|insan": {
+      "gercek_kutu": 858,
+      "yakalanan": 609,
+      "recall": 0.7098
+    }
+  }
+}

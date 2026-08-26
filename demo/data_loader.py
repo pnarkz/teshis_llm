@@ -57,6 +57,7 @@ EVIDENCE_JSON = {
     "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d1_metrics.json",
     "D3": ROOT / "reports/d3_v2_sonuc/d1_metrics.json",
     "D3b": ROOT / "reports/d3b_sonuc/d1_metrics.json",
+    "D4": ROOT / "reports/d4_best_sonuc/d1_metrics.json",
 }
 
 EVIDENCE_FOLDERS = {
@@ -67,6 +68,7 @@ EVIDENCE_FOLDERS = {
     "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic",
     "D3": ROOT / "reports/d3_v2_sonuc/d3_v2_val_diagnostic",
     "D3b": ROOT / "reports/d3b_sonuc/d3b_val_diagnostic",
+    "D4": ROOT / "reports/d4_best_sonuc/d4_best_val_diagnostic",
 }
 
 
