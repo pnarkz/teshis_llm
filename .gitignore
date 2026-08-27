@@ -52,3 +52,6 @@ veri_surumleri/*/labels/
 !veri_surumleri/**/manifest.txt
 !veri_surumleri/**/data.yaml
 !veri_surumleri/**/*.txt
+
+# Ultralytics etiket onbellegi (uretilen dosya)
+*.cache
