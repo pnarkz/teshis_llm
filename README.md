@@ -30,6 +30,60 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-28 — D6a ve D6b tamamlandı; D serisi bitti, yolo26n karşılaştırması başladı
+
+**D6a (split sızıntısı)** tamamlandı ve önemli bir tasarım bulgusu verdi:
+**bu senaryo yeniden eğitim gerektirmiyor.** Sızıntı modeli değil ölçümü
+bozar, o yüzden mevcut v00 modeli iki kümede ölçüldü. Daha önce "kural 3 ile
+çatışıyor" diye çekindiğim senaryo, kilitli tanı seti temiz taban olarak
+kullanılınca test setine hiç dokunmadan yapılabildi.
+
+%20 sızıntı mAP50-95'i **+0.0287 (+%4,3)** şişiriyor, mAP50'yi sadece
++0.0085. En çok mAP50-95'in şişmesi mekanizmayla tutarlı: model sızan
+karelerin kutu konumlarını ezberlemiş, sıkı IoU eşikleri tam da onu ölçüyor.
+Asıl tehlike, bu şişmenin projedeki birçok **gerçek** bozulmanın etkisinden
+büyük olması (D4 -0.0006, D3b +0.0042, D5 +0.0044) — yani sızıntı bir
+bozulmayı tamamen maskeleyebilir.
+
+**D6b (tekrar ağırlığı)** tamamlandı ve projenin en net **doz-yanıt**
+ilişkisini gösterdi. 175 kare 40× tekrarlanarak eğitimin %28,8'ini kapladı;
+o karelerde UAI hiç yok (bbox payı %0,00). `last.pt`'de sonuç temsil payını
+tam olarak izliyor:
+
+| Sınıf | eğitimdeki pay | recall farkı | z |
+|---|---:|---:|---:|
+| tasit | %22,80 | +0.0356 | +2,52 * |
+| insan | %10,39 | +0.0224 | +1,91 |
+| UAP | %0,06 | 0.0000 | 0,00 |
+| **UAI** | **%0,00** | **-0.6123** | **-3,74 *** |
+
+Hiç temsil edilmeyen sınıf çöküyor (recall 0.9412 → 0.3289). Dikkat çekici
+olan: bu bozulma veriye **hiçbir hata eklemiyor** — hiçbir etiket yanlış
+değil, hiçbir kutu silinmedi. Yalnızca bazı kareler daha sık gösterildi.
+Veri kalitesinin sadece "etiketler doğru mu" olmadığını, **dağılımın
+kendisinin** bir kalite boyutu olduğunu gösteriyor.
+
+**Yeni koruma — farklı ölçüm kümesi karışması.** D6a farklı bir
+değerlendirme kümesinde ölçüldüğü için ajan katmanına yapısal engel eklendi:
+`anonim_kosu_haritasi` artık yalnızca `KILITLI_DEGERLENDIRME_SETI` üzerinde
+ölçülmüş koşuları sunuyor. Aksi halde ajan farklı tabanları kıyaslar ve
+sızıntının şişmesini "bozulma" sanardı. Kayıt `results.csv`'de duruyor,
+sadece ajana verilmiyor.
+
+**Ayrıca:** `labels.cache` bir commit'e sızmıştı (Ultralytics'in ürettiği
+makineye özgü önbellek); git takibinden çıkarıldı ve `.gitignore`'a genel
+`*.cache` kuralı eklendi — mevcut kural yalnızca `experiments/` altını
+kapsıyordu.
+
+**Başlatıldı: yolo26n karşılaştırması.** D1'in mevcut kurguda başarısız
+olmasının nedeni, `main_model.pt`'nin zaten tüm veriyi görmüş olmasıydı.
+Genel amaçlı `yolo26n.pt`'den bir referans (`v00n`) ve bir D1 koşusu
+başlatıldı (~6,4 saat/koşu). **Önemli sınır:** `yolo26n.pt` 2,57M
+parametreli nano bir model; `main_model.pt` çok daha büyük. Bu çift kendi
+içinde geçerli bir kontrollü karşılaştırmadır ("veriyi hiç görmemiş bir
+model sınıf yetersizliğinden etkilenir mi?") ancak sayıları mevcut
+main_model serisiyle **doğrudan kıyaslanamaz.**
+
 ### 2026-08-26 (10) — Function-calling ajanı çalıştırıldı; ilk gözlem alındı, üç hata düzeltildi
 
 Ajan ilk kez canlı API ile koşuldu. **Deneme tamamlanamadı** (günlük API kotası
@@ -804,10 +858,11 @@ Sonraki isler:
 - [x] D5 kaynak/alan kaymasi.
 - [ ] Function-calling ajan denemesi: 5/9 kosu kosuldu, gunluk API kotasi
   bitti. `python -m teshis.ajan.ajan --devam` ile tamamlanacak.
-- [ ] D6a-D6b veri senaryolari.
+- [x] D6a split sizintisi.
+- [x] D6b tekrar agirligi.
 - [ ] E1-E4 egitim senaryolari.
-- [ ] D1'in yolo26n.pt'den yeniden kosulmasi (mevcut kurguda hipotez
-  desteklenmiyor; bkz. Bakim Gunlugu 2026-08-26 (3)).
+- [~] D1'in yolo26n.pt'den yeniden kosulmasi: v00n referans egitimi basladi,
+  ardindan D1n gelecek (~6,4 saat/kosu).
 - [ ] teshis/servis/ (Asama 2) - hala bos iskelet.
 - [ ] Bootstrap guven araliklari.
 - [ ] Final test: sadece bir kez.
@@ -1220,6 +1275,68 @@ Ilk kosu (egitim val'i olarak kilitli tanı setini kullaniyordu, bu yuzden
 iyimser yanliydi; tarihsel kayit olarak korunuyor):
 experiments/run_D3_42_local · reports/d3_sonuc/d1_metrics.json
 - veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
+
+### D6b Sonucu — temsil payi ile performans arasinda net doz-yanit iliskisi
+
+D6b, 175 train karesini **40 kez** tekrarlayarak o sahneleri asiri temsil
+eder. Egitim listesi 17.515 -> 24.340 satira cikar ve bu 175 kare egitimin
+**%28,8'ini** kaplar. D1/D5 gibi manifest-only: etiketler degismez, goruntu
+kopyalanmaz. Kosu: 11 epoch, 3,15 saat.
+
+Bozulmanin kritik ozelligi, tekrarlanan karelerin **sinif bilesimidir**:
+
+| Sinif | Tekrarlanan karelerdeki bbox payi |
+|---|---:|
+| tasit | %22,80 |
+| insan | %10,39 |
+| UAP | %0,06 |
+| **UAI** | **%0,00** |
+
+Yani asiri temsil edilen sahnelerde UAI hic bulunmuyor, UAP neredeyse yok.
+Hipotez: bu siniflarin goreli agirligi dustugu icin performanslari bozulmali.
+
+**`best.pt` (epoch 1) hipotezi gostermez.** mAP50 +0.0033, insan recall
++0.0394. Bu, D1/D2a/D4/D5'te de gorulen desendir: model hicbir epoch'ta
+baslangictan iyi olamadigi icin en iyi checkpoint epoch 1'den secilir ve
+bozulmaya neredeyse hic maruz kalmaz.
+
+**`last.pt` (epoch 11) hipotezi net bicimde dogrular** ve temsil payi ile
+performans arasinda **monotonik** bir iliski cikar:
+
+| Sinif | bbox n | egitimdeki asiri temsil | AP50 farki | recall farki | z |
+|---|---:|---:|---:|---:|---:|
+| tasit | 1.264 | %22,80 | +0.0119 | +0.0356 | +2,52 * |
+| insan | 2.718 | %10,39 | +0.0041 | +0.0224 | +1,91 |
+| UAP | 15 | %0,06 | 0.0000 | 0.0000 | 0,00 |
+| **UAI** | **17** | **%0,00** | **-0.1482** | **-0.6123** | **-3,74 *** |
+
+Siralama tam olarak temsil payini izliyor: en cok temsil edilen sinif
+(tasit) kazaniyor, ikinci sinif (insan) daha az kazaniyor, hic temsil
+edilmeyen sinif (UAI) **cokuyor** — recall 0.9412'den 0.3289'a iniyor.
+Etki n=17 olmasina ragmen istatistiksel olarak anlamli (z=-3,74), cunku
+buyuklugu cok fazla.
+
+UAP'nin degismemesi aciklanabilir: v00'da zaten recall 1.0000 ile tavanda ve
+tekrarlanan karelerdeki payi sifir degil (%0,06), yani tamamen yok olmamis.
+
+**Bulgunun anlami.** Tekrar agirligi, veriye hicbir "hata" eklemez: hicbir
+etiket yanlis degildir, hicbir kutu silinmemistir, hicbir goruntu
+bozulmamistir. Yalnizca bazi kareler daha sik gosterilir. Buna ragmen, o
+karelerde bulunmayan bir sinif neredeyse tamamen kaybolur. Bu, veri
+kalitesinin yalnizca "etiketler dogru mu" sorusu olmadigini; **dagilimin
+kendisinin** bir kalite boyutu oldugunu gosterir.
+
+Pratik karsiligi yaygin: ayni sahnenin cok kez cekilmesi, augment
+kopyalarinin veri setine birden fazla girmesi veya "zor ornekleri cogalt"
+turu bir dengeleme calismasinin yan etkisi. Hicbiri hata gibi gorunmez.
+
+> **Sinir:** UAI icin n=17 oldugundan bu etkinin **buyuklugu** hakkinda kesin
+> genelleme yapilamaz; %95 guven araligi genistir. Ancak yon ve anlamlilik
+> (z=-3,74) rastgele dalgalanmayla aciklanamaz. D3/D3b ciftinde oldugu gibi,
+> nadir siniflarda yon guvenilir, buyukluk degildir.
+
+- reports/d6b_best_sonuc/d1_metrics.json · reports/d6b_last_sonuc/d1_metrics.json
+- veri_surumleri/v09_d6b_tekrar_agirligi/manifest.json
 
 ### D6a Sonucu — sizintili val, gercek bozulmalardan daha buyuk bir yalan soyluyor
 

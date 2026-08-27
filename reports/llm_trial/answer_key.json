@@ -34,5 +34,9 @@
   "kosu_09": {
     "hidden_role": "D5",
     "expected": "kaynak_alani_kaymasi"
+  },
+  "kosu_10": {
+    "hidden_role": "D6b",
+    "expected": "tekrar_agirligi"
   }
 }

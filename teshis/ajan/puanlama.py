@@ -28,6 +28,7 @@ SENARYO_BEKLENEN: dict[str, str] = {
     "D3b": "tasit_insan_sinif_karisikligi",
     "D4": "kucuk_nesne_sinyal_kaybi",
     "D5": "kaynak_alani_kaymasi",
+    "D6b": "tekrar_agirligi",
     "D1": "sinif_yetersizligi",
     "D2a": "lokalizasyon_etiket_gurultusu",
     "D2b": "eksik_etiket",
@@ -53,6 +54,7 @@ ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
     "tasit_insan_sinif_karisikligi": (r"sinif|karis|tasit|insan|id hatas|capraz|confusion", "tasit/insan sinif karisikligi"),
     "kucuk_nesne_sinyal_kaybi": (r"kucuk|boyut|small|olcek|piksel|cozunurluk|minik", "kucuk nesne sinyal kaybi"),
     "kaynak_alani_kaymasi": (r"kaynak|alan|domain|dagilim|kayma|shift|sensor|cesitlilik", "kaynak/alan kaymasi"),
+    "tekrar_agirligi": (r"tekrar|asiri temsil|dengesiz|dagilim|agirlik|baskin|over.?represent|duplicate", "tekrar agirligi"),
     # Bozulmanin tanı setinde anlamli iz birakmadigi kosular icin gecerli cevap.
     "anlamli_degisim_yok": (
         r"stabil|degisim yok|fark yok|anlamli\w*\s*(degil|yok)|iyilesme|korunmus|"
