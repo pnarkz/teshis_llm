@@ -1,0 +1,8 @@
+# D6a: SIZINTILI degerlendirme kumesi. Train kareleri val icine eklenmistir;
+# bu kume yalnizca sizintinin etkisini olcmek icindir, model secimi icin
+# KULLANILMAMALIDIR.
+path: C:/Users/ASUS/Desktop/termal_teshis/veri_surumleri/v08_d6a_split_sizintisi
+train: images
+val: images
+nc: 4
+names: [tasit, insan, UAP, UAI]

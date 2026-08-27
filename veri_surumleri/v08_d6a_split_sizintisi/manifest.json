@@ -1,0 +1,33 @@
+{
+  "format": "dataset_manifest_v1",
+  "scenario": "D6a",
+  "version": "v08_d6a_split_sizintisi",
+  "created_at_utc": "2026-08-27T17:58:14.408965+00:00",
+  "source_dataset": "C:\\Users\\ASUS\\Desktop\\HYZ\\dataset",
+  "clean_reference_set": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\val_diagnostic",
+  "source_dataset_unchanged": true,
+  "labels_modified": false,
+  "requires_training": false,
+  "seed": 42,
+  "parameters": {
+    "kaynak_sizdirma_orani": 0.2
+  },
+  "counts": {
+    "temiz_kare": 1056,
+    "sizdirilan_train_karesi": 264,
+    "toplam_kare": 1320,
+    "gerceklesen_sizinti_orani": 0.2,
+    "sizan_kaynak_dagilimi": {
+      "aaterm": 177,
+      "termal": 53,
+      "tf2026": 4,
+      "hituav": 29,
+      "sentetik": 1
+    }
+  },
+  "test_split_used": false,
+  "sizan_train_etiketleri_sha256": "c2f58c16763fb9f29e916311d4ec61305a566ed32b2d1510e58e4db8541dde47",
+  "files": {
+    "data_yaml": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v08_d6a_split_sizintisi\\data.yaml"
+  }
+}

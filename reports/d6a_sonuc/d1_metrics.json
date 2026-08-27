@@ -1,0 +1,40 @@
+{
+  "scenario": "D6a_sizintili",
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\experiments\\run_20260826_081354_v00_42\\weights\\best.pt",
+  "data": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v08_d6a_split_sizintisi\\data.yaml",
+  "imgsz": 768,
+  "mAP50": 0.9285079495990645,
+  "mAP50_95": 0.6993740493933542,
+  "precision": 0.9210375411489771,
+  "recall": 0.8845829282871147,
+  "class_names": [
+    "tasit",
+    "insan",
+    "UAP",
+    "UAI"
+  ],
+  "class_ap50": [
+    0.9112808222475508,
+    0.8215435458081499,
+    0.995,
+    0.9862074303405571
+  ],
+  "class_ap50_95": [
+    0.6266514256357733,
+    0.44286166813054606,
+    0.9088901709401709,
+    0.8190929328669266
+  ],
+  "class_precision": [
+    0.8988408491968615,
+    0.8823102402943254,
+    0.9707939954121593,
+    0.9322050796925619
+  ],
+  "class_recall": [
+    0.8507843852608536,
+    0.74637085729937,
+    1.0,
+    0.9411764705882353
+  ]
+}

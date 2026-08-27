@@ -23,7 +23,13 @@ def test_her_senaryonun_beklenen_teshisi_tanimli():
     """results.csv'deki her senaryo icin SENARYO_BEKLENEN kaydi olmalidir."""
     import pandas as pd
 
-    scenarios = set(pd.read_csv(araclar.RESULTS_CSV)["scenario"])
+    frame = pd.read_csv(araclar.RESULTS_CSV)
+    # Yalnizca ajana sunulan kosular; farkli bir degerlendirme kumesinde
+    # olculenler (orn. D6a'nin sizintili kumesi) ajana verilmez ve cevap
+    # anahtarina girmez.
+    scenarios = set(
+        frame[frame["evaluation_set"] == araclar.KILITLI_DEGERLENDIRME_SETI]["scenario"]
+    )
     # results.csv'de iki D2b kosusu ayni senaryo adini tasir; demo/loader
     # bunlardan birini "D2b final_best" olarak yeniden adlandirir.
     scenarios |= {"Baseline", "D2b final_best"}

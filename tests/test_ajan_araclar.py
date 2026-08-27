@@ -24,7 +24,10 @@ def test_kosu_listesi_uzunlugu_results_csv_ile_tutarli():
     olarak sunulmaz; kosu_01 olarak karsilastirma tabani rolunu ustlenir.
     """
     frame = pd.read_csv(araclar.RESULTS_CSV)
-    senaryo_sayisi = (frame["scenario"] != araclar.REFERANS_SENARYO).sum()
+    senaryo_sayisi = (
+        (frame["scenario"] != araclar.REFERANS_SENARYO)
+        & (frame["evaluation_set"] == araclar.KILITLI_DEGERLENDIRME_SETI)
+    ).sum()
     assert len(araclar.kosu_listesini_getir()) == senaryo_sayisi + 1
 
 
@@ -85,3 +88,29 @@ def test_baseline_farki_baseline_metrikleriyle_tutarlidir():
 
 def test_bbox_sayilari_val_diagnostic_ile_sabittir():
     assert araclar.bbox_sayilarini_getir() == {"tasit": 1264, "insan": 2718, "UAP": 15, "UAI": 17}
+
+
+def test_farkli_degerlendirme_setindeki_kosu_ajana_verilmez():
+    """Ajan yalnizca ayni kilitli kumede olculmus kosulari gormeli.
+
+    D6a'nin metrikleri kasitli olarak SIZINTILI bir kumede olculdu. Ayni
+    tabloya konup ajana senaryo olarak sunulursa, ajan farkli tabanlari
+    kiyaslar ve sizintinin sismesini "bozulma" sanir.
+    """
+    frame = pd.read_csv(araclar.RESULTS_CSV).set_index("run_id")
+    for run_id in araclar.anonim_kosu_haritasi().values():
+        assert frame.loc[run_id, "evaluation_set"] == araclar.KILITLI_DEGERLENDIRME_SETI, (
+            f"{run_id} farkli bir degerlendirme kumesinde olculmus; ajana verilmemeli"
+        )
+
+
+def test_kilitli_set_disindaki_satirlar_results_csvde_kalir():
+    """Disarida birakma yalnizca ajan katmanindadir; kayit silinmez."""
+    frame = pd.read_csv(araclar.RESULTS_CSV)
+    disaridakiler = frame[frame["evaluation_set"] != araclar.KILITLI_DEGERLENDIRME_SETI]
+    if disaridakiler.empty:
+        pytest.skip("farkli kumede olculmus kosu yok")
+    # Kayit duruyor ama ajan haritasinda yok.
+    harita = set(araclar.anonim_kosu_haritasi().values())
+    for run_id in disaridakiler["run_id"]:
+        assert run_id not in harita

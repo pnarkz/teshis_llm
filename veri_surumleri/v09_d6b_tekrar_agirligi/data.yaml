@@ -1,0 +1,8 @@
+# D6b: yalnizca train goruntu listesi yeniden agirliklandirilir.
+# Etiketler degistirilmez, goruntu kopyalanmaz.
+path: C:/Users/ASUS/Desktop/HYZ/dataset
+train: C:/Users/ASUS/Desktop/termal_teshis/veri_surumleri/v09_d6b_tekrar_agirligi/train_images.txt
+val: C:/Users/ASUS/Desktop/HYZ/dataset/images/val
+test: C:/Users/ASUS/Desktop/HYZ/dataset/images/test
+nc: 4
+names: [tasit, insan, UAP, UAI]

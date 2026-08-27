@@ -46,6 +46,11 @@ def _scenario_rows() -> pd.DataFrame:
 
 
 REFERANS_SENARYO = "v00_saglikli"
+# Ajan yalnizca AYNI kilitli kumede olculmus kosulari karsilastirabilir.
+# Farkli bir degerlendirme kumesinde olculen bir kosu (orn. D6a'nin sizintili
+# kumesi) ayni tabloya konursa, ajan elmayla armudu kiyaslar ve fark
+# "bozulma" gibi gorunur. Bu sabit, o karistirmayi yapisal olarak engeller.
+KILITLI_DEGERLENDIRME_SETI = "val_diagnostic"
 
 
 def _referans_satiri() -> "pd.Series":
@@ -69,9 +74,15 @@ def anonim_kosu_haritasi() -> dict[str, str]:
     kosu_01 saglikli referansa (v00) ayrildigi icin senaryo kosulari
     kosu_02'den baslar ve v00'in kendisi bu haritaya DAHIL EDILMEZ: ajanin
     teshis etmesi gereken bir senaryo degil, karsilastirma tabanidir.
+
+    Kilitli tanı setinden BASKA bir kumede olculmus kosular da disarida
+    birakilir; ajan yalnizca ayni tabanda olculmus kosulari karsilastirabilir.
     """
     frame = _scenario_rows()
-    senaryolar = frame[frame["scenario"] != REFERANS_SENARYO]
+    senaryolar = frame[
+        (frame["scenario"] != REFERANS_SENARYO)
+        & (frame["evaluation_set"] == KILITLI_DEGERLENDIRME_SETI)
+    ]
     return {
         f"kosu_{index + 2:02d}": str(run_id)
         for index, run_id in enumerate(senaryolar["run_id"])

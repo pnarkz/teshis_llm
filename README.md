@@ -1221,6 +1221,65 @@ iyimser yanliydi; tarihsel kayit olarak korunuyor):
 experiments/run_D3_42_local · reports/d3_sonuc/d1_metrics.json
 - veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
 
+### D6a Sonucu — sizintili val, gercek bozulmalardan daha buyuk bir yalan soyluyor
+
+D6a, veri setinin **degerlendirme tarafindaki** bir kusuru gosterir: train
+kareleri val icine de sizmissa, val skoru yapay olarak yukselir ve gelistirme
+boyunca yaniltir.
+
+**Bu senaryo yeniden egitim gerektirmez.** Sizinti modeli degil olcumu bozar;
+bu yuzden zaten egitilmis saglikli referans (v00) modeli iki farkli kumede
+olculur. Kilitli tanı setine 264 train karesi eklenerek %20 sizintili bir
+degerlendirme kumesi uretildi (1.056 temiz + 264 sizan = 1.320 kare).
+
+**Ayni model, iki farkli kume:**
+
+| Olcum | temiz tanı seti | sizintili kume | sisme | goreli |
+|---|---:|---:|---:|---:|
+| mAP50 | 0.9200 | 0.9285 | +0.0085 | +0,9% |
+| **mAP50-95** | **0.6707** | **0.6994** | **+0.0287** | **+4,3%** |
+| Precision | 0.9175 | 0.9210 | +0.0035 | +0,4% |
+| Recall | 0.8785 | 0.8846 | +0.0060 | +0,7% |
+
+Sinif bazinda: tasit AP50 +0.0256, insan AP50 +0.0146.
+
+**En cok mAP50-95 sisiyor (+4,3%), mAP50'nin (+0,9%) bes kati.** Mekanizma
+acik: model sizan kareleri egitimde gormus ve kutu konumlarini ezberlemistir;
+siki IoU esikleri (0.5-0.95) tam da konum hassasiyetini olctugu icin
+ezberlemeden en cok onlar yararlanir. Yani sizinti, **en guvendigimiz metrigi
+en cok bozuyor.**
+
+#### Asil tehlike: sizinti, gercek bozulmalari maskeleyebilir
+
+Sizintinin urettigi sisme (+0.0287 mAP50-95), projedeki bircok **gercek
+bozulmanin** olculen etkisinden daha buyuk:
+
+| Kaynak | mAP50-95 degisimi |
+|---|---:|
+| **D6a sizinti sismesi** | **+0.0287** |
+| D1 sinif yetersizligi | +0.0240 |
+| D5 kaynak kaymasi (`best.pt`) | +0.0044 |
+| D3b sinif karisikligi | +0.0042 |
+| D4 kucuk nesne kaybi | -0.0006 |
+
+Yalnizca %20 sizinti, D4'un ve D3b'nin gercek etkisini tamamen ortecek
+buyuklukte bir sisme uretiyor. Sizintili bir val setiyle calisan ekip, D4
+gibi bir bozulmayi olcemez: bozulmanin dusurdugu skoru sizintinin sismesi
+geri kaldirir ve metrik "normal" gorunur.
+
+Bu, D5'in dersinin tamamlayicisidir. D5 "val setinizin **kaynak cesitliligi**
+onemlidir" diyordu; D6a "val setinizin **temizligi** onemlidir" diyor. Ikisi
+birlikte, projenin kilitli ve degistirilmeyen bir tanı seti tutma kuralinin
+neden metodolojinin merkezinde oldugunu gosterir.
+
+**Kural 3 ihlal edilmedi:** temiz karsilastirma tabani olarak kilitli tanı
+seti kullanildi, test setine hic dokunulmadi. Senaryo config'indeki
+"test-val farki" ifadesi ayni olguyu anlatir; burada temiz taban olarak tanı
+seti alinmistir.
+
+- reports/d6a_sonuc/d1_metrics.json
+- veri_surumleri/v08_d6a_split_sizintisi/manifest.json
+
 ### D5 Sonucu — erken durdurmanin gizledigi felaket
 
 D5, egitim setini yalnizca **tek bir kaynakla** (`aaterm`) sinirlar:
