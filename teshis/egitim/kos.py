@@ -11,16 +11,28 @@ from .kayit import write_run_manifest
 from .protokol import egitim_kwargs
 
 
-def devam_et(run_dir: Path) -> Path:
-    """Yarida kalmis bir kosuyu son checkpoint'ten surdurur.
+def devam_et(run_dir: Path, onayla: bool = False) -> Path:
+    """Yarida kalmis bir kosuyu son checkpoint'ten surdurur. DIKKAT: guvenilir degil.
 
-    Uzun kosular (6+ saat) makine uykusu, oturum kapanmasi veya harici
-    sonlandirma yuzunden yarida kalabiliyor; boyle bir kesinti Python
-    istisnasi uretmez, surec sessizce olur. Bu fonksiyon o durumda saatlerce
-    suren isi bastan baslatmak yerine kaldigi yerden surdurur.
+    !!! OLCULEN SORUN !!!
+    Bu ozellik v00n kosusunda denendi ve egitimi BOZDU. Kesinti oncesi ve
+    sonrasi (ayni kosu, ayni protokol, LR duzgun azaliyor):
 
-    Ultralytics `resume=True` ile kosunun kendi args.yaml'ini okur; bu yuzden
-    protokol ve veri yolu yeniden verilmez, orijinal kosununkiler gecerlidir.
+        epoch 23 (kesintiden once): mAP50 0.8136, cls_loss 0.7477
+        epoch 24 (devam sonrasi)  : mAP50 0.2849, cls_loss 3.1210
+        epoch 25                  : mAP50 0.3473, cls_loss 1.8099
+
+    cls_loss dort katina cikti ve kismi toparlanmaya ragmen kosu eski
+    seviyesine donemedi. Kopus tam olarak devam sinirinda; Ultralytics'in
+    optimizer/EMA durumunu tam geri yukleyememesine isaret ediyor.
+
+    Bu yuzden devam etmek, bilimsel karsilastirmaya girecek bir kosu icin
+    KULLANILMAMALIDIR: elde edilen model, bastan kosulmus bir modelle ayni
+    protokolun urunu sayilamaz. Kesinti olursa dogru davranis, kaydedilmis
+    best.pt'yi kullanmak veya kosuyu bastan baslatmaktir.
+
+    Ozellik silinmedi cunku kesif/duman testi gibi karsilastirmaya girmeyen
+    kosularda hala ise yarayabilir; ancak bilincli onay ister.
     """
     from ultralytics import YOLO
 
@@ -30,7 +42,15 @@ def devam_et(run_dir: Path) -> Path:
             f"Devam edilecek checkpoint yok: {son}\n"
             "Kosu hic epoch tamamlamamis olabilir; bastan baslatin."
         )
-    print(f"devam ediliyor: {son}")
+    if not onayla:
+        raise RuntimeError(
+            "Devam etmek egitimi bozabilir (bkz. devam_et docstring: v00n kosusunda "
+            "cls_loss 0.75 -> 3.12 sicradi ve kosu toparlanamadi).\n"
+            "Bilimsel karsilastirmaya girecek bir kosuda KULLANMAYIN; bunun yerine "
+            "kaydedilmis best.pt'yi kullanin veya kosuyu bastan baslatin.\n"
+            "Yine de devam etmek istiyorsaniz --devam-onayla ekleyin."
+        )
+    print(f"UYARI: devam ediliyor, egitim bozulabilir -> {son}")
     YOLO(str(son)).train(resume=True)
     return run_dir
 
@@ -117,13 +137,17 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=0, help="Windows yerel kosuda 0 daha kararlidir")
     parser.add_argument(
         "--devam", type=Path, default=None,
-        help="Yarida kalmis bir kosu klasorunu son checkpoint'ten surdur "
-             "(orn. experiments/run_20260828_002130_v00n_42).",
+        help="Yarida kalmis bir kosuyu surdur. DIKKAT: olculen bir sorun var, "
+             "egitimi bozabilir; karsilastirmaya girecek kosularda kullanmayin.",
+    )
+    parser.add_argument(
+        "--devam-onayla", action="store_true",
+        help="--devam riskini bilerek kabul et (bkz. kos.py::devam_et).",
     )
     args = parser.parse_args()
 
     if args.devam:
-        devam_et(args.devam)
+        devam_et(args.devam, onayla=args.devam_onayla)
         return
     device: int | str = "cpu" if args.device.lower() == "cpu" else int(args.device)
     run_training(
