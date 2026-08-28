@@ -25,7 +25,7 @@ def test_kosu_listesi_uzunlugu_results_csv_ile_tutarli():
     """
     frame = pd.read_csv(araclar.RESULTS_CSV)
     senaryo_sayisi = (
-        (frame["scenario"] != araclar.REFERANS_SENARYO)
+        (~frame["scenario"].isin(araclar.AJANA_VERILMEYEN))
         & (frame["evaluation_set"] == araclar.KILITLI_DEGERLENDIRME_SETI)
     ).sum()
     assert len(araclar.kosu_listesini_getir()) == senaryo_sayisi + 1
@@ -114,3 +114,32 @@ def test_kilitli_set_disindaki_satirlar_results_csvde_kalir():
     harita = set(araclar.anonim_kosu_haritasi().values())
     for run_id in disaridakiler["run_id"]:
         assert run_id not in harita
+
+
+def test_farkli_taban_modelden_gelen_kosu_ajana_verilmez():
+    """yolo26n cifti ajana senaryo olarak sunulmamali.
+
+    Ajan her kosuyu kosu_01 (main_model tabanli v00) ile karsilastirir. Farkli
+    bir taban modelden gelen kosuda fark, bozulmadan degil model
+    kapasitesinden gelir; ajan bunu "bozulma" sanar.
+    """
+    frame = pd.read_csv(araclar.RESULTS_CSV).set_index("run_id")
+    referans_model = frame.loc[
+        frame["scenario"] == araclar.REFERANS_SENARYO, "model"
+    ].iloc[0]
+    for run_id in araclar.anonim_kosu_haritasi().values():
+        senaryo = frame.loc[run_id, "scenario"]
+        assert senaryo not in araclar.AJANA_VERILMEYEN, f"{run_id} disarida birakilmaliydi"
+
+
+def test_ajana_verilmeyen_kayitlari_results_csvde_durur():
+    """Disarida birakma yalnizca ajan katmanindadir; deney kaydi silinmez."""
+    frame = pd.read_csv(araclar.RESULTS_CSV)
+    for senaryo in araclar.AJANA_VERILMEYEN:
+        assert (frame["scenario"] == senaryo).any(), f"{senaryo} results.csv'de yok"
+
+
+def test_ajana_verilmeyen_her_kayit_gerekcelidir():
+    """Her disarida birakma yazili bir gerekce tasimali."""
+    for senaryo, gerekce in araclar.AJANA_VERILMEYEN.items():
+        assert gerekce and len(gerekce) > 15, f"{senaryo} icin gerekce yetersiz"

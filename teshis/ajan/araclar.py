@@ -46,6 +46,20 @@ def _scenario_rows() -> pd.DataFrame:
 
 
 REFERANS_SENARYO = "v00_saglikli"
+
+# Ajana senaryo olarak SUNULMAYAN kosular ve nedenleri.
+#
+# Ajan tum kosulari kosu_01 (v00, main_model tabanli saglikli referans) ile
+# karsilastirir. Baska bir taban modelden gelen kosular bu referansla
+# kiyaslanamaz: fark, bozulmadan degil model kapasitesinden gelir.
+#
+# yolo26n cifti (v00n / D1n) kendi icinde gecerli bir kontrollu deneydir ve
+# kendi referansina (v00n) sahiptir; README'de ayri bir bolumde raporlanir.
+AJANA_VERILMEYEN: dict[str, str] = {
+    REFERANS_SENARYO: "karsilastirma tabani (kosu_01 olarak sunulur)",
+    "v00n": "farkli taban model (yolo26n); kendi ciftinin referansi",
+    "D1n": "farkli taban model (yolo26n); v00n ile karsilastirilir",
+}
 # Ajan yalnizca AYNI kilitli kumede olculmus kosulari karsilastirabilir.
 # Farkli bir degerlendirme kumesinde olculen bir kosu (orn. D6a'nin sizintili
 # kumesi) ayni tabloya konursa, ajan elmayla armudu kiyaslar ve fark
@@ -75,12 +89,13 @@ def anonim_kosu_haritasi() -> dict[str, str]:
     kosu_02'den baslar ve v00'in kendisi bu haritaya DAHIL EDILMEZ: ajanin
     teshis etmesi gereken bir senaryo degil, karsilastirma tabanidir.
 
-    Kilitli tanı setinden BASKA bir kumede olculmus kosular da disarida
-    birakilir; ajan yalnizca ayni tabanda olculmus kosulari karsilastirabilir.
+    Kilitli tanı setinden BASKA bir kumede olculmus kosular ve
+    AJANA_VERILMEYEN'de listelenenler disarida birakilir; ajan yalnizca ayni
+    tabanda olculmus ve ayni taban modelden gelen kosulari karsilastirabilir.
     """
     frame = _scenario_rows()
     senaryolar = frame[
-        (frame["scenario"] != REFERANS_SENARYO)
+        (~frame["scenario"].isin(AJANA_VERILMEYEN))
         & (frame["evaluation_set"] == KILITLI_DEGERLENDIRME_SETI)
     ]
     return {

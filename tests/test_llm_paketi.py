@@ -28,7 +28,10 @@ def test_her_senaryonun_beklenen_teshisi_tanimli():
     # olculenler (orn. D6a'nin sizintili kumesi) ajana verilmez ve cevap
     # anahtarina girmez.
     scenarios = set(
-        frame[frame["evaluation_set"] == araclar.KILITLI_DEGERLENDIRME_SETI]["scenario"]
+        frame[
+            (frame["evaluation_set"] == araclar.KILITLI_DEGERLENDIRME_SETI)
+            & (~frame["scenario"].isin(araclar.AJANA_VERILMEYEN))
+        ]["scenario"]
     )
     # results.csv'de iki D2b kosusu ayni senaryo adini tasir; demo/loader
     # bunlardan birini "D2b final_best" olarak yeniden adlandirir.

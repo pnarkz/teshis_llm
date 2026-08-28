@@ -30,6 +30,48 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-28 (2) — D1 doğru kurguda doğrulandı; iki yeni koruma eklendi
+
+**D1 hipotezi, dataset'i hiç görmemiş bir başlangıç modelinden koşulduğunda
+güçlü biçimde doğrulandı.** Aynı bozulma, aynı protokol, aynı ölçüm seti;
+tek fark başlangıç modeli:
+
+| | main_model kurgusu | yolo26n kurgusu |
+|---|---:|---:|
+| insan recall farkı | -0.0147 | **-0.2475** |
+| z | -1,22 (anlamsız) | **-18,58** |
+| insan AP50 farkı | +0.0260 | **-0.1721** |
+
+D1'in ilk başarısızlığı bozulmanın etkisiz olmasından değil, **deney
+kurgusunun onu ölçememesinden** kaynaklanıyormuş — 2026-08-26 (3) kaydındaki
+teşhis doğrulandı. Zaten veriyi öğrenmiş bir modeli kısa fine-tune ile
+unutturamazsınız.
+
+İki koşu birebir eşitlendi: aynı başlangıç modeli, aynı 30-epoch LR programı
+ve **23 tamamlanmış epoch** (v00n bir kesinti nedeniyle 23'te kaldığı için
+D1n de 23'te durduruldu).
+
+**Yeni koruma 1 — farklı taban modelden gelen koşular ajana verilmez.**
+`AJANA_VERILMEYEN` sözlüğü eklendi. Ajan her koşuyu kosu_01 (main_model
+tabanlı v00) ile karşılaştırır; farklı bir taban modelden gelen koşuda fark
+bozulmadan değil model kapasitesinden gelir ve ajan bunu "bozulma" sanardı.
+Her dışarıda bırakma yazılı gerekçe taşıyor, test bunu zorunlu kılıyor.
+Kayıtlar `results.csv`'de duruyor, sadece ajana sunulmuyor.
+
+**Yeni koruma 2 — `--devam` artık onay istiyor.** Bir önceki kayıtta eklediğim
+özellik v00n koşusunda ölçülebilir şekilde eğitimi bozdu (cls_loss 0.7477 →
+3.1210, mAP50 0.8136 → 0.2849). Ölçülen kanıt docstring'de somut sayılarla
+duruyor; bilimsel karşılaştırmaya girecek koşularda kullanılamaz.
+
+**`bootstrap.py` yazıldı.** README'deki tüm z değerleri ve güven aralıkları
+tek seferlik scriptlerde hesaplanmıştı, repoda karşılığı yoktu — kimse
+doğrulayamaz veya yeniden üretemezdi. Modül Wilson aralığı, iki oran testi ve
+**görüntü birimli bootstrap** sağlıyor (aynı görüntüdeki kutular bağımsız
+değildir; kutu birimli testler aralığı olduğundan dar gösterir). Doğrulama
+sırasında bir tutarsızlık çıktı: UAI için ad-hoc script z=-3,74 veriyordu,
+modül -3,59. İki oran testi sayımlar üzerinde tanımlı olduğu için modülünki
+tutarlı; README düzeltildi, gerekçe yazıldı, sonuç değişmedi (p<0,05).
+
 ### 2026-08-28 — D6a ve D6b tamamlandı; D serisi bitti, yolo26n karşılaştırması başladı
 
 **D6a (split sızıntısı)** tamamlandı ve önemli bir tasarım bulgusu verdi:
@@ -861,8 +903,7 @@ Sonraki isler:
 - [x] D6a split sizintisi.
 - [x] D6b tekrar agirligi.
 - [ ] E1-E4 egitim senaryolari.
-- [~] D1'in yolo26n.pt'den yeniden kosulmasi: v00n referans egitimi basladi,
-  ardindan D1n gelecek (~6,4 saat/kosu).
+- [x] D1'in yolo26n.pt'den yeniden kosulmasi (v00n + D1n, 23'er epoch).
 - [ ] teshis/servis/ (Asama 2) - hala bos iskelet.
 - [x] Bootstrap guven araliklari (teshis/degerlendirme/bootstrap.py).
 - [ ] Final test: sadece bir kez.
@@ -1275,6 +1316,69 @@ Ilk kosu (egitim val'i olarak kilitli tanı setini kullaniyordu, bu yuzden
 iyimser yanliydi; tarihsel kayit olarak korunuyor):
 experiments/run_D3_42_local · reports/d3_sonuc/d1_metrics.json
 - veri_surumleri/v04_d3_uap_uai_sinif_karisikligi/manifest.json
+
+### D1 Yeniden Kurgu (yolo26n cifti) — hipotez, dogru kurguda guclu bicimde dogrulandi
+
+D1 mevcut kurguda basarisiz olmustu: insan recall farki -0.0147, z=-1,22,
+anlamli degil. Teshisimiz suydu: tum senaryolar `main_model.pt`'den fine-tune
+ile basliyor, ancak bu model **zaten ayni dataset'in tamami** uzerinde
+egitilmis. Insan karelerinin %90'i cikarilsa bile model insanlari biliyor ve
+kisa bir fine-tune bunu unutturmuyor.
+
+Bu teshisi sinamak icin ayni bozulma, dataset'i hic gormemis genel amacli bir
+baslangic modelinden (`yolo26n.pt`) yeniden kosuldu.
+
+**Kosu esitligi.** Iki kosu da: `yolo26n.pt` baslangici, ortak protokol
+(lr0=0.001, warmup=3), 30-epoch cos_lr programi, seed=42, batch=8, imgsz=768
+ve **23 tamamlanmis epoch**. Esit epoch sayisi kasitlidir: v00n bir kesinti
+nedeniyle 23 temiz epoch'ta kaldi, bu yuzden D1n de 23. epoch'ta durduruldu.
+
+**Sonuc — hipotez guclu bicimde dogrulandi:**
+
+| Sinif | bbox n | v00n recall | D1n recall | fark | z |
+|---|---:|---:|---:|---:|---:|
+| **insan** | 2.718 | 0.7171 | 0.4696 | **-0.2475** | **-18,58 *** |
+| tasit | 1.264 | 0.7626 | 0.8046 | +0.0420 | +2,56 * |
+| UAP | 15 | 1.0000 | 0.8667 | -0.1333 | -1,46 |
+| UAI | 17 | 0.2941 | 0.6471 | +0.3529 | +2,06 * |
+
+Sinif AP50: insan 0.8202 → 0.6481 (**-0.1721**), tasit -0.0161, UAP -0.0135,
+UAI -0.0937. Genel: mAP50 -0.0739, precision -0.1184.
+
+**Iki kurgunun karsilastirmasi — bulgunun ozu:**
+
+| | main_model kurgusu | yolo26n kurgusu |
+|---|---:|---:|
+| insan recall farki | -0.0147 | **-0.2475** |
+| z | -1,22 (anlamsiz) | **-18,58** |
+| insan AP50 farki | +0.0260 | **-0.1721** |
+
+Ayni veri bozulmasi, ayni protokol, ayni olcum seti. Tek fark baslangic
+modeli. **D1'in ilk basarisizligi bozulmanin etkisiz olmasindan degil, deney
+kurgusunun onu olcememesinden kaynaklaniyormus.** Zaten veriyi ogrenmis bir
+modeli kisa fine-tune ile "unutturamazsiniz"; sinif yetersizliginin etkisini
+gormek icin modelin o veriyi ilk kez ogreniyor olmasi gerekir.
+
+`tasit` recall'inin yukselmesi (+0.0420) beklenen yan etkidir: insan kareleri
+azalinca tasit egitimde goreli olarak agirlik kazanir. UAI'deki +0.3529 ise
+n=17 uzerinde olculdugu ve v00n'in UAI taban degeri zaten cok dusuk oldugu
+(0.2941) icin guvenilir bir bulgu sayilmaz.
+
+> **Kapsam siniri — bu cift kendi icinde okunmalidir.** `yolo26n.pt` 2,57M
+> parametreli nano bir modeldir; `main_model.pt` cok daha buyuktur. Ayrica bu
+> kosular 23 epoch'ta kalmistir. Bu yuzden buradaki mutlak sayilar
+> (v00n mAP50 0.8126) main_model serisiyle **karsilastirilamaz**; yalnizca
+> ciftin kendi icindeki fark anlamlidir. Ayni nedenle bu iki kosu ajana
+> senaryo olarak sunulmaz (`araclar.AJANA_VERILMEYEN`).
+
+> **Provenans notu:** v00n'in `args.yaml` dosyasi, basarisiz devam denemesi
+> sirasinda uzerine yazildigi icin `model: last.pt` gosterir. Kosunun gercek
+> baslangic modeli `run_manifest.json` icinde `yolo26n.pt` olarak kayitlidir.
+
+Istatistikler `teshis/degerlendirme/bootstrap.py` ile yeniden uretilebilir:
+`python -m teshis.degerlendirme.bootstrap --kosu reports/D1n_sonuc/d1_metrics.json --referans reports/v00n_sonuc/d1_metrics.json --alan class_recall`
+
+- reports/v00n_sonuc/d1_metrics.json · reports/D1n_sonuc/d1_metrics.json
 
 ### D6b Sonucu — temsil payi ile performans arasinda net doz-yanit iliskisi
 
