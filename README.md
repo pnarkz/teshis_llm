@@ -55,7 +55,7 @@ tam olarak izliyor:
 | tasit | %22,80 | +0.0356 | +2,52 * |
 | insan | %10,39 | +0.0224 | +1,91 |
 | UAP | %0,06 | 0.0000 | 0,00 |
-| **UAI** | **%0,00** | **-0.6123** | **-3,74 *** |
+| **UAI** | **%0,00** | **-0.6123** | **-3,59 *** |
 
 Hiç temsil edilmeyen sınıf çöküyor (recall 0.9412 → 0.3289). Dikkat çekici
 olan: bu bozulma veriye **hiçbir hata eklemiyor** — hiçbir etiket yanlış
@@ -864,7 +864,7 @@ Sonraki isler:
 - [~] D1'in yolo26n.pt'den yeniden kosulmasi: v00n referans egitimi basladi,
   ardindan D1n gelecek (~6,4 saat/kosu).
 - [ ] teshis/servis/ (Asama 2) - hala bos iskelet.
-- [ ] Bootstrap guven araliklari.
+- [x] Bootstrap guven araliklari (teshis/degerlendirme/bootstrap.py).
 - [ ] Final test: sadece bir kez.
 
 ## 3. Degismez Kurallar
@@ -1107,7 +1107,7 @@ experiments/run_20260817_222323_D1_42 · reports/d1_sonuc/d1_metrics.json
 - [x] D3 UAP/UAI class 2-3 karisikligi.
 - [x] D4 kucuk nesne sinyal kaybi.
 - [x] D5 kaynak/alani kaymasi.
-- [ ] D6a split sizintisi.
+- [x] D6a split sizintisi.
 - [ ] D6b tekrar agirligi ve efektif n.
 - [ ] E1 overfitting.
 - [ ] E2 underfitting.
@@ -1308,12 +1308,20 @@ performans arasinda **monotonik** bir iliski cikar:
 | tasit | 1.264 | %22,80 | +0.0119 | +0.0356 | +2,52 * |
 | insan | 2.718 | %10,39 | +0.0041 | +0.0224 | +1,91 |
 | UAP | 15 | %0,06 | 0.0000 | 0.0000 | 0,00 |
-| **UAI** | **17** | **%0,00** | **-0.1482** | **-0.6123** | **-3,74 *** |
+| **UAI** | **17** | **%0,00** | **-0.1482** | **-0.6123** | **-3,59 *** |
 
 Siralama tam olarak temsil payini izliyor: en cok temsil edilen sinif
 (tasit) kazaniyor, ikinci sinif (insan) daha az kazaniyor, hic temsil
 edilmeyen sinif (UAI) **cokuyor** — recall 0.9412'den 0.3289'a iniyor.
-Etki n=17 olmasina ragmen istatistiksel olarak anlamli (z=-3,74), cunku
+
+> **Istatistik notu:** bu tablodaki z degerleri
+> `teshis/degerlendirme/bootstrap.py` ile yeniden uretilebilir:
+> `python -m teshis.degerlendirme.bootstrap --kosu reports/d6b_last_sonuc/d1_metrics.json
+> --referans reports/v00_sonuc/d1_metrics.json --alan class_recall`
+> UAI icin z, ilk raporda -3,74 yazilmisti; iki oran testi sayimlar uzerinde
+> tanimli oldugu icin modul geri turetilen tam sayilardan hesaplar ve -3,59
+> verir. Daha tutarli olan ikincisidir; sonuc degismez (p<0,05).
+Etki n=17 olmasina ragmen istatistiksel olarak anlamli (z=-3,59), cunku
 buyuklugu cok fazla.
 
 UAP'nin degismemesi aciklanabilir: v00'da zaten recall 1.0000 ile tavanda ve
@@ -1332,7 +1340,7 @@ turu bir dengeleme calismasinin yan etkisi. Hicbiri hata gibi gorunmez.
 
 > **Sinir:** UAI icin n=17 oldugundan bu etkinin **buyuklugu** hakkinda kesin
 > genelleme yapilamaz; %95 guven araligi genistir. Ancak yon ve anlamlilik
-> (z=-3,74) rastgele dalgalanmayla aciklanamaz. D3/D3b ciftinde oldugu gibi,
+> (z=-3,59) rastgele dalgalanmayla aciklanamaz. D3/D3b ciftinde oldugu gibi,
 > nadir siniflarda yon guvenilir, buyukluk degildir.
 
 - reports/d6b_best_sonuc/d1_metrics.json · reports/d6b_last_sonuc/d1_metrics.json
