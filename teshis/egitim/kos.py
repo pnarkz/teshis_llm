@@ -11,6 +11,30 @@ from .kayit import write_run_manifest
 from .protokol import egitim_kwargs
 
 
+def devam_et(run_dir: Path) -> Path:
+    """Yarida kalmis bir kosuyu son checkpoint'ten surdurur.
+
+    Uzun kosular (6+ saat) makine uykusu, oturum kapanmasi veya harici
+    sonlandirma yuzunden yarida kalabiliyor; boyle bir kesinti Python
+    istisnasi uretmez, surec sessizce olur. Bu fonksiyon o durumda saatlerce
+    suren isi bastan baslatmak yerine kaldigi yerden surdurur.
+
+    Ultralytics `resume=True` ile kosunun kendi args.yaml'ini okur; bu yuzden
+    protokol ve veri yolu yeniden verilmez, orijinal kosununkiler gecerlidir.
+    """
+    from ultralytics import YOLO
+
+    son = run_dir.resolve() / "weights/last.pt"
+    if not son.is_file():
+        raise FileNotFoundError(
+            f"Devam edilecek checkpoint yok: {son}\n"
+            "Kosu hic epoch tamamlamamis olabilir; bastan baslatin."
+        )
+    print(f"devam ediliyor: {son}")
+    YOLO(str(son)).train(resume=True)
+    return run_dir
+
+
 def run_training(
     model_path: Path,
     data_path: Path,
@@ -91,7 +115,16 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="0", help="GPU id, or cpu")
     parser.add_argument("--workers", type=int, default=0, help="Windows yerel kosuda 0 daha kararlidir")
+    parser.add_argument(
+        "--devam", type=Path, default=None,
+        help="Yarida kalmis bir kosu klasorunu son checkpoint'ten surdur "
+             "(orn. experiments/run_20260828_002130_v00n_42).",
+    )
     args = parser.parse_args()
+
+    if args.devam:
+        devam_et(args.devam)
+        return
     device: int | str = "cpu" if args.device.lower() == "cpu" else int(args.device)
     run_training(
         Path(args.model), Path(args.data), Path(args.output_root), args.scenario,

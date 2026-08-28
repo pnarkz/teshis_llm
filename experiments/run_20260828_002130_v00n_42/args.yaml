@@ -1,6 +1,6 @@
 task: detect
 mode: train
-model: C:\Users\ASUS\Desktop\termal_teshis\yolo26n.pt
+model: C:\Users\ASUS\Desktop\termal_teshis\experiments\run_20260828_002130_v00n_42\weights\last.pt
 data: C:\Users\ASUS\Desktop\termal_teshis\veri_surumleri\v00_saglikli\data.yaml
 epochs: 30
 time: null
@@ -25,7 +25,7 @@ single_cls: false
 rect: false
 cos_lr: true
 close_mosaic: 8
-resume: false
+resume: C:\Users\ASUS\Desktop\termal_teshis\experiments\run_20260828_002130_v00n_42\weights\last.pt
 amp: true
 fraction: 1.0
 profile: false
@@ -78,7 +78,7 @@ momentum: 0.937
 weight_decay: 0.0005
 warmup_epochs: 3
 warmup_momentum: 0.8
-warmup_bias_lr: 0.1
+warmup_bias_lr: 0.0
 distill_model: null
 dis: 6.0
 box: 7.5
