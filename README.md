@@ -89,5 +89,11 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   kotasi nedeniyle yarim kaldi, `python -m teshis.ajan.ajan --devam` ile
   surdurulur). E serisi egitim arizalari: E4 tamamlandi, E2 kosuyor.
 - **Yapilmadi:** E1 ve E3, `teshis/servis/` (Asama 2), final test kosusu.
+- **Sartname boslugu (yeni bulundu):** C2 negatif kontrolu (ayni protokol,
+  seed 7) hic kosulmadi — ajanin *yanlis pozitif* orani olculmemis durumda.
+  Ayrica kanit sozlesmesi (`kanit.json`) uretilmiyor ve yayimlanmis guven
+  araliklari sartnamedeki tabakali bootstrap yerine Wilson ile hesaplandi
+  (~1.5 kat dar). Ayrinti: [docs/BULGULAR.md](docs/BULGULAR.md)
+  'Sartnameye Uyum Denetimi'.
 
 Guncel ayrinti: [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md)

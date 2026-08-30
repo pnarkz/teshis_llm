@@ -968,3 +968,69 @@ uzerinden sabit bir esleme). Deneme bastan kosulacaksa bu once yapilmalidir.
 **Bu, aynen v00n/D1n ciftinin ajandan dislanmasiyla ayni gerekcedir** — orada
 fark tamamen model kapasitesinden geliyordu ve kosular tamamen cikarildi.
 Buradaki fark, bozulmanin da gercekten mevcut olmasidir.
+
+---
+
+## Sartnameye Uyum Denetimi (2026-08-30)
+
+`docs/proje-brifingi-v2.1.md` ile mevcut durum karsilastirildi. Uc bosluk
+bulundu; ikisi kapatildi, biri olcum bekliyor.
+
+### 1. C3 bootstrap protokolu — KISMEN KAPATILDI
+
+Sartname bolum 8, guven araliklarinin **goruntu birimli ve kaynak grubuna
+gore tabakali** bootstrap ile hesaplanmasini istiyor. Gerekce acik: ayni
+karedeki kutular iliskilidir; kutu bazli hesap araligi yapay olarak daraltir.
+
+Projede yayimlanmis araliklarin buyuk kismi ise kutu sayilari uzerinde
+**Wilson** ile hesaplandi — tam da sartnamenin uyardigi yontem.
+
+`tabakali_goruntu_bootstrap` eklendi ve fark olculdu:
+
+| kumelenme | bootstrap / Wilson genislik orani |
+|---|---|
+| kare basina 1 kutu (kumelenme yok) | 1.02x |
+| kare basina 3-4 kutu (gercekci) | 1.50x |
+| kare basina 5 kutu | 2.19x |
+| kare basina 10 kutu | 2.91x |
+
+**Sonuc:** yayimlanmis araliklar muhtemelen ~1.5 kat dar. Aralari genis olan
+bulgular (E4'te UAP ve UAI) bundan etkilenmez. **Sinirda olanlar yeniden
+kontrol edilmelidir** — ozellikle E4'te `tasit`: araliklar 0.026 aralikla
+ayrik, %50 genisleme bu payi buyuk olcude yer.
+
+Kalan is: `goruntu_kayitlari` iceren yeni kirilim olcumleri uretmek
+(`metrikler.py` artik bunu yaziyor, ancak mevcut `reports/kirilim/*.json`
+dosyalari eski surumle uretildi ve bu alani icermiyor).
+
+### 2. Kanit sozlesmesi (`kanit.json`) — ACIK
+
+Sartname bolum 9, her egitim kosusu icin tek bir
+`experiments/<kosu_adi>/kanit.json` uretilmesini istiyor: sinif bazli
+metrikler bbox sayisi ve bootstrap GA ile, boyut binleri, kaynak bazli
+metrikler, confusion matrix, hata ornekleri, egitim egrileri, veri surumu ve
+hiperparametreler, kare **ve** benzersiz kaynak sayisi.
+
+Bu bilgilerin tamami projede **mevcut**, ancak dort ayri yere dagilmis:
+`reports/senaryo_*/d1_metrics.json`, `reports/kirilim/*.json`,
+`experiments/*/results.csv`, `experiments/*/run_manifest.json`. Sozlesmenin
+kendisi (tek dosya, tek sema) uretilmiyor.
+
+### 3. C2 kontrolu (seed 7) — ACIK, ve en onemlisi bu
+
+Sartname bolum 8'deki kontrol kosullari:
+
+| Kod | Tanim | Amac | Durum |
+|---|---|---|---|
+| C1 | Saglikli yapilandirma, seed 42 | Referans taban | **var** (v00) |
+| C2 | Ayni yapilandirma, **seed 7** | Ajan seed kaynakli dalgalanmayi "sorun" saniyor mu? | **YOK** |
+| C3 | Bootstrap guven araligi | Farklar anlamli mi | kismen (yukari bkz.) |
+
+`results.csv`'deki **her kosu seed 42**. Yani su an projenin merkezi
+iddiasini — "ajan bozulmayi metrik imzasindan teshis edebilir" — sinayan
+negatif kontrol eksik: ajanin, hicbir bozulma olmayan ama yalnizca farkli
+seed ile egitilmis bir kosuda **sorun uydurup uydurmadigini** bilmiyoruz.
+
+Bu, D veya E serisine bir senaryo daha eklemekten daha degerlidir: bir
+teshis sisteminin yanlis pozitif orani olculmeden dogruluk iddiasi eksik
+kalir. Tek bir egitim kosusu maliyeti vardir (v00 protokolu, seed 7).
