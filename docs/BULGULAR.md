@@ -936,3 +936,35 @@ yoludur. Sapma `reports/senaryo_E4/e4_cozunurluk_taramasi.json` icinde
 - reports/senaryo_E4/e4_cozunurluk_taramasi.json
 - reports/senaryo_E4/e4_sinif_anlamlilik.json
 - reports/senaryo_E4_imgsz512/ ... senaryo_E4_imgsz1280/ (ham degerlendirmeler)
+
+---
+
+## Ajan Denemesinin Bilinen Siniri: kosu_05 iki degiskenle ayriliyor
+
+Ajana verilen her kosunun saglikli referanstan (v00) **tek** degiskenle —
+veri surumuyle — ayrilmasi gerekir. Bir kosu bu kurali ihlal ediyor.
+
+`d2b_20260820_final` (ajanda **kosu_05**), ayni eksik-etiket bozulmasini
+tasir ama `final_best.pt` baslangic modelinden ve 30 epoch ile egitilmistir;
+digerleri `main_model.pt` ve 11 epoch'tur. Bozulma gercekten mevcuttur, bu
+yuzden beklenen teshis (`eksik_etiket`) gecerlidir; ancak ajanin gordugu
+precision/recall farkinin bir kismi bozulmadan degil **baslangic modelinden**
+gelir. Ayni belgede "D2b Final_best Karsilastirmasi" bolumu bu iki kosu
+arasindaki farki zaten olcuyor: mAP50 -0.0077, precision +0.0236,
+recall -0.0299. Yani konfonderin buyuklugu bilinmektedir ve bozulmanin
+etkisinden kucuktur.
+
+**Neden kapatilmadi.** `kosu_NN` numaralari `results.csv` satir sirasina
+dayanir; ortadan bir kosu cikarmak sonraki tum numaralari kaydirir ve yarim
+kalan ajan denemesinin tamamlanmis kosularini gecersiz kilardi. Konfonder bu
+nedenle kapatilmak yerine `teshis/ajan/araclar.py::BILINEN_TABAN_MODEL_SAPMASI`
+altinda **beyan edildi** ve `test_taban_model_sapmalari_beyan_edilmis_olanlarla_sinirli`
+testiyle sinirlandirildi: beyan edilmemis yeni bir taban model sapmasi
+eklenirse test kirilir.
+
+Kalici cozum, numaralandirmayi satir sirasindan koparmaktir (ornegin run_id
+uzerinden sabit bir esleme). Deneme bastan kosulacaksa bu once yapilmalidir.
+
+**Bu, aynen v00n/D1n ciftinin ajandan dislanmasiyla ayni gerekcedir** — orada
+fark tamamen model kapasitesinden geliyordu ve kosular tamamen cikarildi.
+Buradaki fark, bozulmanin da gercekten mevcut olmasidir.
