@@ -84,11 +84,10 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
 
 - **Tamamlandi:** D serisinin tamami (D1, D2a, D2b, D3, D3b, D4, D5, D6a,
   D6b), v00 saglikli referans, yolo26n kontrol cifti, ajan arac katmani,
-  tek atislik LLM denemesi (9 kosu).
-- **Devam ediyor:** function-calling ajan denemesi (5/9 kosu; gunluk API
+  tek atislik LLM denemesi (9 kosu), E4 cozunurluk uyumsuzlugu.
+- **Devam ediyor:** function-calling ajan denemesi (8/10 kosu; gunluk API
   kotasi nedeniyle yarim kaldi, `python -m teshis.ajan.ajan --devam` ile
-  surdurulur).
-- **Yapilmadi:** E1-E4 egitim senaryolari, `teshis/servis/` (Asama 2),
-  final test kosusu.
+  surdurulur). E serisi egitim arizalari: E4 tamamlandi, E2 kosuyor.
+- **Yapilmadi:** E1 ve E3, `teshis/servis/` (Asama 2), final test kosusu.
 
 Guncel ayrinti: [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md)

@@ -9,6 +9,53 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-08-30 — E serisi baslatildi: protokol sapmalari beyan edilir hale getirildi
+
+**Sorun.** E senaryolari (egitim arizalari) ortak egitim protokolunu KASITLI
+olarak bozmak zorundadir; D serisi ise protokolun sabit kalmasina dayanir.
+Sapmalari CLI bayraklariyla vermek, hangi kosunun protokolden nerede
+ayrildigini izlenemez hale getirirdi — projenin tek kaynak ilkesini bozan
+tam da bu tur sessiz kaymalar olmustu (bkz. D1 protokol sapmasi).
+
+**Cozum.** Sapmalar `senaryolar/egitim_protokolu.yaml` icinde `e_serisi`
+blokunda beyan edilir. `teshis/egitim/protokol.py` iki fonksiyon ekler:
+`e_senaryo_ayarlari()` ve `egitim_kwargs_e()`. Ikincisi, protokolde
+**var olmayan** bir alana sapma tanimlanmasini reddeder — aksi halde E
+kosusu sessizce protokolu genisletir ve D kosulariyla karsilastirilamaz
+hale gelirdi. `kos.py --e-senaryo <kod>` sapmalari uygular, baslangicta
+ekrana basar ve kosu manifestine `protokol_sapmalari` alani olarak yazar.
+
+21 test (`tests/test_e_serisi_protokol.py`) bu yapiyi korur; ozellikle
+"sapma protokolle ayni degeri tasiyamaz" ve "E sapmasi D protokolunu
+kirletemez" kontrolleri.
+
+**E4 tamamlandi.** E4, egitim gerektirmeyen tek E senaryosudur. Konfigdeki
+tek cift (640/1280) yerine protokol-uyumlu v00 modeli (imgsz=768) bes
+noktada olculdu; gerekce `scripts/senaryo_E4_cozunurluk_uyumsuzlugu.py`
+docstring'inde. Bulgular:
+
+- mAP50 tepesi tam egitim cozunurlugunde (0.920) — taramanin ic kontrolu.
+- Kucultmek buyutmekten cok daha pahali: 512'de -0.318, 1280'de -0.042.
+- Precision cozunurlukten neredeyse etkilenmiyor (0.858-0.918), recall
+  cokuyor (0.518-0.879). Uyumsuzluk modeli **yaniltmiyor, kor ediyor** —
+  D serisi etiket bozulmalarindan ayirt edici imza budur.
+- Kayip kucuk siniflarda yogunlasiyor; Wilson %95 araliklari UAP, UAI ve
+  tasit icin ortusmuyor (`insan` icin ortusuyor, pratik olarak kucuk).
+
+**Yakalanan iki hata.**
+
+1. `d1_sonuc.py` val ciktisini `<senaryo>_val_diagnostic` olarak
+   adlandiriyordu; mevcut klasorler daha once elle `gorseller/` yapilmis
+   ama uretici hic duzeltilmemisti. `test_belge_yollari.py` bunu yakaladi;
+   uretici duzeltildi ve yeni E4 klasorleri tasindi.
+2. Belgeye UAP recall@512 icin 0.241 yazildi; dogrusu 0.242. Neden: ozet
+   JSON 4 haneye yuvarliyor (0.2415) ve bunu tekrar 3 haneye bicimlemek
+   *cift yuvarlama* ile 0.241 veriyor. Dogrulama artik ham
+   `d1_metrics.json` dosyalarina karsi yapiliyor
+   (`tests/test_e4_belge_tutarliligi.py`).
+
+**Sirada:** E2 kosuyor (5 epoch). Ardindan E1 ve E3 (iki seed).
+
 ### 2026-08-28 (3) — Proje mimari olarak yeniden duzenlendi
 
 Proje buyudukce dosya duzeni ve README takip edilemez hale gelmisti. Yapisal

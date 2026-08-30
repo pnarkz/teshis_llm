@@ -853,3 +853,86 @@ insan olarak tahmin ediliyor (z=20,3); AP tabanli metrikler bu felaketi
 tamamen gizliyor." Bagimsiz olcum bu rakami dogrulamadi (gercek deger
 4/1264) ve Ultralytics gorselinin kendi raporladigi recall ile celistigi
 goruldu.
+
+---
+
+## E Serisi — Egitim Arizalari
+
+D serisi **veriyi** bozar, egitim protokolunu sabit tutar. E serisi tersini
+yapar: veri temizdir (`v00_saglikli`), bozulan **egitim/cikarim
+protokoludur**. Bu yuzden E kosulari D kosulariyla ayni tabloda
+karsilastirilamaz; her biri kendi saglikli referansiyla okunur.
+
+Sapmalar `senaryolar/egitim_protokolu.yaml` icindeki `e_serisi` blokunda
+**beyan edilir**, koda dagilmis CLI bayraklariyla degil. `kos.py --e-senaryo E2`
+sapmalari oradan okur, kosu manifestine `protokol_sapmalari` alani olarak
+yazar ve baslangicta ekrana basar. Boylece hangi kosunun protokolden nerede
+ayrildigi hem YAML'dan hem kosu ciktisinin kendisinden okunabilir.
+
+### E4 Sonucu — cikarim cozunurlugu recall'u kor eder, precision'a dokunmaz
+
+E4 tek E senaryosudur ki **egitim gerektirmez**: uyumsuzluk cikarim
+tarafindadir. Protokol-uyumlu v00 referansi (imgsz=768) kilitli tanı setinde
+bes cozunurlukte degerlendirildi.
+
+| imgsz | egitime oran | mAP50 | mAP50-95 | precision | recall | mAP50 farki |
+|---|---|---|---|---|---|---|
+| 512 | 0.67 | 0.602 | 0.395 | 0.878 | 0.518 | -0.318 |
+| 640 | 0.83 | 0.795 | 0.568 | 0.904 | 0.721 | -0.125 |
+| **768** | **1.00** | **0.920** | **0.671** | **0.917** | **0.879** | **egitim cozunurlugu** |
+| 1024 | 1.33 | 0.887 | 0.650 | 0.891 | 0.878 | -0.033 |
+| 1280 | 1.67 | 0.878 | 0.625 | 0.858 | 0.855 | -0.042 |
+
+**Uc bulgu:**
+
+**1. Tepe tam egitim cozunurlugunde.** Egri 768'de maksimum yapiyor. Bu,
+taramanin kendi ic kontrolu: eger tepe baska yerde ciksaydi, ya egitim
+cozunurlugu kaydedilmemis ya olcum bozuk olurdu.
+
+**2. Kucultmek buyutmekten cok daha pahali.** 768 -> 512 (x0.67) mAP50'yi
+0.318 dusururken, 768 -> 1280 (x1.67) yalnizca 0.042 dusuruyor. Asimetri
+mantikli: kucultmek termal imzalari kalici olarak yok eder, buyutmek ise
+var olan bilgiyi yalnizca yeniden orneklemekle kalir.
+
+**3. Uyumsuzluk modeli yaniltmaz, KOR EDER.** Precision cozunurluk boyunca
+neredeyse sabit (0.858-0.918), recall ise cokuyor (0.518-0.879). Model
+buldugunu dogru buluyor; sorun bulamamasi. Bu, D serisindeki etiket
+bozulmalarindan farkli bir imzadir: orada precision da bozulur.
+
+#### Sinif kirilimi: kayip kucuk nesnelerde yogunlasiyor
+
+imgsz 512'de recall kaybi (iki oran z-testi, bbox sayilari uzerinde):
+
+| sinif | n (bbox) | recall@768 | recall@512 | fark | z | p | %95 GA ortusmesi |
+|---|---|---|---|---|---|---|---|
+| tasit | 1264 | 0.834 | 0.763 | -0.070 | 4.41 | 1.0e-05 | ayrik |
+| insan | 2718 | 0.739 | 0.713 | -0.026 | 2.16 | 3.1e-02 | ortusuyor |
+| UAP | 15 | 1.000 | 0.242 | -0.758 | 4.17 | 3.1e-05 | ayrik |
+| UAI | 17 | 0.941 | 0.353 | -0.588 | 3.59 | 3.3e-04 | ayrik |
+
+**Sinir:** UAP (n=15) ve UAI (n=17) bbox sayilari cok dusuktur; buradaki
+buyuk yuzde farklari birkac kutunun kaybina karsilik gelir. Yine de fark
+istatistiksel olarak ayakta kaliyor — Wilson %95 araliklari **ortusmuyor**
+(UAP: [0.796, 1.0] vs [0.109, 0.520]). Genel makro recall dususunun buyuk
+kismini bu iki sinif surukluyor; `insan` sinifinda fark p<0.05 olsa da
+guven araliklari ortustugu icin pratik olarak kucuktur.
+
+Bu, D4 (kucuk nesne sinyal kaybi) ile ayni yonde ama farkli kokenli bir
+bulgudur: D4'te sinyal **veriden** silinmisti, burada **cikarim
+cozunurlugunden** siliniyor. Ikisini ayirt eden sey, E4'te veri surumunun
+tamamen temiz olmasidir.
+
+#### Konfigden bilincli sapma
+
+`senaryolar/egitim/e4_cozunurluk_uyumsuzlugu.yaml` tek bir cift tanimliyordu:
+`imgsz_egitim: 640`, `imgsz_degerlendirme: 1280`. Bunun yerine mevcut
+protokol-uyumlu 768 modeli uzerinde bes noktali tarama yapildi. Gerekce: tek
+cift yalnizca bir sayi verir, tarama egrinin **bicimini** gosterir (tepe
+noktasi ve asimetri ancak boyle gorulur); ayrica 640'ta yeni bir model
+egitmek, egitim protokolunu degistirmeden ayni olguyu olcmenin pahali
+yoludur. Sapma `reports/senaryo_E4/e4_cozunurluk_taramasi.json` icinde
+`not` alaninda kayitlidir.
+
+- reports/senaryo_E4/e4_cozunurluk_taramasi.json
+- reports/senaryo_E4/e4_sinif_anlamlilik.json
+- reports/senaryo_E4_imgsz512/ ... senaryo_E4_imgsz1280/ (ham degerlendirmeler)

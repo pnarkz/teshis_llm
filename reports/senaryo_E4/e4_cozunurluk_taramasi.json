@@ -1,0 +1,128 @@
+{
+  "senaryo": "E4",
+  "ad": "egitim/cikarim cozunurluk uyumsuzlugu",
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\experiments\\run_20260826_081354_v00_42\\weights\\best.pt",
+  "degerlendirme_seti": "val_diagnostic (kilitli)",
+  "egitim_imgsz": 768,
+  "not": "Konfig (senaryolar/egitim/e4_cozunurluk_uyumsuzlugu.yaml) tek cift imgsz_egitim=640 / imgsz_degerlendirme=1280 tanimliyordu. Bunun yerine protokol-uyumlu v00 referansi (imgsz=768) cok noktali olculdu; gerekce bu scriptin docstring'inde. Sapma bilinclidir; E4 egitim gerektirmez.",
+  "olcumler": [
+    {
+      "imgsz": 512,
+      "egitimle_orani": 0.667,
+      "mAP50": 0.6021,
+      "mAP50_95": 0.3954,
+      "precision": 0.8781,
+      "recall": 0.5177,
+      "mAP50_kaybi": -0.3179,
+      "recall_kaybi": -0.3608,
+      "sinif_recall": {
+        "tasit": 0.7634,
+        "insan": 0.713,
+        "UAP": 0.2415,
+        "UAI": 0.3529
+      },
+      "sinif_ap50": {
+        "tasit": 0.8059,
+        "insan": 0.753,
+        "UAP": 0.4944,
+        "UAI": 0.355
+      }
+    },
+    {
+      "imgsz": 640,
+      "egitimle_orani": 0.833,
+      "mAP50": 0.7948,
+      "mAP50_95": 0.568,
+      "precision": 0.9044,
+      "recall": 0.7214,
+      "mAP50_kaybi": -0.1252,
+      "recall_kaybi": -0.1571,
+      "sinif_recall": {
+        "tasit": 0.8165,
+        "insan": 0.7163,
+        "UAP": 1.0,
+        "UAI": 0.3529
+      },
+      "sinif_ap50": {
+        "tasit": 0.8596,
+        "insan": 0.7936,
+        "UAP": 0.995,
+        "UAI": 0.531
+      }
+    },
+    {
+      "imgsz": 768,
+      "egitimle_orani": 1.0,
+      "mAP50": 0.92,
+      "mAP50_95": 0.6707,
+      "precision": 0.9175,
+      "recall": 0.8785,
+      "mAP50_kaybi": 0.0,
+      "recall_kaybi": 0.0,
+      "sinif_recall": {
+        "tasit": 0.8339,
+        "insan": 0.7391,
+        "UAP": 1.0,
+        "UAI": 0.9412
+      },
+      "sinif_ap50": {
+        "tasit": 0.8856,
+        "insan": 0.807,
+        "UAP": 0.995,
+        "UAI": 0.9922
+      }
+    },
+    {
+      "imgsz": 1024,
+      "egitimle_orani": 1.333,
+      "mAP50": 0.8873,
+      "mAP50_95": 0.6496,
+      "precision": 0.8908,
+      "recall": 0.8777,
+      "mAP50_kaybi": -0.0327,
+      "recall_kaybi": -0.0008,
+      "sinif_recall": {
+        "tasit": 0.8729,
+        "insan": 0.638,
+        "UAP": 1.0,
+        "UAI": 1.0
+      },
+      "sinif_ap50": {
+        "tasit": 0.8855,
+        "insan": 0.6737,
+        "UAP": 0.995,
+        "UAI": 0.995
+      }
+    },
+    {
+      "imgsz": 1280,
+      "egitimle_orani": 1.667,
+      "mAP50": 0.8783,
+      "mAP50_95": 0.6248,
+      "precision": 0.8584,
+      "recall": 0.8554,
+      "mAP50_kaybi": -0.0417,
+      "recall_kaybi": -0.0232,
+      "sinif_recall": {
+        "tasit": 0.8774,
+        "insan": 0.6166,
+        "UAP": 1.0,
+        "UAI": 0.9275
+      },
+      "sinif_ap50": {
+        "tasit": 0.8759,
+        "insan": 0.6853,
+        "UAP": 0.995,
+        "UAI": 0.957
+      }
+    }
+  ],
+  "bulgular": {
+    "tepe_imgsz": 768,
+    "tepe_egitim_cozunurlugunde_mi": true,
+    "en_kotu_kucultme": -0.3179,
+    "en_kotu_buyutme": -0.0417,
+    "asimetri": "Kucultmek buyutmekten pahalidir: kucultme termal imzayi kalici olarak yok eder, buyutme var olan bilgiyi yeniden orneklemekle kalir.",
+    "precision_recall_ayrisimi": "Precision cozunurlukten neredeyse etkilenmez, recall coker. Uyumsuzluk modeli yaniltmaz, KOR EDER: buldugunu dogru bulur, ama bulamaz. Etiket bozulmalarinda (D serisi) precision da bozulur; iki arizayi ayirt eden imza budur."
+  }
+}

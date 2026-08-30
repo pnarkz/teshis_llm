@@ -64,9 +64,10 @@ termal_teshis/
 
   senaryolar/                   Degistirilemez senaryo tanimlari
     katalog.yaml                Senaryo kodlarinin tek listesi
-    egitim_protokolu.yaml       D serisi sabit egitim protokolu (tek kaynak)
+    egitim_protokolu.yaml       Sabit egitim protokolu (tek kaynak) +
+                                e_serisi: E kosularinin BEYAN EDILMIS sapmalari
     veri/                       D1-D6b bozulma parametreleri
-    egitim/                     E1-E4 (henuz kosulmadi)
+    egitim/                     E1-E4 egitim arizasi tanimlari
 
   scripts/                      Adindan ne yaptigi anlasilan calistiricilar
     senaryo_D2b_eksik_etiket.py
@@ -75,6 +76,7 @@ termal_teshis/
     senaryo_D5_kaynak_kaymasi.py
     senaryo_D6a_split_sizintisi.py
     senaryo_D6b_tekrar_agirligi.py
+    senaryo_E4_cozunurluk_uyumsuzlugu.py   (egitim gerektirmez; imgsz taramasi)
     kaggle_D2a_lokalizasyon_gurultusu.py
     kaggle_D2b_eksik_etiket.py
     ajan_paket_hazirla.py                  LLM deneme paketi + cevap anahtari
@@ -101,6 +103,9 @@ reports/
   senaryo_D1/ D2a/ D2b/ D2b_final_best/
   senaryo_D3/ D3b/ D4/ D5/ D6a/ D6b/          Guncel senaryo sonuclari
   senaryo_D4_last_pt/ D5_last_pt/ D6b_last_pt/  last.pt varyantlari
+
+  senaryo_E4/                   E4 tarama ozeti + sinif anlamlilik testi
+  senaryo_E4_imgsz512/ ... _imgsz1280/          E4 ham degerlendirmeleri
 
   yolo26n_referans_v00n/        Farkli taban modelli kontrol cifti
   yolo26n_senaryo_D1n/
