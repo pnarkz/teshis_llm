@@ -32,7 +32,11 @@ def evaluate(
         # runs/detect/<project> altina yaziliyor (D3 kosusunda gozlendi);
         # resolve() bunu onler.
         project=str(output_dir.resolve()),
-        name=f"{scenario.lower()}_val_diagnostic",
+        # Rapor klasoru sozlesmesi (docs/MIMARI.md): her senaryo klasorunde
+        # val ciktisi "gorseller/" adini tasir. Senaryo adini buraya tekrar
+        # gomen eski bicim ("<senaryo>_val_diagnostic") klasorler elle
+        # duzeltilirken geride kalmisti; test_belge_yollari.py bunu yakalar.
+        name="gorseller",
         exist_ok=True,
     )
     # Rule 8: sonuclar genel mAP ile birlikte sinif AP *ve recall* icermelidir.
