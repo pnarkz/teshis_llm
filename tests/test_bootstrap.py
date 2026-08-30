@@ -149,3 +149,98 @@ def test_bbox_sayilari_kilitli_setle_tutarli():
     from teshis.ajan import araclar
 
     assert bs.VAL_DIAGNOSTIC_BBOX_N == araclar.VAL_DIAGNOSTIC_BBOX_N
+
+
+# --------------------------------------------------------------------------
+# C3 protokolu: tabakali, goruntu birimli bootstrap (sartname bolum 8)
+# --------------------------------------------------------------------------
+
+
+def _kayitlar(desen: list[tuple[str, int, int]]) -> list[dict]:
+    """(kaynak, yakalanan, toplam) uclulerinden goruntu kaydi listesi uretir."""
+    return [
+        {"goruntu": f"{i}.jpg", "kaynak": kaynak,
+         "sinif": {"insan": [y, t]}, "bant": {"orta": [y, t]}}
+        for i, (kaynak, y, t) in enumerate(desen)
+    ]
+
+
+def test_tabakali_bootstrap_nokta_tahmini_dogru():
+    kayitlar = _kayitlar([("a", 3, 4), ("a", 1, 2), ("b", 2, 2)])
+    sonuc = bs.tabakali_goruntu_bootstrap(kayitlar, grup="insan", tekrar=200)
+    assert sonuc["oran"] == pytest.approx(6 / 8)
+    assert sonuc["kutu_sayisi"] == 8
+    assert sonuc["goruntu_sayisi"] == 3
+    assert sonuc["kaynak_sayisi"] == 2
+    assert sonuc["alt"] <= sonuc["oran"] <= sonuc["ust"]
+
+
+def test_tabakali_bootstrap_her_kaynagin_payini_korur():
+    """Tabakalama, bir kaynagin payinin turler arasi dalgalanmasini engeller.
+
+    Kaynak b tek goruntudur ve recall'u 0'dir. Tabakali ornekleme her turda
+    tam olarak bir b goruntusu secer, yani b'nin payi sabittir. Tabakasiz
+    ornekleme b'yi hic secmeyebilir veya birkac kez secebilirdi; bu, araliga
+    gercekte var olmayan bir degiskenlik katardi.
+    """
+    kayitlar = _kayitlar([("a", 1, 1)] * 20 + [("b", 0, 1)])
+    sonuc = bs.tabakali_goruntu_bootstrap(kayitlar, grup="insan", tekrar=500)
+    # a'nin tamami 1/1, b'nin tamami 0/1 -> her turda tam olarak 20/21 cikar
+    assert sonuc["alt"] == pytest.approx(20 / 21)
+    assert sonuc["ust"] == pytest.approx(20 / 21)
+    assert sonuc["genislik"] == pytest.approx(0.0)
+
+
+def test_kumelenmis_kutularda_bootstrap_wilsondan_genis():
+    """Sartnamenin asil iddiasi: kutu birimli aralik YAPAY OLARAK dardir.
+
+    Kutular kareler icinde kumelenmisse (bir kare ya tamamen bulunur ya
+    tamamen kacar) gercek belirsizlik kare sayisina baglidir, kutu sayisina
+    degil. Wilson kutulari bagimsiz saydigi icin araligi daraltir.
+
+    Burada 20 kare var; her karede 10 kutu ve kare ya hep vurus ya hep kacis.
+    Wilson 200 bagimsiz kutu gorur, bootstrap 20 kare gorur.
+    """
+    desen = [("a", 10, 10)] * 10 + [("a", 0, 10)] * 10
+    karsilastirma = bs.yontem_karsilastir(
+        _kayitlar(desen), grup="insan", tekrar=2000
+    )
+    assert karsilastirma["oran"] == pytest.approx(0.5)
+    assert karsilastirma["genislik_orani"] > 2.0, (
+        "kumelenmis kutularda bootstrap araligi Wilson'dan belirgin genis olmali; "
+        f"olculen oran {karsilastirma['genislik_orani']:.2f}"
+    )
+
+
+def test_kume_yoksa_iki_yontem_yakinsar():
+    """Her karede tek kutu varsa korelasyon yoktur; iki yontem benzer olmali."""
+    desen = [("a", i % 2, 1) for i in range(200)]
+    karsilastirma = bs.yontem_karsilastir(
+        _kayitlar(desen), grup="insan", tekrar=2000
+    )
+    assert 0.7 < karsilastirma["genislik_orani"] < 1.4, karsilastirma["genislik_orani"]
+
+
+def test_ayni_seed_ayni_sonuc():
+    kayitlar = _kayitlar([("a", 3, 5), ("b", 2, 4), ("b", 1, 3)])
+    ilk = bs.tabakali_goruntu_bootstrap(kayitlar, grup="insan", tekrar=300, seed=7)
+    ikinci = bs.tabakali_goruntu_bootstrap(kayitlar, grup="insan", tekrar=300, seed=7)
+    assert ilk == ikinci
+
+
+def test_kutusu_olmayan_grup_hata_verir():
+    """Sessizce 0 dondurmek yerine hata: tanimsiz bir aralik rapora girmemeli."""
+    with pytest.raises(ValueError, match="kutu yok"):
+        bs.tabakali_goruntu_bootstrap(
+            _kayitlar([("a", 1, 2)]), grup="UAP", tekrar=50
+        )
+
+
+def test_grup_verilmezse_tum_kutular_birlestirilir():
+    kayitlar = [
+        {"goruntu": "1.jpg", "kaynak": "a",
+         "sinif": {"insan": [1, 2], "tasit": [3, 3]}, "bant": {}},
+    ]
+    sonuc = bs.tabakali_goruntu_bootstrap(kayitlar, tekrar=100)
+    assert sonuc["kutu_sayisi"] == 5
+    assert sonuc["oran"] == pytest.approx(4 / 5)

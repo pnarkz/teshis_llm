@@ -228,6 +228,7 @@ def boyut_bazli_recall(
     sinif_bant: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
     kaynak_sayaclari: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
     kaynak_sinif: dict[str, dict[str, int]] = defaultdict(lambda: {"toplam": 0, "eslesen": 0})
+    goruntu_kayitlari: list[dict[str, Any]] = []
     # karisiklik["gercek_sinif"]["tahmin_sinifi" | "bulunamadi"] = adet
     karisiklik: dict[str, Counter[str]] = defaultdict(Counter)
     toplam_tahmin = 0
@@ -238,6 +239,10 @@ def boyut_bazli_recall(
             [str(yol) for yol in parca], imgsz=imgsz, conf=conf, verbose=False, device=0
         )
         for goruntu_yolu, sonuc in zip(parca, sonuclar):
+            # Goruntu birimli kayit: sartnamedeki C3 bootstrap protokolu
+            # yeniden ornekleme birimi olarak GORUNTUYU ister. Toplam sayimlar
+            # bunu yapmaya yetmez - ayni karedeki kutularin birlikte secilmesi
+            # gerekir - bu yuzden kare basina kirilim burada saklanir.
             with Image.open(goruntu_yolu) as goruntu:
                 genislik, yukseklik = goruntu.size
             gercek = etiketleri_oku(labels_dir / f"{goruntu_yolu.stem}.txt", genislik, yukseklik)
@@ -254,9 +259,15 @@ def boyut_bazli_recall(
             toplam_tahmin += len(tahminler)
             kaynak = kaynak_adi(goruntu_yolu.name)
             eslesen = eslestir(gercek, tahminler, iou_esigi)
+            kare_sinif: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+            kare_bant: dict[str, list[int]] = defaultdict(lambda: [0, 0])
             for indis, hedef in enumerate(gercek):
                 sinif_adi = SINIFLAR.get(hedef["sinif"], str(hedef["sinif"]))
                 vurus = 1 if indis in eslesen else 0
+                kare_sinif[sinif_adi][0] += vurus
+                kare_sinif[sinif_adi][1] += 1
+                kare_bant[hedef["bant"]][0] += vurus
+                kare_bant[hedef["bant"]][1] += 1
                 for sayac, anahtar in (
                     (bant_sayaclari, hedef["bant"]),
                     (sinif_sayaclari, sinif_adi),
@@ -266,6 +277,13 @@ def boyut_bazli_recall(
                 ):
                     sayac[anahtar]["toplam"] += 1
                     sayac[anahtar]["eslesen"] += vurus
+
+            goruntu_kayitlari.append({
+                "goruntu": goruntu_yolu.name,
+                "kaynak": kaynak,
+                "sinif": {ad: list(v) for ad, v in sorted(kare_sinif.items())},
+                "bant": {ad: list(v) for ad, v in sorted(kare_bant.items())},
+            })
 
             # Karisiklik matrisi: sinif bagimsiz eslestirme ile "dogru yerde
             # bulundu ama yanlis sinif" durumunu yakala.
@@ -287,6 +305,9 @@ def boyut_bazli_recall(
         "conf": conf,
         "iou_esigi": iou_esigi,
         "goruntu": len(goruntuler),
+        # Goruntu birimli bootstrap icin ham kayitlar (bkz. bootstrap.py
+        # tabakali_goruntu_bootstrap). Toplam sayimlardan turetilemez.
+        "goruntu_kayitlari": goruntu_kayitlari,
         "toplam_tahmin": toplam_tahmin,
         "bant_tanimi": bant_araliklari(),
         "boyut_bandi_recall": {

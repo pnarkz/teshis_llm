@@ -38,6 +38,7 @@ termal_teshis/
     CALISTIRMA.md               Kurulum ve komutlar
     BAKIM_GUNLUGU.md            Kronolojik degisiklik kaydi
     SUNUM.md                    Teknik olmayan anlatim
+    proje-brifingi-v2.1.md      Sartname (disaridan gelen referans belge)
 
   teshis/                       Ana Python paketi
     veri/

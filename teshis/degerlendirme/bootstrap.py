@@ -19,9 +19,31 @@ Uc olcum saglanir:
    yeniden ornekleme birimi olarak goruntuyu alarak bu bagimliligi hesaba
    katar ve daha durustur.
 
+4. ``tabakali_goruntu_bootstrap``: sartnamedeki C3 protokolunun tam
+   karsiligi. Goruntu birimlidir VE kaynak grubuna gore tabakalidir, yani
+   her kaynagin payi her turda korunur. B=1000, yuzdelik yontemiyle %95.
+5. ``yontem_karsilastir``: ayni veri icin Wilson ve tabakali bootstrap
+   araliklarini yan yana koyar; ``genislik_orani`` 1'den ne kadar buyukse
+   kutu birimli aralik o kadar dar kalmistir.
+
 Hangisi kullanilmali: yon ve kaba anlamlilik icin ``iki_oran_testi`` yeterli;
-bir sayiyi rapora manset olarak koyacaksaniz ``goruntu_bootstrap`` tercih
-edilmelidir.
+bir sayiyi rapora manset olarak koyacaksaniz ``tabakali_goruntu_bootstrap``
+tercih edilmelidir.
+
+OLCULEN FARK (tests/test_bootstrap.py). Kutulari kareler icinde kumelendikce
+Wilson araligi gercege gore daralir:
+
+    kare basina 1 kutu (kumelenme yok) ... bootstrap / Wilson = 1.02x
+    kare basina 3-4 kutu (gercekci)  ..... 1.50x
+    kare basina 5 kutu  .................. 2.19x
+    kare basina 10 kutu .................. 2.91x
+
+DIKKAT: docs/BULGULAR.md'de yayimlanmis guven araliklarinin buyuk kismi
+Wilson ile hesaplandi; yani muhtemelen oldugundan DARDIR. Farkin sonuca
+etkisi, ``goruntu_kayitlari`` iceren yeni kirilim olcumleri uretildikce
+kirilim bazinda yeniden degerlendirilmelidir. Aralari genis olan bulgular
+(orn. E4'te UAP ve UAI) bundan etkilenmez; sinirda olanlar (orn. E4'te
+tasit) yeniden kontrol edilmelidir.
 """
 
 from __future__ import annotations
@@ -225,6 +247,122 @@ def sinif_metrigi_karsilastir(
             "wilson_genislik": round(ust - alt, 4),
         })
     return sorted(satirlar, key=lambda s: -s["bbox_n"])
+
+
+# --------------------------------------------------------------------------
+# C3 protokolu (sartname bolum 8): tabakali, goruntu birimli bootstrap
+#
+# Sartname acikca soyle diyor:
+#   - Yeniden ornekleme birimi GORUNTUDUR (kutu degil). Ayni karedeki kutular
+#     iliskilidir; kutu bazli bootstrap guven araligini yapay olarak DARALTIR.
+#   - Kaynak grubu bazinda TABAKALI ornekleme yapilir; her grubun payi korunur.
+#   - Yuzdelik yontemiyle %95 guven araligi.
+#
+# Projede yayimlanmis araliklarin bir kismi kutu sayilari uzerinde Wilson ile
+# hesaplandi. Wilson, kutulari bagimsiz varsayar; sartnamenin uyardigi
+# daralmayi tam olarak uretir. Bu fonksiyon sartnameye uygun alternatifi
+# saglar, boylece iki yontem ayni veri uzerinde karsilastirilabilir.
+# --------------------------------------------------------------------------
+
+
+def tabakali_goruntu_bootstrap(
+    kayitlar: Sequence[dict[str, Any]],
+    alan: str = "sinif",
+    grup: str | None = None,
+    tekrar: int = 1000,
+    seed: int = 42,
+    yuzde: float = 95.0,
+) -> dict[str, Any]:
+    """Kaynak grubuna gore tabakali, goruntu birimli bootstrap guven araligi.
+
+    kayitlar: metrikler.py ciktisindaki ``goruntu_kayitlari`` listesi. Her oge
+        ``{"goruntu", "kaynak", "sinif": {ad: [yakalanan, toplam]}, "bant": {...}}``.
+    alan: hangi kirilim uzerinde calisilacagi ("sinif" veya "bant").
+    grup: tek bir grubun (orn. "insan") recall'u; None ise tum kutular birlikte.
+
+    Tabakalama: her kaynak grubu KENDI icinde, kendi goruntu sayisi kadar
+    yeniden orneklenir. Boylece bir turda bir kaynagin payi buyuyup digerinin
+    kuculemez; degisenlik yalnizca grup ICI ornekleme belirsizliginden gelir.
+    """
+    if not kayitlar:
+        raise ValueError("en az bir goruntu kaydi gerekir")
+    if tekrar < 1:
+        raise ValueError("tekrar pozitif olmalidir")
+
+    def ikili(kayit: dict[str, Any]) -> tuple[int, int]:
+        kirilim = kayit.get(alan) or {}
+        if grup is not None:
+            yakalanan, toplam = kirilim.get(grup, [0, 0])
+            return int(yakalanan), int(toplam)
+        return (sum(int(v[0]) for v in kirilim.values()),
+                sum(int(v[1]) for v in kirilim.values()))
+
+    # Kaynak grubuna gore tabakalar
+    tabakalar: dict[str, list[tuple[int, int]]] = {}
+    for kayit in kayitlar:
+        tabakalar.setdefault(str(kayit.get("kaynak", "bilinmiyor")), []).append(ikili(kayit))
+
+    toplam_yakalanan = sum(y for grup_kayit in tabakalar.values() for y, _ in grup_kayit)
+    toplam_kutu = sum(t for grup_kayit in tabakalar.values() for _, t in grup_kayit)
+    if not toplam_kutu:
+        raise ValueError(f"'{grup}' icin hic kutu yok; guven araligi tanimsiz")
+
+    rng = random.Random(seed)
+    oranlar: list[float] = []
+    for _ in range(tekrar):
+        y_top = t_top = 0
+        for grup_kayit in tabakalar.values():
+            n = len(grup_kayit)
+            for _ in range(n):          # her tabaka KENDI boyutunda ornekleniyor
+                y, t = grup_kayit[rng.randrange(n)]
+                y_top += y
+                t_top += t
+        if t_top:
+            oranlar.append(y_top / t_top)
+
+    oranlar.sort()
+    alt_yuzde = (100 - yuzde) / 2
+    alt = oranlar[max(0, int(len(oranlar) * alt_yuzde / 100) - 1)]
+    ust = oranlar[min(len(oranlar) - 1, int(len(oranlar) * (100 - alt_yuzde) / 100))]
+    return {
+        "grup": grup or "tumu",
+        "alan": alan,
+        "oran": toplam_yakalanan / toplam_kutu,
+        "alt": alt,
+        "ust": ust,
+        "genislik": ust - alt,
+        "goruntu_sayisi": sum(len(v) for v in tabakalar.values()),
+        "kutu_sayisi": toplam_kutu,
+        "kaynak_sayisi": len(tabakalar),
+        "tekrar": tekrar,
+        "yontem": "tabakali_goruntu_bootstrap_yuzdelik",
+    }
+
+
+def yontem_karsilastir(
+    kayitlar: Sequence[dict[str, Any]], grup: str, alan: str = "sinif", **kwargs: Any
+) -> dict[str, Any]:
+    """Ayni veri icin Wilson (kutu birimli) ve tabakali bootstrap araliklarini yan yana verir.
+
+    Sartname, kutu birimli araliklarin yapay olarak DAR oldugunu soyler. Bu
+    fonksiyon iddiayi olculebilir kilar: ``genislik_orani`` 1'den buyukse
+    bootstrap araligi daha genistir, yani Wilson gercekten dar kalmistir.
+    """
+    boot = tabakali_goruntu_bootstrap(kayitlar, alan=alan, grup=grup, **kwargs)
+    yakalanan = round(boot["oran"] * boot["kutu_sayisi"])
+    w_alt, w_ust = wilson_araligi(yakalanan, boot["kutu_sayisi"])
+    wilson_genislik = w_ust - w_alt
+    return {
+        "grup": grup,
+        "oran": boot["oran"],
+        "kutu_sayisi": boot["kutu_sayisi"],
+        "goruntu_sayisi": boot["goruntu_sayisi"],
+        "wilson": [w_alt, w_ust],
+        "wilson_genislik": wilson_genislik,
+        "bootstrap": [boot["alt"], boot["ust"]],
+        "bootstrap_genislik": boot["genislik"],
+        "genislik_orani": (boot["genislik"] / wilson_genislik) if wilson_genislik else None,
+    }
 
 
 def main() -> None:

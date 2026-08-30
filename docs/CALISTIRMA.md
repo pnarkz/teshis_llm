@@ -38,7 +38,7 @@ python -m teshis.egitim.v3_iyilestirme `
   --val-root C:\path\to\val_diagnostic
 ```
 
-Ana referans: `proje-brifingi-v2.2.md`
+Ana referans: `docs/proje-brifingi-v2.1.md` (projenin sartname belgesi)
 
 D1 egitimi bittikten sonra tanisal val degerlendirmesi:
 
