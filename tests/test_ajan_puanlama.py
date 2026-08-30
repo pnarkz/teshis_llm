@@ -133,3 +133,24 @@ def test_paket_iki_ortalama_dondurur():
     sonuc = puanlama.paketi_puanla(cevaplar, anahtar)
     assert "mean_score" in sonuc and "mean_score_tespit" in sonuc
     assert sonuc["mean_score_tespit"] >= sonuc["mean_score"]
+
+
+def test_snake_case_teshis_eslesir():
+    """Model snake_case yazar; kaliplar dogal dilde. Normallestirme sart.
+
+    Gercek bir kosuda ajan D1 icin "bozulma_tespit_edilmedi" dedi - bizim
+    analizimize gore DOGRU cevap - ama kalip "bozulma yok" aradigi icin
+    sifir aliyordu.
+    """
+    assert puanlama.teshis_puani("anlamli_degisim_yok",
+                                 {"diagnosis": "bozulma_tespit_edilmedi"})[0] == 1.0
+    assert puanlama.teshis_puani("kucuk_nesne_sinyal_kaybi",
+                                 {"diagnosis": "cok_kucuk_nesne_tespit_kaybi"})[0] == 1.0
+    assert puanlama.teshis_puani("eksik_etiket",
+                                 {"diagnosis": "yuksek-yanlis-pozitif-orani"})[0] == 1.0
+
+
+def test_normallestirme_yanlis_cevabi_dogru_yapmaz():
+    """Normallestirme yalnizca ayirici karakterleri duzeltmeli; anlam eklememeli."""
+    assert puanlama.teshis_puani("anlamli_degisim_yok",
+                                 {"diagnosis": "tamamen_alakasiz_bir_aciklama"})[0] == 0.0

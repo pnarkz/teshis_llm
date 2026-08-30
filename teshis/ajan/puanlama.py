@@ -58,6 +58,7 @@ ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
     # Bozulmanin tanı setinde anlamli iz birakmadigi kosular icin gecerli cevap.
     "anlamli_degisim_yok": (
         r"stabil|degisim yok|fark yok|anlamli\w*\s*(degil|yok)|iyilesme|korunmus|"
+        r"bozulma\s*(tespit\s*edilmedi|bulunamadi|gozlenmedi|saptanmadi)|"
         r"saglikl|referans|bozulma yok|normal",
         "anlamli degisim yok",
     ),
@@ -83,6 +84,18 @@ TESPIT_EDILEMEYEN: dict[str, str] = {
 }
 
 
+def _normalize(metin: Any) -> str:
+    """Teshis metnini eslestirme icin normallestirir.
+
+    Model teshisleri snake_case yaziyor ("bozulma_tespit_edilmedi"), kaliplar
+    ise dogal dilde ("bozulma yok"). Alt cizgi ve tireler bosluga cevrilmezse
+    dogru cevaplar eslesmeden gecer: gercek bir kosuda ajan D1 icin
+    "bozulma_tespit_edilmedi" dedi - bizim analizimize gore DOGRU cevap - ama
+    kalip "bozulma yok" aradigi icin sifir aldi.
+    """
+    return re.sub(r"[_\-]+", " ", str(metin)).lower().strip()
+
+
 def metin_ozeti(cevap: dict[str, Any]) -> str:
     """Puanlama icin cevabin metin alanlarini kucuk harfli tek dizeye indirger."""
     parcalar = [cevap.get("diagnosis", ""), *cevap.get("evidence", []), *cevap.get("limitations", [])]
@@ -100,7 +113,7 @@ def teshis_puani(beklenen_etiket: str, cevap: dict[str, Any]) -> tuple[float, st
     if beklenen_etiket not in ANAHTAR_KALIPLAR:
         return 0.0, None
     kalip, etiket = ANAHTAR_KALIPLAR[beklenen_etiket]
-    metin = str(cevap.get("diagnosis", "")).lower()
+    metin = _normalize(cevap.get("diagnosis", ""))
     if re.search(kalip, metin):
         return 1.0, etiket
     # Eksik etikette model nedeni adlandiramasa bile precision/recall

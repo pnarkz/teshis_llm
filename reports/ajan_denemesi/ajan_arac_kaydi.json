@@ -1,0 +1,442 @@
+{
+  "kosu_01": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_01"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_01"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_01"
+        },
+        "hata": null
+      }
+    ],
+    "hata": null
+  },
+  "kosu_02": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kosu_metriklerini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_02"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "baseline_farkini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_02"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_02"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_02"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_02"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      }
+    ],
+    "hata": null
+  },
+  "kosu_03": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kosu_metriklerini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_03"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "baseline_farkini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_03"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 2,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_03"
+        },
+        "hata": null
+      },
+      {
+        "tur": 2,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_03"
+        },
+        "hata": null
+      },
+      {
+        "tur": 2,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_03"
+        },
+        "hata": null
+      }
+    ],
+    "hata": null
+  },
+  "kosu_04": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kosu_metriklerini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_04"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "baseline_farkini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_04"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_04"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_04"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_04"
+        },
+        "hata": null
+      }
+    ],
+    "hata": null
+  },
+  "kosu_05": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kosu_metriklerini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_05"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "baseline_farkini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_05"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_05"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_05"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_05"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      }
+    ],
+    "hata": null
+  },
+  "kosu_06": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kosu_metriklerini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_06"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "baseline_farkini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_06"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_06"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_06"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_06"
+        },
+        "hata": null
+      }
+    ],
+    "hata": null
+  },
+  "kosu_07": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kosu_metriklerini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_07"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "baseline_farkini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_07"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_07"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_07"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_07"
+        },
+        "hata": null
+      }
+    ],
+    "hata": null
+  },
+  "kosu_08": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kosu_metriklerini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_08"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "baseline_farkini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_08"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_08"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_08"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_08"
+        },
+        "hata": null
+      }
+    ],
+    "hata": null
+  }
+}

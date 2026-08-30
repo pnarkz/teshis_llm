@@ -1,0 +1,115 @@
+[
+  {
+    "diagnosis": "saglikli_referans",
+    "evidence": [
+      "kosu_01 genel performans metrikleri mAP50 = 0.920 ve mAP50_95 = 0.671 seviyesindedir.",
+      "Model genelinde precision 0.918 ve recall 0.879 olarak kaydetilmis olup baseline referans degerleri saglanmaktadir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sinifinda 17 bbox bulunmaktadir (20 altinda oldugundan genelleme yapilamaz).",
+      "UAP sinifinda 15 bbox bulunmaktadir (20 altinda oldugundan genelleme yapilamaz)."
+    ],
+    "next_measurement": "Diger kosular ile karsilastirma yapilarak olasi bozulma senaryolari izlenebilir.",
+    "run_id": "kosu_01"
+  },
+  {
+    "diagnosis": "bozulma_tespit_edilmedi",
+    "evidence": [
+      "kosu_02 mAP50 değeri 0.9250 olup baseline referansa (0.9200) göre +0.0050 (+%0.54) fark göstermektedir.",
+      "kosu_02 mAP50_95 değeri 0.6947 olup baseline referansa (0.6707) göre +0.0240 artış göstermiştir.",
+      "İnsan sınıfı AP50 değeri 0.8330 ile baseline referansın (0.8070) +0.0260 üzerindedir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sınıfı yalnızca 17 bbox içerdiğinden (20 bbox altında) bu sınıf için kesin genelleme yapılamaz.",
+      "UAP sınıfı yalnızca 15 bbox içerdiğinden (20 bbox altında) bu sınıf için kesin genelleme yapılamaz."
+    ],
+    "next_measurement": "Model performansının kararlılığını teyit etmek için ek test setleri üzerinde değerlendirme yapılabilir.",
+    "run_id": "kosu_02"
+  },
+  {
+    "diagnosis": "kucuk_nesne_performans_kaybi",
+    "evidence": [
+      "0-16 px (cok_kucuk_16_alti) boyut bandında recall değeri referanstaki 0.7446 değerinden 0.6538'e düşerek -0.0908 oranında belirgin bir kayıp yaşamıştır.",
+      "Orta (32-64 px, +0.0057) ve büyük (64+ px, +0.0064) boyut bantlarında recall korunup hafif artarken, mAP50_95 değeri 0.6707'den 0.6162'ye (-0.0544) ve genel recall 0.8785'ten 0.8317'ye (-0.0468) gerilemiştir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI (17 bbox) ve UAP (15 bbox) sınıflarında örnek sayısı 20'nin altında olduğu için bu sınıflar üzerinde kesin genelleme yapılamamaktadır."
+    ],
+    "next_measurement": "Küçük nesne tespit performansını iyileştirmek için girdi çözünürlüğünün (imgsz) artırıldığı veya P2/küçük nesne tespit katmanı eklenmiş bir eğitim koşusu ölçülmelidir.",
+    "run_id": "kosu_03"
+  },
+  {
+    "diagnosis": "yuksek_yanlis_pozitif_orani_ve_precision_dususu",
+    "evidence": [
+      "Model hassasiyeti (precision) baseline değeri olan 0.9175'ten 0.8088'e düşerek 0.1087 puan gerilemiştir.",
+      "tasit sınıfının AP50 değeri 0.8856'dan 0.8343'e düşmüş (-0.0513) ve tespit edilemeyen (bulunamadı) taşıt kutusu sayısı 131'den 295'e yükselmiştir.",
+      "kaynak_d veri grubundaki recall değeri 0.9906'dan 0.8679'a düşerek 0.1227 puanlık kayıp yaşamıştır."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI (17 bbox) ve UAP (15 bbox) sınıflarının örnek sayıları 20'nin altında olduğu için bu sınıflar üzerinde kesin genelleme yapılamamaktadır."
+    ],
+    "next_measurement": "Aşırı yanlış pozitif tahminleri azaltmak için güven eşiği (confidence threshold) duyarlılık analizi yapılmalı ve taşıt sınıfı ile kaynak_d verilerinde ek hata analizi gerçekleştirilmelidir.",
+    "run_id": "kosu_04"
+  },
+  {
+    "diagnosis": "Genel hassasiyet (precision) düşüşü ve kaynak_d grubunda recall kaybı",
+    "evidence": [
+      "Genel precision değeri baseline'a göre 0.9175'ten 0.8324'e düşmüştür (fark: -0.0852).",
+      "kaynak_d veri grubunda recall değeri 0.9906'dan 0.8774'e gerilemiştir (fark: -0.1132).",
+      "UAI sınıfının AP50 değeri baseline'daki 0.9922 seviyesinden 0.8514 seviyesine düşmüştür (fark: -0.1408)."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sınıfı yalnızca 17 bbox içermektedir.",
+      "UAP sınıfı yalnızca 15 bbox içermektedir."
+    ],
+    "next_measurement": "kaynak_d verilerinde ek yanlış pozitif (FP) ve yanlış negatif (FN) analizleri yapılmalı, ek veri toplama veya kaynak bazlı veri dengeleme adımları değerlendirilmelidir.",
+    "run_id": "kosu_05"
+  },
+  {
+    "diagnosis": "UAI sınıfı ile UAP sınıfı arasında belirgin sınıf karışıklığı (17 UAI kutusunun 8'i UAP olarak tahmin edilmiş) yaşanmış, UAI AP50 değeri düşmüş ve genel model Precision değeri ciddi şekilde gerilemiştir.",
+    "evidence": [
+      "Model genel Precision değeri baseline'daki 0.9175 seviyesinden 0.7128 seviyesine düşmüştür (-0.2047 fark).",
+      "UAI sınıfındaki 17 gerçek kutunun 8'i UAP olarak yanlış sınıflandırılmıştır (baseline'da 17/17 doğru UAI sınıflandırılmıştı).",
+      "UAI sınıfı AP50 değeri baseline'daki 0.9922 seviyesinden 0.8591 seviyesine gerilemiştir (-0.1331 fark).",
+      "Kaynak_d ver kaynağında recall değeri %99.06 seviyesinden %85.85 seviyesine düşmüştür (-0.1321 fark)."
+    ],
+    "confidence": "orta",
+    "limitations": [
+      "UAI sınıfının örnek sayısı (17 bbox) ve UAP sınıfının örnek sayısı (15 bbox) 20 bbox sınırının altında olduğu için bu sınıflar üzerindeki karışıklık değerlendirmesinde kesin genelleme yapılamamaktadır."
+    ],
+    "next_measurement": "UAI ve UAP etiketlerinin doğruluğu incelenmeli, bu sınıflara ait örnek sayıları artırılarak test tekrarlanmalı ve yanlış pozitif oranlarını incelemek için confidence eşik değerleri analiz edilmelidir.",
+    "run_id": "kosu_06"
+  },
+  {
+    "diagnosis": "kaynak_d_performans_kaybi",
+    "evidence": [
+      "kaynak_d grubunda recall değeri referans 0.9906 seviyesinden 0.8679 seviyesine düşerek -0.1227 oranında belirgin bir kayıp yaşamıştır.",
+      "Genel recall değeri 0.8785 seviyesinden 0.8290 seviyesine (-0.0495) düşerken, diğer kaynaklardaki düşüşler (kaynak_a: -0.0153, kaynak_b: -0.0248, kaynak_c: -0.0257) oldukça sınırlı kalmıştır."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sınıfında 17 bbox ve UAP sınıfında 15 bbox bulunmaktadır; 20 bbox altında kaldıkları için bu sınıflar özelinde kesin genelleme yapılamamaktadır."
+    ],
+    "next_measurement": "kaynak_d veri kaynağındaki görüntü kalitesi ve etiketler incelenmeli, egitim setindeki kaynak_d örnekleri artırılarak tekrar test edilmelidir.",
+    "run_id": "kosu_07"
+  },
+  {
+    "diagnosis": "cok_kucuk_nesne_tespit_kaybi",
+    "evidence": [
+      "0-16 px (cok_kucuk_16_alti) boyut bandında recall değeri referans 0.7446 seviyesinden 0.2922 seviyesine düşerek 0.4524 (45.24 puan) azalmıştır.",
+      "insan sınıfında tespit edilemeyen (bulunamadı) nesne sayısı referanstaki 534 değerinden 1043'e yükselmiştir.",
+      "kaynak_a grubundaki recall değeri referans 0.8402 seviyesinden 0.5954'e gerilemiştir (-0.2448 fark)."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI (17 bbox) ve UAP (15 bbox) sınıflarında örnek sayısı 20'nin altında olduğu için bu sınıflarda kesin genelleme yapılamamaktadır."
+    ],
+    "next_measurement": "Çok küçük nesnelerin (0-16 px) tespitini iyileştirmek için SAHI (Slicing Aided Hyper Inference) veya yüksek çözünürlüklü giriş boyutu ile değerlendirme yapılmalıdır.",
+    "run_id": "kosu_08"
+  }
+]
