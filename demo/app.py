@@ -163,6 +163,18 @@ VARSAYILAN_BILGI = {
 }
 
 scenario_info = {
+    "E4 imgsz512": {
+        "problem": "Egitim/cikarim cozunurluk uyumsuzlugu (E serisi)",
+        "change": "Veri HIC bozulmaz. v00 modeli, egitildigi 768 yerine 512'de olculur.",
+        "signal": "Recall cokuyor (0.879 -> 0.518), precision neredeyse sabit kaliyor (0.918 -> 0.878).",
+        "why": ("D serisinden farkli bir ariza turu: bozulan veri degil, olcum "
+                "cozunurlugu. Uyumsuzluk modeli yaniltmaz, KOR EDER - buldugunu "
+                "dogru bulur ama bulamaz. Etiket bozulmalarinda precision da "
+                "bozuldugu icin iki ariza bu imzayla ayirt edilir. Tablodaki fark "
+                "bir bozulmaya DEGIL, cikarim ayarina aittir. Tam cozunurluk "
+                "egrisi (512-1280) docs/BULGULAR.md ve reports/senaryo_E4/ icinde."),
+        "status": "Tamamlandi",
+    },
     "Baseline": {
         "problem": "Saglikli referans (fine-tune YOK)",
         "change": "main_model.pt dogrudan olculur; hicbir egitim yapilmaz.",

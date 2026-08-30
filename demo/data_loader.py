@@ -58,6 +58,9 @@ OZEL_KLASOR = {
     "D2b final_best": "senaryo_D2b_final_best",
     "v00n": "yolo26n_referans_v00n",
     "D1n": "yolo26n_senaryo_D1n",
+    # E4 bir egitim degil, v00 modelinin farkli imgsz ile yeniden
+    # degerlendirilmesidir; klasor adi olcum cozunurlugunu tasir.
+    "E4 imgsz512": "senaryo_E4_imgsz512",
 }
 
 

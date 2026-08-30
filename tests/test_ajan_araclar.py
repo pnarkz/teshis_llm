@@ -17,18 +17,31 @@ def test_kosu_listesi_baseline_ile_baslar():
     assert len(liste) == len(set(liste))
 
 
-def test_kosu_listesi_uzunlugu_results_csv_ile_tutarli():
-    """Ajan, saglikli referans + her senaryo kosusunu gorur.
+def test_ajanin_gordugu_kosular_uygunluk_kosullariyla_birebir_ortusur():
+    """Ajan, uygun olan HER kosuyu gorur ve uygun olmayan HICBIRINI gormez.
+
+    Sadece sayi karsilastirmak yetmiyordu: E4 satiri eklendiginde bu test
+    uretimdeki filtreyi kopyaladigi icin o da birlikte kaydi ve sizinti
+    gorunmez kaldi. Kume esitligi hem eksigi hem fazlayi yakalar.
 
     v00 referans kosusu results.csv'de bir satirdir ama ajana ayri bir senaryo
     olarak sunulmaz; kosu_01 olarak karsilastirma tabani rolunu ustlenir.
     """
     frame = pd.read_csv(araclar.RESULTS_CSV)
-    senaryo_sayisi = (
-        (~frame["scenario"].isin(araclar.AJANA_VERILMEYEN))
-        & (frame["evaluation_set"] == araclar.KILITLI_DEGERLENDIRME_SETI)
-    ).sum()
-    assert len(araclar.kosu_listesini_getir()) == senaryo_sayisi + 1
+    referans = araclar._referans_satiri()
+    uygun = {
+        str(r.run_id) for r in frame.itertuples()
+        if r.scenario not in araclar.AJANA_VERILMEYEN
+        and r.evaluation_set == araclar.KILITLI_DEGERLENDIRME_SETI
+        and r.imgsz_eval == referans["imgsz_eval"]
+    }
+    gorunen = set(araclar.anonim_kosu_haritasi().values())
+    assert gorunen == uygun, (
+        f"ajanda fazla: {sorted(gorunen - uygun)} | "
+        f"ajanda eksik: {sorted(uygun - gorunen)}"
+    )
+    assert araclar.kosu_listesini_getir()[0] == "kosu_01"
+    assert len(araclar.kosu_listesini_getir()) == len(uygun) + 1
 
 
 def test_referans_kosusu_ajana_senaryo_olarak_sunulmaz():
@@ -143,3 +156,64 @@ def test_ajana_verilmeyen_her_kayit_gerekcelidir():
     """Her disarida birakma yazili bir gerekce tasimali."""
     for senaryo, gerekce in araclar.AJANA_VERILMEYEN.items():
         assert gerekce and len(gerekce) > 15, f"{senaryo} icin gerekce yetersiz"
+
+
+def test_farkli_cozunurlukte_olculen_kosu_ajana_verilmez():
+    """Ayni kumede olculmus olmak yetmez; ayni imgsz'de de olculmus olmali.
+
+    E4, v00 modelinin farkli imgsz degerlerinde yeniden degerlendirilmesidir.
+    Veri tertemizdir; fark yalnizca cikarim cozunurlugundan gelir. Kilitli
+    kumede olculdugu icin evaluation_set filtresini GECER ve ajanin listesine
+    "bozulmus bir kosu" gibi girer. Gercekte bu leaked satir eklendiginde
+    kosu_11 olarak goruldu ve ancak elle fark edildi.
+    """
+    import pandas as pd
+    from teshis.ajan import araclar
+
+    frame = araclar._scenario_rows()
+    referans_imgsz = araclar._referans_satiri()["imgsz_eval"]
+    gorunen = set(araclar.anonim_kosu_haritasi().values())
+
+    farkli = frame[
+        (frame["evaluation_set"] == araclar.KILITLI_DEGERLENDIRME_SETI)
+        & (frame["imgsz_eval"] != referans_imgsz)
+    ]
+    sizan = [str(r) for r in farkli["run_id"] if str(r) in gorunen]
+    assert not sizan, (
+        f"Referanstan farkli imgsz ile olculmus kosular ajana verilmis: {sizan}"
+    )
+
+
+def test_ajana_verilen_kosularin_hepsi_ayni_kume_ve_cozunurlukte():
+    """Kume ve cozunurluk yapisal olarak garanti; bunlarda istisna yok."""
+    from teshis.ajan import araclar
+
+    frame = araclar._scenario_rows().set_index("run_id")
+    referans = araclar._referans_satiri()
+    for run_id in araclar.anonim_kosu_haritasi().values():
+        satir = frame.loc[run_id]
+        assert satir["evaluation_set"] == araclar.KILITLI_DEGERLENDIRME_SETI, run_id
+        assert satir["imgsz_eval"] == referans["imgsz_eval"], run_id
+
+
+def test_taban_model_sapmalari_beyan_edilmis_olanlarla_sinirli():
+    """Farkli baslangic modelinden gelen kosu, ancak BEYAN EDILMISSE ajana verilebilir.
+
+    Boyle bir kosuda fark iki degiskenden gelir (bozulma + baslangic modeli);
+    ajan bunu tek degiskenli bir bozulma gibi okur. Kusur d2b_20260820_final'da
+    gercekten mevcut ve kapatilmak yerine sinirlandirildi (bkz. araclar.py
+    BILINEN_TABAN_MODEL_SAPMASI). Bu test, listenin sessizce buyumesini onler.
+    """
+    from teshis.ajan import araclar
+
+    frame = araclar._scenario_rows().set_index("run_id")
+    referans_model = araclar._referans_satiri()["model"]
+    beyansiz = [
+        run_id for run_id in araclar.anonim_kosu_haritasi().values()
+        if frame.loc[run_id]["model"] != referans_model
+        and run_id not in araclar.BILINEN_TABAN_MODEL_SAPMASI
+    ]
+    assert not beyansiz, (
+        f"Beyan edilmemis taban model sapmasi: {beyansiz}. Ya kosuyu ajandan "
+        "cikarin ya da BILINEN_TABAN_MODEL_SAPMASI'na gerekcesiyle ekleyin."
+    )

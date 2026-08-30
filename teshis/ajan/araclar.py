@@ -66,6 +66,35 @@ AJANA_VERILMEYEN: dict[str, str] = {
 # "bozulma" gibi gorunur. Bu sabit, o karistirmayi yapisal olarak engeller.
 KILITLI_DEGERLENDIRME_SETI = "val_diagnostic"
 
+# BILINEN KONFONDER - kapatilmadi, sinirlandirildi.
+#
+# Ajana verilen kosularin tamaminin v00'dan TEK degiskenle (veri surumu)
+# ayrilmasi gerekir. Asagidaki kosu bu kurali ihlal eder: ayni eksik etiket
+# bozulmasini tasir ama farkli bir baslangic modelinden (final_best.pt) ve
+# farkli epoch sayisiyla egitilmistir. Yani ajanin gordugu precision/recall
+# farkinin bir kismi bozulmadan degil, baslangic modelinden gelir.
+#
+# Neden listeden cikarilmadi: kosu_NN numaralari results.csv satir sirasina
+# dayanir; ortadan bir kosu cikarmak sonraki tum numaralari kaydirir ve
+# yarim kalan ajan denemesinin tamamlanmis kosularini gecersiz kilar.
+# Konfonder bu yuzden kapatilmak yerine BEYAN EDILDI; cevap anahtari ve
+# BULGULAR.md bu sinira atif yapar. Numaralandirma satir sirasindan
+# koparildiginda (veya deneme bastan kosuldugunda) buraya tasinabilir.
+BILINEN_TABAN_MODEL_SAPMASI: dict[str, str] = {
+    "d2b_20260820_final": (
+        "final_best.pt ile egitildi (digerleri main_model.pt); epoch 30 vs 11. "
+        "Bozulma gercekten mevcut, ancak farkin buyuklugu baslangic modeliyle "
+        "karisir. bkz. docs/BULGULAR.md 'D2b Final_best Karsilastirmasi'."
+    ),
+}
+
+# Ayni kumede olculmus olmak YETMEZ: ayni cozunurlukte de olculmus olmali.
+# E4 bunu somut olarak gosterdi - v00 modelinin imgsz=512'de yeniden
+# degerlendirilmesi, kilitli kumede olculdugu icin kume filtresini geciyor ve
+# ajanin listesine "bozulmus bir kosu" gibi giriyordu. Oysa veri tertemiz;
+# fark yalnizca cikarim cozunurlugunden geliyor. Referans kosunun imgsz_eval
+# degeri, karsilastirilabilirligin ikinci yapisal kosuludur.
+
 
 def _referans_satiri() -> "pd.Series":
     """Saglikli referans kosusunun (v00) results.csv satiri."""
@@ -89,14 +118,22 @@ def anonim_kosu_haritasi() -> dict[str, str]:
     kosu_02'den baslar ve v00'in kendisi bu haritaya DAHIL EDILMEZ: ajanin
     teshis etmesi gereken bir senaryo degil, karsilastirma tabanidir.
 
-    Kilitli tanı setinden BASKA bir kumede olculmus kosular ve
-    AJANA_VERILMEYEN'de listelenenler disarida birakilir; ajan yalnizca ayni
-    tabanda olculmus ve ayni taban modelden gelen kosulari karsilastirabilir.
+    Uc filtre uygulanir; ucu de ayni amaca hizmet eder: ajan yalnizca
+    tek degiskeni VERI SURUMU olan kosulari karsilastirabilmelidir.
+
+    1. AJANA_VERILMEYEN: referans ve farkli taban modelden gelen kosular.
+    2. Ayni kilitli degerlendirme kumesi (D6a'nin sizintili kumesi disarida).
+    3. Ayni cikarim cozunurlugu (E4'un imgsz taramasi disarida).
+
+    Ucuncusu olmadan E4 kosulari "bozulmus" gibi gorunurdu: veri tertemiz,
+    fark yalnizca imgsz'den geliyor.
     """
     frame = _scenario_rows()
+    referans_imgsz = _referans_satiri()["imgsz_eval"]
     senaryolar = frame[
         (~frame["scenario"].isin(AJANA_VERILMEYEN))
         & (frame["evaluation_set"] == KILITLI_DEGERLENDIRME_SETI)
+        & (frame["imgsz_eval"] == referans_imgsz)
     ]
     return {
         f"kosu_{index + 2:02d}": str(run_id)

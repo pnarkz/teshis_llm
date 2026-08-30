@@ -35,6 +35,11 @@ SENARYO_BEKLENEN: dict[str, str] = {
     # Ayni eksik-etiket bozulmasi, farkli baslangic modeli: beklenen teshis aynidir.
     "D2b final_best": "eksik_etiket",
     "D3": "uap_uai_sinif_karisikligi",
+    # E4: veri tertemiz; bozulma cikarim cozunurlugunde. Ajanin kosu
+    # listesinde YER ALMAZ (araclar.py imgsz filtresi), ancak results.csv'de
+    # bir satiri oldugu icin beklenen teshisi burada tanimli olmalidir -
+    # aksi halde paket hazirlayici "beklenen teshis yok" diye durur.
+    "E4 imgsz512": "cozunurluk_uyumsuzlugu",
 }
 
 # beklenen etiket -> (diagnosis alaninda aranan regex, okunabilir etiket).
@@ -47,6 +52,10 @@ SENARYO_BEKLENEN: dict[str, str] = {
 # olarak ayirt edilir ve sessizce yanlis puanlanmaz.
 ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
     "saglikli_referans": (r"baseline|saglikli|referans|optimal|dengeli|en yuksek", "saglikli referans"),
+    "cozunurluk_uyumsuzlugu": (
+        r"cozunurluk|imgsz|resolution|olcek|kucult|downscal|upscal|boyut uyumsuz",
+        "cozunurluk uyumsuzlugu",
+    ),
     "sinif_yetersizligi": (r"sinif|yetersiz|insan.*(az|dus|kayb)|temsil", "sinif yetersizligi"),
     "lokalizasyon_etiket_gurultusu": (r"konum|lokal|box|iou|yerlestir|konumlandirma|gurultu", "lokalizasyon gurultusu"),
     "eksik_etiket": (r"eksik|etiket|anot|annotation|yanlis pozitif|false positive", "eksik etiket"),
