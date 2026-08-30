@@ -5,8 +5,8 @@ aciklama: >
   augmentasyon protokolu kullanilir. Senaryolar arasinda yalnizca veri
   surumu (ve gerekiyorsa baslangic modeli) degisir; asagidaki degerler
   sabit kalir. Bu dosya teshis/egitim/protokol.py, teshis/egitim/kos.py,
-  scripts/local_d2b.py, scripts/local_d3.py, scripts/kaggle_d2a.py ve
-  scripts/kaggle_d2b.py tarafindan tek kaynak olarak okunur.
+  scripts/senaryo_*.py ve scripts/kaggle_*.py tarafindan tek kaynak olarak
+  okunur.
 
 sabit:
   deterministic: true
@@ -48,3 +48,68 @@ kapsam_disi:
       D serisi tanı senaryosu degildir; ayri bir genel iyilestirme fine-tune
       denemesidir (farkli mosaic/close_mosaic/patience kasitli olarak
       kullanilir). Bu protokolun kapsaminda degildir.
+
+# ---------------------------------------------------------------------------
+# E SERISI: EGITIM ARIZALARI
+#
+# D serisi VERIYI bozar, protokolu sabit tutar. E serisi tam tersini yapar:
+# veri temizdir (v00_saglikli), bozulan EGITIM PROTOKOLUDUR. Bu yuzden
+# yukaridaki "sabit" bloktan kasitli olarak sapilir.
+#
+# Sapmalar burada BEYAN EDILIR; kod icine dagilmis CLI bayraklariyla degil.
+# Boylece hangi kosunun protokolden nerede ve neden ayrildigi tek yerden
+# okunabilir ve denetlenebilir.
+#
+# ONEMLI: E kosulari D kosulariyla ayni tabloda karsilastirilamaz. Fark
+# bozulmadan degil, farkli egitim ayarindan gelir. Her E kosusu kendi
+# saglikli referansiyla (ayni sapmalar HARIC ayni ayarlar) okunur.
+# ---------------------------------------------------------------------------
+e_serisi:
+  E1:
+    aciklama: >
+      Overfitting. Az kare (1000), cok epoch (200), augmentasyon tamamen
+      kapali. Beklenen: train metrikleri yukselirken val geride kalir ve
+      aradaki fark acilir.
+    sapmalar:
+      hsv_v: 0.0
+      degrees: 0.0
+      translate: 0.0
+      scale: 0.0
+      fliplr: 0.0
+      mosaic: 0.0
+      close_mosaic: 0
+      patience: 1000      # erken durdurma kapali; overfitting'in olusmasi gerekiyor
+    kosu_ayarlari:
+      epochs: 200
+      kare_sayisi: 1000
+
+  E2:
+    aciklama: >
+      Underfitting. Protokol ayarlari korunur, yalnizca epoch sayisi cok
+      dusuktur. Beklenen: train ve val birlikte dusuk, loss hala inis
+      egiliminde.
+    sapmalar:
+      patience: 1000      # 5 epoch'ta erken durdurma anlamsiz
+    kosu_ayarlari:
+      epochs: 5
+
+  E3:
+    aciklama: >
+      Egitim kararsizligi. Ogrenme orani 100 kat yuksek. Beklenen: loss
+      gurultulu, iki farkli seed arasinda belirgin oynaklik.
+    sapmalar:
+      lr0: 0.10
+      warmup_epochs: 0    # yuksek lr'nin etkisi warmup ile yumusatilmasin
+    kosu_ayarlari:
+      epochs: 30
+      ikinci_seed: 43     # oynakligi olcmek icin ikinci kosu zorunlu
+
+  E4:
+    aciklama: >
+      Egitim/cikarim cozunurluk uyumsuzlugu. Egitim protokolu bozulmaz;
+      bozulma DEGERLENDIRME tarafindadir, model egitildigi cozunurlukten
+      farkli bir imgsz ile olculur. Bu yuzden yeni egitim gerektirmez.
+    sapmalar: {}
+    kosu_ayarlari:
+      egitim_imgsz: 768   # mevcut v00 referansi
+      olcum_imgsz: [512, 640, 768, 1024, 1280]

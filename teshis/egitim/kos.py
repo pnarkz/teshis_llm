@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .kayit import write_run_manifest
-from .protokol import egitim_kwargs
+from .protokol import egitim_kwargs, egitim_kwargs_e
 
 
 def devam_et(run_dir: Path, onayla: bool = False) -> Path:
@@ -66,8 +66,15 @@ def run_training(
     seed: int,
     device: int | str,
     workers: int,
+    e_senaryo: str | None = None,
 ) -> Path:
-    """Train without touching source data or the selected source model."""
+    """Train without touching source data or the selected source model.
+
+    `e_senaryo` verilirse ortak protokol, o E senaryosunun YAML'da BEYAN
+    EDILMIS sapmalariyla birlestirilir (bkz. senaryolar/egitim_protokolu.yaml
+    -> e_serisi). D serisi kosulari bu parametreyi kullanmaz; onlarda tek
+    degisken veri surumudur.
+    """
     try:
         import torch
         from ultralytics import YOLO
@@ -82,6 +89,11 @@ def run_training(
         raise FileNotFoundError(f"Data YAML bulunamadi: {data_path}")
     if device != "cpu" and not torch.cuda.is_available():
         raise RuntimeError("GPU istendi fakat CUDA kullanilamiyor. --device cpu ile bilincli baslatin.")
+
+    protokol_kwargs = egitim_kwargs_e(e_senaryo) if e_senaryo else egitim_kwargs()
+    sapmalar = {k: v for k, v in protokol_kwargs.items() if egitim_kwargs().get(k) != v}
+    if sapmalar:
+        print(f"UYARI: {e_senaryo} ortak protokolden KASITLI olarak sapiyor: {sapmalar}")
 
     run_name = f"run_{datetime.now():%Y%m%d_%H%M%S}_{scenario}_{seed}"
     run_dir = output_root.resolve() / run_name
@@ -98,6 +110,10 @@ def run_training(
             "batch": batch,
             "imgsz": imgsz,
             "test_evaluated_during_training": False,
+            # Kosunun kendisi hangi protokolle uretildigini tasisin: rapor
+            # okunurken YAML'in o gunku haline geri donmek gerekmesin.
+            "e_senaryo": e_senaryo,
+            "protokol_sapmalari": sapmalar,
         },
     )
 
@@ -117,7 +133,7 @@ def run_training(
         plots=False,
         val=True,
         pretrained=str(model_path),
-        **egitim_kwargs(),
+        **protokol_kwargs,
     )
     print(json.dumps({"run_dir": str(run_dir), "weights": str(run_dir / "weights")}, indent=2))
     return run_dir
@@ -136,6 +152,12 @@ def main() -> None:
     parser.add_argument("--device", default="0", help="GPU id, or cpu")
     parser.add_argument("--workers", type=int, default=0, help="Windows yerel kosuda 0 daha kararlidir")
     parser.add_argument(
+        "--e-senaryo",
+        choices=["E1", "E2", "E3"],
+        help="E serisi egitim arizasi: ortak protokole YAML'da beyan edilmis "
+             "sapmalari uygular. E4 egitim gerektirmez (cikarim tarafi).",
+    )
+    parser.add_argument(
         "--devam", type=Path, default=None,
         help="Yarida kalmis bir kosuyu surdur. DIKKAT: olculen bir sorun var, "
              "egitimi bozabilir; karsilastirmaya girecek kosularda kullanmayin.",
@@ -153,6 +175,7 @@ def main() -> None:
     run_training(
         Path(args.model), Path(args.data), Path(args.output_root), args.scenario,
         args.epochs, args.batch, args.imgsz, args.seed, device, args.workers,
+        e_senaryo=args.e_senaryo,
     )
 
 

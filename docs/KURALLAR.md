@@ -52,6 +52,12 @@ Senaryolar:
 - senaryolar/katalog.yaml: tek resmi senaryo listesi.
 - senaryolar/veri: D1, D2a, D2b, D3, D4, D5, D6a, D6b.
 - senaryolar/egitim: E1, E2, E3, E4.
+  E kosulari ortak protokolden KASITLI olarak sapar (bozulan sey veri degil,
+  egitim protokoludur). Sapmalar `egitim_protokolu.yaml -> e_serisi` altinda
+  BEYAN EDILIR; CLI bayragi veya script icine gomulu sayi olarak degil.
+  `kos.py --e-senaryo <kod>` bunlari okur ve kosu manifestine
+  `protokol_sapmalari` alani olarak yazar. E kosulari D kosulariyla ayni
+  tabloda karsilastirilmaz.
 
 Ciktilar:
 

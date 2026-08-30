@@ -30,3 +30,37 @@ def egitim_kwargs(yol: Path = PROTOKOL_YOLU) -> dict[str, Any]:
         return dict(protokol["sabit"])
     except KeyError as hata:
         raise ValueError(f"{yol} icinde 'sabit' anahtari bulunamadi") from hata
+
+
+def e_senaryo_ayarlari(kod: str, yol: Path = PROTOKOL_YOLU) -> dict[str, Any]:
+    """E serisi bir senaryonun sapmalarini ve kosu ayarlarini dondurur.
+
+    D serisi VERIYI bozar, protokolu sabit tutar. E serisi tam tersidir: veri
+    temizdir, bozulan EGITIM PROTOKOLUDUR. Sapmalar YAML'da beyan edilir;
+    koda dagilmis CLI bayraklariyla degil. Boylece hangi kosunun protokolden
+    nerede ayrildigi tek yerden denetlenebilir.
+    """
+    protokol = yukle(yol)
+    seri = protokol.get("e_serisi", {})
+    if kod not in seri:
+        raise KeyError(
+            f"{kod} e_serisi altinda tanimli degil. Mevcut: {sorted(seri)}"
+        )
+    return seri[kod]
+
+
+def egitim_kwargs_e(kod: str, yol: Path = PROTOKOL_YOLU) -> dict[str, Any]:
+    """Ortak protokolu E senaryosunun beyan edilmis sapmalariyla birlestirir.
+
+    Sapmalar SABIT protokolde zaten var olan alanlari degistirebilir; olmayan
+    bir alan eklemek sessiz bir protokol genislemesi olacagi icin reddedilir.
+    """
+    taban = egitim_kwargs(yol)
+    sapmalar = e_senaryo_ayarlari(kod, yol).get("sapmalar") or {}
+    bilinmeyen = sorted(set(sapmalar) - set(taban))
+    if bilinmeyen:
+        raise ValueError(
+            f"{kod} sapmalarinda protokolde olmayan alan(lar) var: {bilinmeyen}. "
+            "Once senaryolar/egitim_protokolu.yaml 'sabit' blokuna eklenmelidir."
+        )
+    return {**taban, **sapmalar}
