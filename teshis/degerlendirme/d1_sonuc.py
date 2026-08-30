@@ -65,7 +65,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="D1 diagnostic validation")
     parser.add_argument("--model", required=True)
     parser.add_argument("--data", default="val_diagnostic/data.yaml")
-    parser.add_argument("--output", default="reports/d1_sonuc")
+    parser.add_argument("--output", default="reports/eski_D1_protokol_sapmali")
     parser.add_argument("--imgsz", type=int, default=768)
     parser.add_argument("--scenario", default="D1")
     args = parser.parse_args()

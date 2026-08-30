@@ -17,10 +17,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 PROTOKOLU_KULLANMASI_GEREKEN_DOSYALAR = [
     ROOT / "teshis/egitim/kos.py",
-    ROOT / "scripts/local_d2b.py",
-    ROOT / "scripts/local_d3.py",
-    ROOT / "scripts/kaggle_d2a.py",
-    ROOT / "scripts/kaggle_d2b.py",
+    ROOT / "scripts/senaryo_D2b_eksik_etiket.py",
+    ROOT / "scripts/senaryo_D3_D3b_sinif_karisikligi.py",
+    ROOT / "scripts/kaggle_D2a_lokalizasyon_gurultusu.py",
+    ROOT / "scripts/kaggle_D2b_eksik_etiket.py",
 ]
 
 

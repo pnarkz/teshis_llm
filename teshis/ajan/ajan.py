@@ -1,6 +1,6 @@
 """Function-calling tabanli teshis ajani.
 
-``scripts/run_gemini_trial.py`` tek atislik bir denemedir: tum kanit
+``scripts/ajan_tek_atislik_calistir.py`` tek atislik bir denemedir: tum kanit
 onceden verilir ve yalnizca **yorumlama** olculur. Bu modul daha zor
 soruyu sorar: ajan, hangi kanita bakmasi gerektigini **kendisi secebiliyor
 mu?** Model veriyi dogrudan gormez; yalnizca ``araclar.py`` fonksiyonlarini
@@ -11,7 +11,7 @@ kismi (D3b, D4, D5) toplam metriklerde GORUNMEZ; yalnizca dogru kirilim
 araci cagrildiginda ortaya cikar. Bu yuzden her kosu icin **hangi araclarin
 cagrildigi da kaydedilir** ve rapora girer.
 
-Cikti formati ``scripts/score_llm_trial.py`` ile ayni oldugu icin iki deneme
+Cikti formati ``scripts/ajan_puanla.py`` ile ayni oldugu icin iki deneme
 ayni rubrikle puanlanabilir; karsilastirilabilmeleri icin ayri dosyalara
 yazilirlar (tek atislik: gemini_response.json, ajan: ajan_response.json).
 """
@@ -31,8 +31,8 @@ from . import araclar, semalar
 ROOT = Path(__file__).resolve().parents[2]
 # Tek atislik denemenin ciktisini EZMEMEK icin ayri dosya. Onceki surum
 # gemini_response.json'a yaziyordu ve iki deneme birbirini siliyordu.
-VARSAYILAN_CIKTI = ROOT / "reports/llm_trial/ajan_response.json"
-VARSAYILAN_LOG = ROOT / "reports/llm_trial/ajan_arac_kaydi.json"
+VARSAYILAN_CIKTI = ROOT / "reports/ajan_denemesi/ajan_response.json"
+VARSAYILAN_LOG = ROOT / "reports/ajan_denemesi/ajan_arac_kaydi.json"
 
 # Arac adi -> gercek Python fonksiyonu. semalar.ARAC_BILDIRIMLERI ile birebir eslesmelidir.
 ARAC_UYGULAMALARI: dict[str, Callable[..., Any]] = {
@@ -432,7 +432,7 @@ def main() -> None:
     basarisiz = [s["run_id"] for s in sonuclar if s.get("_hata")]
     if basarisiz:
         print(f"\nUYARI basarisiz kosular: {basarisiz}")
-    print(f"\nsonraki adim: python scripts/score_llm_trial.py --response {args.output}")
+    print(f"\nsonraki adim: python scripts/ajan_puanla.py --response {args.output}")
 
 
 if __name__ == "__main__":

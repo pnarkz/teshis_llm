@@ -1,4 +1,4 @@
-"""scripts/local_d5.py::build_dataset — kaynak/alan kaymasi testleri.
+"""scripts/senaryo_D5_kaynak_kaymasi.py::build_dataset — kaynak/alan kaymasi testleri.
 
 Sentetik mini dataset uzerinde calisir. En kritik sozlesme: D5 etiketlere
 dokunmamali ve goruntu kopyalamamali; yalnizca train listesini daraltmali.
@@ -15,7 +15,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-_spec = importlib.util.spec_from_file_location("local_d5", ROOT / "scripts/local_d5.py")
+_spec = importlib.util.spec_from_file_location("local_d5", ROOT / "scripts/senaryo_D5_kaynak_kaymasi.py")
 local_d5 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(local_d5)
 

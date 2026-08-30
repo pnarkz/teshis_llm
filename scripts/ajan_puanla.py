@@ -31,7 +31,7 @@ def eslesme_denetle(response: list, key: dict) -> list[str]:
     if idsiz:
         uyarilar.append(
             f"{len(idsiz)}/{len(response)} kayitta run_id alani yok. Puanlama run_id ile "
-            "eslestigi icin hepsi 0 alir. scripts/run_gemini_trial.py denemeyi "
+            "eslestigi icin hepsi 0 alir. scripts/ajan_tek_atislik_calistir.py denemeyi "
             "run_id isteyecek sekilde yeniden calistirir."
         )
     gelen = {str(oge.get("run_id", "")) for oge in response}
@@ -46,9 +46,9 @@ def eslesme_denetle(response: list, key: dict) -> list[str]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--response", type=Path, default=ROOT / "reports/llm_trial/gemini_response.json")
-    parser.add_argument("--answer-key", type=Path, default=ROOT / "reports/llm_trial/answer_key.json")
-    parser.add_argument("--output", type=Path, default=ROOT / "reports/llm_trial/llm_score.json")
+    parser.add_argument("--response", type=Path, default=ROOT / "reports/ajan_denemesi/gemini_response.json")
+    parser.add_argument("--answer-key", type=Path, default=ROOT / "reports/ajan_denemesi/answer_key.json")
+    parser.add_argument("--output", type=Path, default=ROOT / "reports/ajan_denemesi/llm_score.json")
     parser.add_argument(
         "--yine-de-yaz",
         action="store_true",

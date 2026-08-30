@@ -12,7 +12,7 @@ from pathlib import Path
 import torch
 from ultralytics import YOLO
 
-from kaggle_d2a import find_image, find_input_dataset, find_input_model, link_or_copy
+from kaggle_D2a_lokalizasyon_gurultusu import find_image, find_input_dataset, find_input_model, link_or_copy
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from teshis.egitim.protokol import egitim_kwargs  # noqa: E402

@@ -124,8 +124,8 @@ def test_bootstrap_bos_girdi_reddedilir():
 
 # --- README sayilarinin yeniden uretilebilirligi ----------------------------
 
-D6B = ROOT / "reports/d6b_last_sonuc/d1_metrics.json"
-V00 = ROOT / "reports/v00_sonuc/d1_metrics.json"
+D6B = ROOT / "reports/senaryo_D6b_last_pt/d1_metrics.json"
+V00 = ROOT / "reports/referans_v00/d1_metrics.json"
 
 
 @pytest.mark.skipif(not (D6B.is_file() and V00.is_file()), reason="D6b/v00 metrikleri yok")

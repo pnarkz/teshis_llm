@@ -117,7 +117,7 @@ def build_packet() -> tuple[dict, dict]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--output", type=Path, default=ROOT / "reports/llm_trial")
+    parser.add_argument("--output", type=Path, default=ROOT / "reports/ajan_denemesi")
     parser.add_argument(
         "--force",
         action="store_true",
@@ -146,7 +146,7 @@ def main() -> None:
         "LLM'ye sadece `llm_input.json` verilir. `answer_key.json` gizli tutulur ve\n"
         "LLM cevabini sonradan puanlamak icin kullanilir. Beklenen cikti,\n"
         "`required_output` semasina uygun JSON olmalidir.\n\n"
-        "Bu dosyalar `scripts/prepare_llm_trial.py` tarafindan `results.csv` ve\n"
+        "Bu dosyalar `scripts/ajan_paket_hazirla.py` tarafindan `results.csv` ve\n"
         "`teshis/ajan/araclar.py` uzerinden uretilir; elle duzenlenmemelidir.\n",
         encoding="utf-8",
     )

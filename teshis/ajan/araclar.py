@@ -28,7 +28,7 @@ SINIFLAR = ("tasit", "insan", "UAP", "UAI")
 VAL_DIAGNOSTIC_BBOX_N: dict[str, int] = {"tasit": 1264, "insan": 2718, "UAP": 15, "UAI": 17}
 
 RESULTS_CSV = ROOT / "results.csv"
-BASELINE_JSON = ROOT / "reports/model_karsilastirma_fair/model_karsilastirma.json"
+BASELINE_JSON = ROOT / "reports/model_secimi/model_karsilastirma.json"
 # teshis/degerlendirme/metrikler.py ciktilari: run_id basina bir dosya.
 KIRILIM_DIR = ROOT / "reports/kirilim"
 

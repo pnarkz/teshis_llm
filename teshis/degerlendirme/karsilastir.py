@@ -122,7 +122,7 @@ def main() -> None:
     parser.add_argument("--referans", required=True)
     parser.add_argument("--aday", required=True)
     parser.add_argument("--val-root", required=True)
-    parser.add_argument("--output", default="reports/model_karsilastirma")
+    parser.add_argument("--output", default="reports/model_secimi")
     parser.add_argument("--referans-imgsz", type=int, default=640)
     parser.add_argument("--aday-imgsz", type=int, default=768)
     args = parser.parse_args()

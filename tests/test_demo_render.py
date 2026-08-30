@@ -63,6 +63,35 @@ def test_hata_galerisi_siralamalari(order: str):
     app = _calistir("Hata Galerisi")
     assert not app.exception, _hatalar(app)
     if len(app.radio) < 2:
-        pytest.skip("hata galerisi bulunamadi (reports/*_hata_galerisi yok)")
+        pytest.skip("hata galerisi bulunamadi (reports/hata_galerisi_* yok)")
     app.radio[1].set_value(order).run()
     assert not app.exception, f"siralama={order}: {_hatalar(app)}"
+
+
+def test_her_kosunun_kaniti_konvansiyonla_bulunur():
+    """Demo, rapor klasorunu senaryo adindan turetmeli; elle harita tutmamali.
+
+    Onceki surumde sabit kodlu bir sozluk vardi ve her yeni senaryoda geride
+    kaliyordu: D6a, D6b, v00n ve D1n eklendiginde demo onlari sessizce
+    "kanit yok" gosteriyordu.
+    """
+    import sys
+
+    sys.path.insert(0, str(APP.parent))
+    from data_loader import evidence_for, images_for, load_results
+
+    eksik = []
+    for _, row in load_results().iterrows():
+        senaryo = row["scenario"]
+        if senaryo == "Baseline":
+            continue  # baseline metrikleri model_secimi altindan gelir
+        if not evidence_for(senaryo) or not images_for(senaryo):
+            eksik.append(senaryo)
+    assert not eksik, f"Bu senaryolarin kaniti demo'da bulunamiyor: {eksik}"
+
+
+def test_demo_sabit_rapor_haritasi_tutmuyor():
+    """Sabit kodlu yol sozlukleri geri gelmemeli."""
+    kaynak = (APP.parent / "data_loader.py").read_text(encoding="utf-8")
+    for yasak in ("EVIDENCE_JSON", "EVIDENCE_FOLDERS"):
+        assert yasak not in kaynak, f"{yasak} sabit haritasi geri gelmis"

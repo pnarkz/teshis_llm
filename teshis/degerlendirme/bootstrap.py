@@ -179,7 +179,7 @@ VAL_DIAGNOSTIC_BBOX_N: dict[str, int] = {"tasit": 1264, "insan": 2718, "UAP": 15
 def sinif_metrigi_karsilastir(
     kosu_json: Path, referans_json: Path, alan: str = "class_recall"
 ) -> list[dict[str, Any]]:
-    """Iki ``d1_sonuc`` metrik dosyasindaki sinif oranlarini karsilastirir.
+    """Iki ``degerlendirme/d1_sonuc.py`` ciktisi olan metrik dosyasindaki sinif oranlarini karsilastirir.
 
     ``kirilim_karsilastir`` metrikler.py'nin kendi eslestirmesini kullanir;
     bu fonksiyon ise Ultralytics'in raporladigi sinif recall/precision

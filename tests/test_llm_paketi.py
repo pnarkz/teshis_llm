@@ -15,8 +15,8 @@ from teshis.ajan import araclar
 from teshis.ajan.puanlama import ANAHTAR_KALIPLAR, SENARYO_BEKLENEN
 
 ROOT = Path(__file__).resolve().parents[1]
-ANSWER_KEY = ROOT / "reports/llm_trial/answer_key.json"
-LLM_INPUT = ROOT / "reports/llm_trial/llm_input.json"
+ANSWER_KEY = ROOT / "reports/ajan_denemesi/answer_key.json"
+LLM_INPUT = ROOT / "reports/ajan_denemesi/llm_input.json"
 
 
 def test_her_senaryonun_beklenen_teshisi_tanimli():
@@ -68,7 +68,7 @@ def test_cevap_anahtari_anonim_haritayla_uyumlu():
         assert entry["expected"] == beklenen, (
             f"{kosu_id} cevap anahtarinda '{entry['expected']}' diyor ama guncel esleme "
             f"{scenario} -> '{beklenen}' veriyor. Paket kaymis; "
-            "scripts/prepare_llm_trial.py --force ile yeniden uretin ve LLM denemesini tekrarlayin."
+            "scripts/ajan_paket_hazirla.py --force ile yeniden uretin ve LLM denemesini tekrarlayin."
         )
 
 
@@ -130,7 +130,7 @@ def test_puanlayici_runid_eksikligini_yakalar():
     """
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location("sc", ROOT / "scripts/score_llm_trial.py")
+    spec = importlib.util.spec_from_file_location("sc", ROOT / "scripts/ajan_puanla.py")
     sc = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sc)
 
@@ -142,7 +142,7 @@ def test_puanlayici_runid_eksikligini_yakalar():
 def test_puanlayici_eksik_ve_fazla_kosuyu_bildirir():
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location("sc", ROOT / "scripts/score_llm_trial.py")
+    spec = importlib.util.spec_from_file_location("sc", ROOT / "scripts/ajan_puanla.py")
     sc = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sc)
 
@@ -155,7 +155,7 @@ def test_puanlayici_eksik_ve_fazla_kosuyu_bildirir():
 def test_puanlayici_tam_eslesmede_uyari_vermez():
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location("sc", ROOT / "scripts/score_llm_trial.py")
+    spec = importlib.util.spec_from_file_location("sc", ROOT / "scripts/ajan_puanla.py")
     sc = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sc)
 

@@ -73,8 +73,8 @@ Veri:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--model", default="gemini-3.6-flash")
-    parser.add_argument("--input", type=Path, default=ROOT / "reports/llm_trial/llm_input.json")
-    parser.add_argument("--output", type=Path, default=ROOT / "reports/llm_trial/gemini_response.json")
+    parser.add_argument("--input", type=Path, default=ROOT / "reports/ajan_denemesi/llm_input.json")
+    parser.add_argument("--output", type=Path, default=ROOT / "reports/ajan_denemesi/gemini_response.json")
     args = parser.parse_args()
 
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -87,7 +87,7 @@ def main() -> None:
     if not args.input.is_file():
         raise SystemExit(
             f"Paket bulunamadi: {args.input}\n"
-            "Once: python scripts/prepare_llm_trial.py --force"
+            "Once: python scripts/ajan_paket_hazirla.py --force"
         )
 
     from google import genai
@@ -136,7 +136,7 @@ def main() -> None:
             print(f"  UYARI {oge.get('run_id', '?')}: sema hatalari {hatalar}")
     if not eksik and not fazla and all(not teshis_dogrula(o) for o in result):
         print("  tum kayitlar sema ile uyumlu")
-    print("\nsonraki adim: python scripts/score_llm_trial.py")
+    print("\nsonraki adim: python scripts/ajan_puanla.py")
 
 
 if __name__ == "__main__":

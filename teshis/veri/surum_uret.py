@@ -27,7 +27,7 @@ def find_image(image_dir: Path, stem: str) -> Path | None:
 def train_labels_sha256(dataset_root: Path) -> tuple[str, int, int]:
     """Train etiketlerinin birlesik sha256'sini, dosya ve bbox sayisini dondurur.
 
-    Diger senaryo ureticileri (local_d2b, local_d3, kaggle_*) ayni alani
+    Diger senaryo ureticileri (scripts/senaryo_*.py, scripts/kaggle_*.py) ayni alani
     manifest'e yaziyor. v00 icin de kaydedilince, tum bozuk surumlerin ayni
     kaynaktan turedigi hash karsilastirmasiyla ispatlanabilir hale gelir.
     """

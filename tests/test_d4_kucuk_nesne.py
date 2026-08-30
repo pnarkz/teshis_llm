@@ -1,4 +1,4 @@
-"""scripts/local_d4.py::build_dataset — kucuk nesne silme testleri.
+"""scripts/senaryo_D4_kucuk_nesne.py::build_dataset — kucuk nesne silme testleri.
 
 Sentetik mini dataset uzerinde calisir; gercek dataset'e dokunmaz.
 En kritik sozlesme: bozulma esigi ile olcum bandi ayni formulu kullanmali,
@@ -16,7 +16,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-_spec = importlib.util.spec_from_file_location("local_d4", ROOT / "scripts/local_d4.py")
+_spec = importlib.util.spec_from_file_location("local_d4", ROOT / "scripts/senaryo_D4_kucuk_nesne.py")
 local_d4 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(local_d4)
 
@@ -121,7 +121,7 @@ def test_esik_config_ile_hizali():
 
 def test_bozulma_ve_olcum_ayni_formulu_kullanir():
     """local_d4, boyut hesabini metrikler modulunden import etmelidir."""
-    kaynak = (ROOT / "scripts/local_d4.py").read_text(encoding="utf-8")
+    kaynak = (ROOT / "scripts/senaryo_D4_kucuk_nesne.py").read_text(encoding="utf-8")
     assert "from teshis.degerlendirme.metrikler import" in kaynak
     assert local_d4.etkin_sqrt_alan is etkin_sqrt_alan
 

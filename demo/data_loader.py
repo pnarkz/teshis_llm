@@ -19,7 +19,7 @@ def read_json(path: Path) -> dict:
 
 def load_results() -> pd.DataFrame:
     frame = pd.read_csv(ROOT / "results.csv")
-    baseline = read_json(ROOT / "reports/model_karsilastirma_fair/model_karsilastirma.json")["aday"]
+    baseline = read_json(ROOT / "reports/model_secimi/model_karsilastirma.json")["aday"]
     baseline_row = {
         "run_id": "baseline_768",
         "scenario": "Baseline",
@@ -49,39 +49,35 @@ def load_results() -> pd.DataFrame:
     return combined
 
 
-EVIDENCE_JSON = {
-    "v00_saglikli": ROOT / "reports/v00_sonuc/d1_metrics.json",
-    "D1": ROOT / "reports/d1_v2_sonuc/d1_metrics.json",
-    "D2a": ROOT / "reports/d2a_sonuc/d1_metrics.json",
-    "D2b": ROOT / "reports/d2b_sonuc/d1_metrics.json",
-    "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d1_metrics.json",
-    "D3": ROOT / "reports/d3_v2_sonuc/d1_metrics.json",
-    "D3b": ROOT / "reports/d3b_sonuc/d1_metrics.json",
-    "D4": ROOT / "reports/d4_best_sonuc/d1_metrics.json",
-    "D5": ROOT / "reports/d5_best_sonuc/d1_metrics.json",
+# Rapor klasoru senaryo adindan KONVANSIYONLA turetilir; elle tutulan bir
+# harita degildir. Onceki surum sabit kodlu bir sozlukdu ve her yeni senaryoda
+# geride kaliyordu: D6a, D6b, v00n ve D1n eklendiginde demo onlari sessizce
+# "kanit yok" gosteriyordu. Adlandirma kurali docs/MIMARI.md'de tanimlidir.
+OZEL_KLASOR = {
+    "v00_saglikli": "referans_v00",
+    "D2b final_best": "senaryo_D2b_final_best",
+    "v00n": "yolo26n_referans_v00n",
+    "D1n": "yolo26n_senaryo_D1n",
 }
 
-EVIDENCE_FOLDERS = {
-    "v00_saglikli": ROOT / "reports/v00_sonuc/v00_val_diagnostic",
-    "D1": ROOT / "reports/d1_v2_sonuc/d1_v2_val_diagnostic",
-    "D2a": ROOT / "reports/d2a_sonuc/d2a_val_diagnostic",
-    "D2b": ROOT / "reports/d2b_sonuc/d2b_val_diagnostic",
-    "D2b final_best": ROOT / "reports/d2b_final_best_sonuc/d2b_final_best_val_diagnostic",
-    "D3": ROOT / "reports/d3_v2_sonuc/d3_v2_val_diagnostic",
-    "D3b": ROOT / "reports/d3b_sonuc/d3b_val_diagnostic",
-    "D4": ROOT / "reports/d4_best_sonuc/d4_best_val_diagnostic",
-    "D5": ROOT / "reports/d5_best_sonuc/d5_best_val_diagnostic",
-}
+
+def rapor_klasoru(scenario: str) -> Path | None:
+    """Senaryo adindan rapor klasorunu turetir: 'D4' -> reports/senaryo_D4."""
+    ad = OZEL_KLASOR.get(scenario, f"senaryo_{scenario}")
+    klasor = ROOT / "reports" / ad
+    return klasor if klasor.is_dir() else None
 
 
 def evidence_for(scenario: str) -> dict:
     if scenario == "Baseline":
-        return read_json(ROOT / "reports/model_karsilastirma_fair/model_karsilastirma.json").get("aday", {})
-    return read_json(EVIDENCE_JSON.get(scenario, Path("")))
+        return read_json(ROOT / "reports/model_secimi/model_karsilastirma.json").get("aday", {})
+    klasor = rapor_klasoru(scenario)
+    return read_json(klasor / "d1_metrics.json") if klasor else {}
 
 
 def images_for(scenario: str) -> list[Path]:
-    folder = EVIDENCE_FOLDERS.get(scenario)
+    klasor = rapor_klasoru(scenario)
+    folder = klasor / "gorseller" if klasor else None
     if not folder or not folder.is_dir():
         return []
     return [folder / name for name in ("confusion_matrix.png", "confusion_matrix_normalized.png") if (folder / name).is_file()]
@@ -89,7 +85,8 @@ def images_for(scenario: str) -> list[Path]:
 
 def examples_for(scenario: str) -> list[Path]:
     """val_batch etiket/tahmin ciftlerini (etiket, tahmin) sirasinda dondurur."""
-    folder = EVIDENCE_FOLDERS.get(scenario)
+    klasor = rapor_klasoru(scenario)
+    folder = klasor / "gorseller" if klasor else None
     if not folder or not folder.is_dir():
         return []
     names = (
@@ -110,7 +107,8 @@ CURVE_FILES = (
 
 def curves_for(scenario: str) -> list[tuple[Path, str]]:
     """Diagnostic degerlendirmenin PR/F1/P/R egri gorsellerini dondurur."""
-    folder = EVIDENCE_FOLDERS.get(scenario)
+    klasor = rapor_klasoru(scenario)
+    folder = klasor / "gorseller" if klasor else None
     if not folder or not folder.is_dir():
         return []
     return [(folder / name, label) for name, label in CURVE_FILES if (folder / name).is_file()]
@@ -160,17 +158,17 @@ def label_distribution_image(row: pd.Series) -> Path | None:
 
 
 def error_galleries() -> dict[str, dict]:
-    """reports/ altindaki *_hata_galerisi klasorlerini senaryo koduna gore dondurur."""
+    """reports/hata_galerisi_<KOD> klasorlerini senaryo koduna gore dondurur."""
     galleries: dict[str, dict] = {}
     reports = ROOT / "reports"
     if not reports.is_dir():
         return galleries
-    for folder in sorted(reports.glob("*_hata_galerisi")):
+    for folder in sorted(reports.glob("hata_galerisi_*")):
         manifest = folder / "gallery.json"
         if not manifest.is_file():
             continue
         entries = json.loads(manifest.read_text(encoding="utf-8"))
-        scenario = folder.name.replace("_hata_galerisi", "").upper().replace("D2A", "D2a").replace("D2B", "D2b")
+        scenario = folder.name.replace("hata_galerisi_", "")
         galleries[scenario] = {"folder": folder, "entries": entries}
     return galleries
 
@@ -188,8 +186,8 @@ def sparkline(values: list[float], blocks: str = "▁▂▃▄▅▆▇█") -> 
 
 
 def llm_response() -> list | dict:
-    return read_json(ROOT / "reports/llm_trial/gemini_response.json")
+    return read_json(ROOT / "reports/ajan_denemesi/gemini_response.json")
 
 
 def llm_score() -> dict:
-    return read_json(ROOT / "reports/llm_trial/llm_score.json")
+    return read_json(ROOT / "reports/ajan_denemesi/llm_score.json")

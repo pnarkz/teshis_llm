@@ -1,4 +1,4 @@
-"""scripts/local_d3.py::build_dataset — sinif karisikligi uretimi testleri.
+"""scripts/senaryo_D3_D3b_sinif_karisikligi.py::build_dataset — sinif karisikligi uretimi testleri.
 
 Sentetik bir mini dataset uzerinde calisir; gercek dataset'e dokunmaz.
 D3 (UAP/UAI) ve D3b (tasit/insan) ayni kodu farkli sinif ciftiyle kullandigi
@@ -16,7 +16,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-_spec = importlib.util.spec_from_file_location("local_d3", ROOT / "scripts/local_d3.py")
+_spec = importlib.util.spec_from_file_location("local_d3", ROOT / "scripts/senaryo_D3_D3b_sinif_karisikligi.py")
 local_d3 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(local_d3)
 

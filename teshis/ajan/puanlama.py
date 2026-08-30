@@ -3,7 +3,7 @@
 Bu, bir bilimsel karsilastirma degil (README'de de boyle belirtiliyor);
 diagnosis, evidence ve limitations alanlarini esit agirlikla, anahtar
 kelime/regex eslesmesiyle puanlar. Mantik onceden yalnizca
-``scripts/score_llm_trial.py`` icinde tekrarlanmaz bir sekilde duruyordu;
+``scripts/ajan_puanla.py`` icinde tekrarlanmaz bir sekilde duruyordu;
 bu modul onu tek kaynak haline getirir.
 
 Not: Dosyanin ilk halinde bahsedilen T0/T1/T2 katmanli degerlendirme
@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-# Senaryo kodu -> cevap anahtarindaki "expected" etiketi. prepare_llm_trial.py
+# Senaryo kodu -> cevap anahtarindaki "expected" etiketi. scripts/ajan_paket_hazirla.py
 # cevap anahtarini bu tablodan uretir; puanlama da ayni tabloyu okur, boylece
 # paket ile puanlama birbirinden ayrisamaz.
 SENARYO_BEKLENEN: dict[str, str] = {

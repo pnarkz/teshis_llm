@@ -69,7 +69,7 @@ def test_bildirim_ve_uygulama_birebir():
 # --- Cikti yolu sozlesmesi -------------------------------------------------
 
 def test_ajan_ciktisi_tek_atislik_denemeyi_ezmez():
-    """Ajan ciktisi, run_gemini_trial.py'nin dosyasindan FARKLI olmalidir.
+    """Ajan ciktisi, scripts/ajan_tek_atislik_calistir.py'nin dosyasindan FARKLI olmalidir.
 
     Onceki surum ikisini de gemini_response.json'a yaziyordu; iki deneme
     birbirini siliyor ve karsilastirilamaz hale geliyordu.

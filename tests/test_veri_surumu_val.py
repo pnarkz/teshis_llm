@@ -1,6 +1,6 @@
 """Hicbir senaryo veri surumu, egitim val'i olarak val_diagnostic kullanmamalidir.
 
-Bu test gercek bir metodoloji hatasindan dogdu: scripts/local_d3.py uretilen
+Bu test gercek bir metodoloji hatasindan dogdu: scripts/senaryo_D3_D3b_sinif_karisikligi.py uretilen
 data.yaml'a `val: val_diagnostic/images` yaziyordu. Ultralytics best.pt'yi val
 uzerindeki en iyi skora gore sectigi icin, D3'un best.pt'si sonradan tum
 senaryolari karsilastirmak icin kullandigimiz kilitli tanı setinin uzerinde
@@ -20,10 +20,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # Senaryo veri surumu data.yaml'i ureten scriptler.
 URETICI_SCRIPTLER = [
-    ROOT / "scripts/local_d2b.py",
-    ROOT / "scripts/local_d3.py",
-    ROOT / "scripts/kaggle_d2a.py",
-    ROOT / "scripts/kaggle_d2b.py",
+    ROOT / "scripts/senaryo_D2b_eksik_etiket.py",
+    ROOT / "scripts/senaryo_D3_D3b_sinif_karisikligi.py",
+    ROOT / "scripts/kaggle_D2a_lokalizasyon_gurultusu.py",
+    ROOT / "scripts/kaggle_D2b_eksik_etiket.py",
 ]
 
 VERI_SURUMU_YAMLLARI = sorted((ROOT / "veri_surumleri").glob("*/data.yaml"))

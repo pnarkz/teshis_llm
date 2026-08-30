@@ -4,7 +4,7 @@ Bu modul iki seyi tek yerden tanimlar:
 
 1. ``TESHIS_SEMASI`` / ``teshis_dogrula``: ajanin uretmesi gereken nihai JSON
    cevabinin sekli ve bunu programatik dogrulayan fonksiyon. Onceden
-   ``scripts/run_gemini_trial.py`` Gemini'den gelen JSON'u hic dogrulamadan
+   ``scripts/ajan_tek_atislik_calistir.py`` Gemini'den gelen JSON'u hic dogrulamadan
    dogrudan diske yaziyordu; eksik alan veya gecersiz "confidence" degeri
    sessizce gecebiliyordu.
 2. ``ARAC_BILDIRIMLERI``: Gemini function-calling icin arac tanimlari. Adlar
