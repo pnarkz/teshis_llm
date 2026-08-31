@@ -1079,7 +1079,7 @@ Kalan is: `goruntu_kayitlari` iceren yeni kirilim olcumleri uretmek
 (`metrikler.py` artik bunu yaziyor, ancak mevcut `reports/kirilim/*.json`
 dosyalari eski surumle uretildi ve bu alani icermiyor).
 
-### 2. Kanit sozlesmesi (`kanit.json`) — ACIK
+### 2. Kanit sozlesmesi (`kanit.json`) — KAPATILDI (icerik hala eksik)
 
 Sartname bolum 9, her egitim kosusu icin tek bir
 `experiments/<kosu_adi>/kanit.json` uretilmesini istiyor: sinif bazli
@@ -1087,10 +1087,40 @@ metrikler bbox sayisi ve bootstrap GA ile, boyut binleri, kaynak bazli
 metrikler, confusion matrix, hata ornekleri, egitim egrileri, veri surumu ve
 hiperparametreler, kare **ve** benzersiz kaynak sayisi.
 
-Bu bilgilerin tamami projede **mevcut**, ancak dort ayri yere dagilmis:
+Bu bilgilerin tamami projede **mevcuttu**, ancak dort ayri yere dagilmisti:
 `reports/senaryo_*/d1_metrics.json`, `reports/kirilim/*.json`,
-`experiments/*/results.csv`, `experiments/*/run_manifest.json`. Sozlesmenin
-kendisi (tek dosya, tek sema) uretilmiyor.
+`experiments/*/results.csv`, `experiments/*/run_manifest.json`.
+
+`teshis/degerlendirme/kanit.py` bunlari tek semada birlestiriyor ve 15
+kosunun tamami icin dosya uretiyor. Ancak **hicbiri sozlesmeyi tam
+karsilamiyor**; modul eksigi silmiyor, `sozlesme_durumu.eksikler` altinda
+tek tek yaziyor:
+
+| Eksik madde | Etkilenen kosu |
+|---|---|
+| hata ornekleri (`hata_galerisi_*`) | 15 / 15 — yalnizca D2a'nin galerisi var |
+| goruntu birimli guven araligi | kirilimi olan kosular (eski olcum, `goruntu_kayitlari` yok) |
+| boyut/kaynak kirilimi | d6a, v00n, d1n, E4, E2 (`reports/kirilim/` dosyasi yok) |
+
+Ogrenme orani alani iki deger tasir: `lr0_beyan_edilen` (0.001) ve
+`lr0_gecerli` (0.00125). `optimizer=auto` beyani yok saydigi icin yalnizca
+birincisini yazmak yaniltici olurdu.
+
+**Uretim sirasinda bir hata yakalandi.** Ilk surum kanit dosyasinin yerini
+`weights_path`'ten turetiyordu. D6a ve E4 kendi agirliklarini egitmez,
+v00'un agirliklarini yeniden degerlendirir; ucu de ayni `weights_path`'i
+gosterir. Sonuc: E4'un kaniti v00'un dizinine yazildi ve **v00'unkini ezdi**
+— dosya adi dogru, icerigi baska kosunun (v00'un kanit dosyasi UAP recall
+0.2415 gosteriyordu; bu E4'un imgsz=512 degeri, v00'un gercek degeri 1.0).
+Artik dizini yalnizca onu **egiten** kosu sahipleniyor; yeniden
+degerlendirmeler `reports/kanit/<run_id>.json` altina yaziliyor. Dort test
+bu davranisi koruyor.
+
+Ayni is sirasinda `results.csv`'de bir belirsizlik de giderildi: iki farkli
+kosu (`d2b_20260820_main` ve `d2b_20260820_final`) ayni `scenario` degerini
+(`D2b`) tasiyordu ve demo bunu run_id'ye gore elle yamaliyordu. Senaryo adi
+kaynagindan netlestirildi (`D2b final_best`), demo yamasi kaldirildi. Ajanin
+kosu kumesi ve numaralari degismedi.
 
 ### 3. C2 kontrolu (seed 7) — ACIK, ve en onemlisi bu
 

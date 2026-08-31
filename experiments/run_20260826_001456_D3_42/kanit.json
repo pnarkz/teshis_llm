@@ -1,0 +1,199 @@
+{
+  "format": "kanit_sozlesmesi_v1",
+  "run_id": "d3_v2_20260826",
+  "senaryo": "D3",
+  "kural": "Tek basina mAP hicbir teshis icin yeterli kanit sayilmaz.",
+  "degerlendirme_seti": "val_diagnostic",
+  "genel_metrikler": {
+    "mAP50": 0.8919,
+    "mAP50_95": 0.6492,
+    "precision": 0.7129,
+    "recall": 0.8438
+  },
+  "sinif_metrikleri": [
+    {
+      "sinif": "tasit",
+      "bbox_n": 1264,
+      "precision": 0.7538,
+      "recall": 0.9161,
+      "f1": 0.8271,
+      "ap50": 0.9031,
+      "ap50_95": 0.5874,
+      "recall_ga": [
+        0.8996,
+        0.9302
+      ],
+      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+    },
+    {
+      "sinif": "insan",
+      "bbox_n": 2718,
+      "precision": 0.7265,
+      "recall": 0.812,
+      "f1": 0.7669,
+      "ap50": 0.8102,
+      "ap50_95": 0.4246,
+      "recall_ga": [
+        0.7969,
+        0.8262
+      ],
+      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+    },
+    {
+      "sinif": "UAP",
+      "bbox_n": 15,
+      "precision": 0.473,
+      "recall": 1.0,
+      "f1": 0.6422,
+      "ap50": 0.995,
+      "ap50_95": 0.8775,
+      "recall_ga": [
+        0.7961,
+        1.0
+      ],
+      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+    },
+    {
+      "sinif": "UAI",
+      "bbox_n": 17,
+      "precision": 0.8983,
+      "recall": 0.6471,
+      "f1": 0.7522,
+      "ap50": 0.8591,
+      "ap50_95": 0.7072,
+      "recall_ga": [
+        0.413,
+        0.8269
+      ],
+      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+    }
+  ],
+  "yapilandirma": {
+    "veri_surumu": "v04_d3_uap_uai_sinif_karisikligi",
+    "baslangic_modeli": "main_model.pt",
+    "seed": 42,
+    "imgsz_egitim": 768,
+    "imgsz_degerlendirme": 768,
+    "epochs": 24,
+    "batch": 8,
+    "lr0_beyan_edilen": 0.001,
+    "lr0_gecerli": 0.00125,
+    "lr0_notu": "optimizer=auto oldugu icin beyan edilen lr0 (0.001) UYGULANMADI; Ultralytics AdamW(lr=0.00125) secti. bkz. docs/BULGULAR.md.",
+    "protokol_sapmalari": {},
+    "e_senaryo": null
+  },
+  "kapsam": {
+    "kare_sayisi": 1056,
+    "benzersiz_kaynak_sayisi": 4
+  },
+  "sozlesme_durumu": {
+    "tam_mi": false,
+    "eksikler": [
+      "goruntu birimli guven araligi: kirilim dosyasi goruntu_kayitlari icermiyor (eski surumle uretilmis). Guven araliklari sartnameye uygun olmayan Wilson yontemiyle hesaplandi.",
+      "hata ornekleri: reports/hata_galerisi_D3/ yok. `python -m teshis.degerlendirme.hata_galerisi` ile uretilir."
+    ]
+  },
+  "boyut_bandi_recall": {
+    "cok_kucuk_16_alti": {
+      "gercek_kutu": 1167,
+      "yakalanan": 891,
+      "recall": 0.7635
+    },
+    "kucuk_16_32": {
+      "gercek_kutu": 2011,
+      "yakalanan": 1669,
+      "recall": 0.8299
+    },
+    "orta_32_64": {
+      "gercek_kutu": 520,
+      "yakalanan": 482,
+      "recall": 0.9269
+    },
+    "buyuk_64_ustu": {
+      "gercek_kutu": 316,
+      "yakalanan": 303,
+      "recall": 0.9589
+    }
+  },
+  "bant_tanimi": {
+    "cok_kucuk_16_alti": "0-16 px",
+    "kucuk_16_32": "16-32 px",
+    "orta_32_64": "32-64 px",
+    "buyuk_64_ustu": "64+ px"
+  },
+  "kaynak_recall": {
+    "aaterm": {
+      "gercek_kutu": 885,
+      "yakalanan": 788,
+      "recall": 0.8904
+    },
+    "tf2026": {
+      "gercek_kutu": 106,
+      "yakalanan": 91,
+      "recall": 0.8585
+    },
+    "hituav": {
+      "gercek_kutu": 2165,
+      "yakalanan": 1859,
+      "recall": 0.8587
+    },
+    "termal": {
+      "gercek_kutu": 858,
+      "yakalanan": 607,
+      "recall": 0.7075
+    }
+  },
+  "karisiklik_matrisi": {
+    "UAI": {
+      "UAP": 8,
+      "UAI": 8,
+      "bulunamadi": 1
+    },
+    "UAP": {
+      "UAP": 15
+    },
+    "insan": {
+      "insan": 2183,
+      "bulunamadi": 530,
+      "tasit": 5
+    },
+    "tasit": {
+      "bulunamadi": 122,
+      "tasit": 1136,
+      "insan": 6
+    }
+  },
+  "background_fn": {
+    "UAI": 1,
+    "UAP": 0,
+    "insan": 530,
+    "tasit": 122
+  },
+  "toplam_tahmin": 4376,
+  "egitim_egrisi": {
+    "epoch_sayisi": 24,
+    "en_iyi_epoch": {
+      "epoch": 14,
+      "mAP50": 0.90401
+    },
+    "son_epoch_mAP50": 0.8475,
+    "val_cls_loss_dip_epoch": {
+      "epoch": 19,
+      "val_cls_loss": 0.85418
+    },
+    "dip_sonrasi_yukselis": 0.0685,
+    "train_val_farki": {
+      "ilk_epoch": {
+        "train_cls_loss": 0.53974,
+        "val_cls_loss": 0.93712,
+        "fark": 0.3974
+      },
+      "son_epoch": {
+        "train_cls_loss": 0.44098,
+        "val_cls_loss": 0.9227,
+        "fark": 0.4817
+      },
+      "fark_acildi_mi": true
+    }
+  }
+}

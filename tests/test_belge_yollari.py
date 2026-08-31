@@ -68,7 +68,7 @@ def test_rapor_adlandirma_kurali_korunuyor():
     Kural docs/MIMARI.md'de tanimli: onek = ne tur, sonek = hangisi.
     """
     izinli = ("senaryo_", "referans_", "yolo26n_", "eski_", "hata_galerisi_",
-              "kirilim", "ajan_denemesi", "model_secimi")
+              "kirilim", "ajan_denemesi", "model_secimi", "kanit")
     hatali = [
         d.name for d in (ROOT / "reports").iterdir()
         if d.is_dir() and not d.name.startswith(izinli)

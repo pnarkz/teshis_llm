@@ -92,7 +92,8 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
 - **Yapilmadi:** E3, `teshis/servis/` (Asama 2), final test kosusu.
 - **Sartname boslugu (yeni bulundu):** C2 negatif kontrolu (ayni protokol,
   seed 7) hic kosulmadi — ajanin *yanlis pozitif* orani olculmemis durumda.
-  Ayrica kanit sozlesmesi (`kanit.json`) uretilmiyor ve yayimlanmis guven
+  Kanit sozlesmesi (`kanit.json`) artik uretiliyor ama icerigi eksik
+  (hata galerileri yok). Yayimlanmis guven
   araliklari sartnamedeki tabakali bootstrap yerine Wilson ile hesaplandi
   (~1.5 kat dar). Ayrinti: [docs/BULGULAR.md](docs/BULGULAR.md)
   'Sartnameye Uyum Denetimi'.

@@ -56,6 +56,7 @@ termal_teshis/
       bootstrap.py              Wilson araligi, iki oran testi, goruntu bootstrap
       karsilastir.py            Iki modeli ayni sette karsilastirir
       hata_galerisi.py          Siralanmis hata ornekleri uretir
+      kanit.py                  Sartname bolum 9 kanit sozlesmesi (kanit.json)
     ajan/
       araclar.py                Function-calling araclari (anonim metrik okuma)
       semalar.py                Arac bildirimleri + teshis cikti semasi
@@ -116,6 +117,11 @@ reports/
   eski_D1_last_pt/
 
   kirilim/                      metrikler.py ciktilari (run_id basina bir dosya)
+  kanit/                        Egitim YAPMAYAN kosularin kanit sozlesmesi.
+                                Egitim kosularininki experiments/<kosu>/kanit.json
+                                altindadir; D6a ve E4 gibi yeniden
+                                degerlendirmeler baskasinin dizinini ezmesin diye
+                                buraya yazilir.
   ajan_denemesi/                LLM paketi, cevap, puan
   ajan_denemesi_arsiv_4kosu/    Kirilim araclari eklenmeden onceki deneme
   model_secimi/                 Adil model karsilastirmasi (kullanilan)

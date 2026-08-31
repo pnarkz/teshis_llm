@@ -1,0 +1,122 @@
+{
+  "format": "kanit_sozlesmesi_v1",
+  "run_id": "d6a_20260827",
+  "senaryo": "D6a",
+  "kural": "Tek basina mAP hicbir teshis icin yeterli kanit sayilmaz.",
+  "degerlendirme_seti": "v08_sizintili_kume",
+  "genel_metrikler": {
+    "mAP50": 0.9285,
+    "mAP50_95": 0.6994,
+    "precision": 0.921,
+    "recall": 0.8846
+  },
+  "sinif_metrikleri": [
+    {
+      "sinif": "tasit",
+      "bbox_n": 1264,
+      "precision": 0.8988,
+      "recall": 0.8508,
+      "f1": 0.8742,
+      "ap50": 0.9113,
+      "ap50_95": 0.6267,
+      "recall_ga": [
+        0.8298,
+        0.8691
+      ],
+      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+    },
+    {
+      "sinif": "insan",
+      "bbox_n": 2718,
+      "precision": 0.8823,
+      "recall": 0.7464,
+      "f1": 0.8087,
+      "ap50": 0.8215,
+      "ap50_95": 0.4429,
+      "recall_ga": [
+        0.7298,
+        0.7625
+      ],
+      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+    },
+    {
+      "sinif": "UAP",
+      "bbox_n": 15,
+      "precision": 0.9708,
+      "recall": 1.0,
+      "f1": 0.9852,
+      "ap50": 0.995,
+      "ap50_95": 0.9089,
+      "recall_ga": [
+        0.7961,
+        1.0
+      ],
+      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+    },
+    {
+      "sinif": "UAI",
+      "bbox_n": 17,
+      "precision": 0.9322,
+      "recall": 0.9412,
+      "f1": 0.9367,
+      "ap50": 0.9862,
+      "ap50_95": 0.8191,
+      "recall_ga": [
+        0.7302,
+        0.9895
+      ],
+      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+    }
+  ],
+  "yapilandirma": {
+    "veri_surumu": "v08_d6a_split_sizintisi",
+    "baslangic_modeli": "main_model.pt",
+    "seed": 42,
+    "imgsz_egitim": 768,
+    "imgsz_degerlendirme": 768,
+    "epochs": 11,
+    "batch": 8,
+    "lr0_beyan_edilen": 0.001,
+    "lr0_gecerli": 0.00125,
+    "lr0_notu": "optimizer=auto oldugu icin beyan edilen lr0 (0.001) UYGULANMADI; Ultralytics AdamW(lr=0.00125) secti. bkz. docs/BULGULAR.md.",
+    "protokol_sapmalari": {},
+    "e_senaryo": null
+  },
+  "kapsam": {
+    "kare_sayisi": null,
+    "benzersiz_kaynak_sayisi": null
+  },
+  "sozlesme_durumu": {
+    "tam_mi": false,
+    "eksikler": [
+      "boyut/kaynak kirilimi ve karisiklik matrisi: reports/kirilim/d6a_20260827.json yok. `python -m teshis.degerlendirme.metrikler` ile uretilir.",
+      "hata ornekleri: reports/hata_galerisi_D6a/ yok. `python -m teshis.degerlendirme.hata_galerisi` ile uretilir."
+    ]
+  },
+  "egitim_egrisi": {
+    "epoch_sayisi": 11,
+    "en_iyi_epoch": {
+      "epoch": 1,
+      "mAP50": 0.93008
+    },
+    "son_epoch_mAP50": 0.90498,
+    "val_cls_loss_dip_epoch": {
+      "epoch": 11,
+      "val_cls_loss": 0.82386
+    },
+    "dip_sonrasi_yukselis": 0.0,
+    "train_val_farki": {
+      "ilk_epoch": {
+        "train_cls_loss": 0.53527,
+        "val_cls_loss": 0.97336,
+        "fark": 0.4381
+      },
+      "son_epoch": {
+        "train_cls_loss": 0.55695,
+        "val_cls_loss": 0.82386,
+        "fark": 0.2669
+      },
+      "fark_acildi_mi": false
+    }
+  }
+}

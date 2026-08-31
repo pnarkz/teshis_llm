@@ -45,7 +45,6 @@ def load_results() -> pd.DataFrame:
     }
     combined = pd.concat([pd.DataFrame([baseline_row]), frame], ignore_index=True)
     # Two D2b runs use different starting models; keep their dashboard keys unique.
-    combined.loc[combined["run_id"] == "d2b_20260820_final", "scenario"] = "D2b final_best"
     return combined
 
 

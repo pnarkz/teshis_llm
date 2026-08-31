@@ -1,0 +1,165 @@
+"""Sartname bolum 9 kanit sozlesmesinin (kanit.json) testleri.
+
+Sozlesmenin kurali net: **"Tek basina mAP hicbir teshis icin yeterli kanit
+sayilmaz."** Bu yuzden buradaki testler yalnizca "dosya uretiliyor mu" diye
+sormaz; dosyanin DOGRU kosuya ait oldugunu ve eksiklerini gizlemedigini de
+dogrular.
+"""
+
+import csv
+import json
+from pathlib import Path
+
+import pytest
+
+from teshis.degerlendirme import kanit
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture(scope="module")
+def kosular() -> list[str]:
+    return kanit.tum_kosular()
+
+
+def test_her_kosu_icin_kanit_uretilebiliyor(kosular):
+    """results.csv'deki her satir icin sozlesme toplanabilmeli."""
+    basarisiz = []
+    for run_id in kosular:
+        try:
+            kanit.kanit_uret(run_id)
+        except Exception as sorun:  # noqa: BLE001 - hangi hata olursa olsun rapor et
+            basarisiz.append(f"{run_id}: {type(sorun).__name__} {sorun}")
+    assert not basarisiz, f"Kanit uretilemeyen kosular: {basarisiz}"
+
+
+def test_kanit_dosyasi_kendi_kosusunun_metriklerini_tasir(kosular):
+    """Dosya adi dogru ama icerigi baska kosuya ait olmamali.
+
+    GERCEK HATA: D6a ve E4, v00'un agirliklarini yeniden degerlendirir; ucu de
+    results.csv'de ayni weights_path'i gosterir. Ilk surumde kanit dosyasi
+    weights_path'ten turetiliyordu, bu yuzden E4'un kaniti v00'un dizinine
+    yazildi ve v00'unkini EZDI. v00'un kanit.json'i UAP recall 0.2415
+    gosteriyordu - bu E4'un imgsz=512 degeri; v00'un gercek degeri 1.0.
+    """
+    with (ROOT / "results.csv").open(encoding="utf-8") as f:
+        satirlar = {s["run_id"]: s for s in csv.DictReader(f)}
+
+    hatali = []
+    for run_id in kosular:
+        yol = kanit.kanit_yolu(run_id)
+        if not yol.is_file():
+            continue
+        icerik = json.loads(yol.read_text(encoding="utf-8"))
+        if icerik["run_id"] != run_id:
+            hatali.append(f"{yol.name} icinde run_id={icerik['run_id']}, beklenen {run_id}")
+            continue
+        beklenen = round(float(satirlar[run_id]["mAP50"]), 4)
+        gercek = icerik["genel_metrikler"]["mAP50"]
+        if abs(gercek - beklenen) > 5e-4:
+            hatali.append(f"{run_id}: kanit mAP50={gercek}, results.csv={beklenen}")
+    assert not hatali, hatali
+
+
+def test_iki_kosu_ayni_kanit_dosyasini_paylasmaz(kosular):
+    """Her kosunun kanit dosyasi benzersiz olmali; biri digerini ezemez."""
+    yollar = {}
+    for run_id in kosular:
+        yol = kanit.kanit_yolu(run_id)
+        if yol in yollar:
+            pytest.fail(f"{run_id} ve {yollar[yol]} ayni dosyayi yaziyor: {yol}")
+        yollar[yol] = run_id
+
+
+def test_paylasilan_dizinde_yalnizca_egiten_kosu_yazar():
+    """Bir dizini birden fazla kosu paylasiyorsa, yalnizca EGITEN sahiplenir.
+
+    Dizini tek basina kullanan bir kosu, duration_min bos olsa bile kendi
+    dizinine yazar - orada ezilecek baska bir kanit yoktur (orn. D2a).
+    Kisitlama yalnizca paylasilan dizinler icin anlamlidir.
+    """
+    with (ROOT / "results.csv").open(encoding="utf-8") as f:
+        satirlar = list(csv.DictReader(f))
+
+    dizinler: dict[Path, list[dict]] = {}
+    for satir in satirlar:
+        dizin = ROOT / Path(satir["weights_path"]).parent.parent
+        dizinler.setdefault(dizin, []).append(satir)
+
+    paylasilan = {d: v for d, v in dizinler.items() if len(v) > 1}
+    if not paylasilan:
+        pytest.skip("hicbir dizin paylasilmiyor")
+
+    for dizin, paylasanlar in paylasilan.items():
+        yazanlar = [
+            s["run_id"] for s in paylasanlar
+            if kanit.kanit_yolu(s["run_id"]).parent == dizin
+        ]
+        assert len(yazanlar) <= 1, (
+            f"{dizin.name} dizinine birden fazla kosu kanit yaziyor: {yazanlar}"
+        )
+        egitenler = [
+            s["run_id"] for s in paylasanlar
+            if (s["duration_min"] or "0").strip() not in ("", "0")
+        ]
+        if egitenler:
+            assert yazanlar == egitenler[:1], (
+                f"{dizin.name}: dizini egiten {egitenler[0]} degil {yazanlar} sahiplenmis"
+            )
+
+
+def test_eksik_maddeler_gizlenmez(kosular):
+    """Sozlesme eksikse bu acikca yazilmali; dosya tam gorunmemeli.
+
+    Yarim bir kanit dosyasinin tam gorunmesi, hic olmamasindan tehlikelidir.
+    """
+    for run_id in kosular:
+        icerik = kanit.kanit_uret(run_id)
+        durum = icerik["sozlesme_durumu"]
+        assert isinstance(durum["tam_mi"], bool)
+        if not durum["tam_mi"]:
+            assert durum["eksikler"], f"{run_id}: tam degil ama eksik listesi bos"
+            for madde in durum["eksikler"]:
+                assert ":" in madde, f"{run_id}: eksik maddesi neyin eksik oldugunu soylemiyor"
+
+
+def test_ogrenme_orani_hem_beyani_hem_gecerli_degeri_tasir(kosular):
+    """optimizer=auto lr0'i yok sayar; yalnizca beyani yazmak yaniltici olur."""
+    for run_id in kosular:
+        yapilandirma = kanit.kanit_uret(run_id)["yapilandirma"]
+        assert "lr0_beyan_edilen" in yapilandirma
+        assert "lr0_gecerli" in yapilandirma
+        assert yapilandirma["lr0_gecerli"] == kanit.AUTO_OPTIMIZER_LR
+        assert "UYGULANMADI" in yapilandirma["lr0_notu"]
+
+
+def test_guven_araligi_yontemi_her_zaman_etiketli(kosular):
+    """Wilson mu, sartnameye uygun bootstrap mu - okuyan kisi bilmeli."""
+    for run_id in kosular:
+        for sinif in kanit.kanit_uret(run_id)["sinif_metrikleri"]:
+            if "recall_ga" not in sinif:
+                continue
+            yontem = sinif.get("ga_yontemi", "")
+            assert yontem, f"{run_id}/{sinif['sinif']}: GA var ama yontemi yazmiyor"
+            assert ("bootstrap" in yontem) or ("wilson" in yontem.lower())
+
+
+def test_sinif_metrikleri_bbox_sayisi_tasir(kosular):
+    """Sartname: sinif metrikleri 'her biri bbox sayisi ve GA ile' verilmeli."""
+    for run_id in kosular:
+        for sinif in kanit.kanit_uret(run_id)["sinif_metrikleri"]:
+            assert sinif["bbox_n"], f"{run_id}/{sinif['sinif']}: bbox_n yok"
+            assert "f1" in sinif
+
+
+def test_kanit_yalnizca_map_ile_yetinmiyor(kosular):
+    """Sozlesmenin kendi kurali: mAP tek basina yeterli kanit degil."""
+    for run_id in kosular:
+        icerik = kanit.kanit_uret(run_id)
+        assert icerik["sinif_metrikleri"], run_id
+        assert icerik["kural"].startswith("Tek basina mAP")
+        # En az bir kirilim veya egitim egrisi bulunmali
+        assert any(
+            anahtar in icerik
+            for anahtar in ("boyut_bandi_recall", "kaynak_recall", "egitim_egrisi")
+        ), f"{run_id}: mAP ve sinif metrikleri disinda hicbir kanit yok"
