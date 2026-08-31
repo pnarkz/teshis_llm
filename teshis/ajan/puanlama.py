@@ -40,6 +40,10 @@ SENARYO_BEKLENEN: dict[str, str] = {
     # bir satiri oldugu icin beklenen teshisi burada tanimli olmalidir -
     # aksi halde paket hazirlayici "beklenen teshis yok" diye durur.
     "E4 imgsz512": "cozunurluk_uyumsuzlugu",
+    # E2 olculdu ve underfitting URETMEDI (bkz. BULGULAR.md). Beklenen
+    # etiket yine de tanimli: ajana verildigi gun dogru cevap "anlamli
+    # degisim yok" olmalidir, "yetersiz egitim" degil.
+    "E2": "anlamli_degisim_yok",
 }
 
 # beklenen etiket -> (diagnosis alaninda aranan regex, okunabilir etiket).

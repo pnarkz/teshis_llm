@@ -9,6 +9,28 @@ aciklama: >
   okunur.
 
 sabit:
+  # ---------------------------------------------------------------------
+  # DIKKAT: optimizer 'auto' oldugu surece lr0 ve momentum BAGLAYICI DEGIL.
+  #
+  # Ultralytics, optimizer=auto iken bu iki degeri yok sayar ve kendisi
+  # secer. E1 kosusunun log'unda birebir soyle gorunur:
+  #
+  #   optimizer: 'optimizer=auto' found, ignoring 'lr0=0.001' and
+  #   'momentum=0.937' and determining best 'optimizer', 'lr0' and
+  #   'momentum' automatically... AdamW(lr=0.00125, momentum=0.9)
+  #
+  # Yani asagidaki lr0 degeri bugune kadar HIC UYGULANMADI; tum D serisi
+  # kosulari AdamW(lr=0.00125) ile egitildi. Kosularin BIRBIRIYLE
+  # karsilastirilabilirligi bozulmaz - hepsi ayni auto secimini aldi - ama
+  # beyan edilen deger gercegi yansitmiyordu.
+  #
+  # 'auto' bilerek korunuyor: acik bir optimizer yazmak lr0'i baglayici
+  # hale getirir ve yeni kosulari mevcut D serisiyle karsilastirilamaz
+  # kilar. Ogrenme oranini GERCEKTEN degistirmesi gereken bir senaryo
+  # (orn. E3) sapmasinda optimizer'i da acikca belirtmek ZORUNDADIR;
+  # test_e_serisi_protokolu.py bunu denetler.
+  # ---------------------------------------------------------------------
+  optimizer: auto
   deterministic: true
   cos_lr: true
   patience: 10
@@ -98,6 +120,11 @@ e_serisi:
       Egitim kararsizligi. Ogrenme orani 100 kat yuksek. Beklenen: loss
       gurultulu, iki farkli seed arasinda belirgin oynaklik.
     sapmalar:
+      # optimizer acikca yazilmali: 'auto' iken Ultralytics lr0'i yok sayar
+      # ve E3 sessizce saglikli bir kosuya donusurdu. AdamW secildi cunku
+      # auto'nun kendi secimi de AdamW'dir; boylece tek degisen ogrenme
+      # oranidir (0.00125 -> 0.10, ~80 kat).
+      optimizer: AdamW
       lr0: 0.10
       warmup_epochs: 0    # yuksek lr'nin etkisi warmup ile yumusatilmasin
     kosu_ayarlari:

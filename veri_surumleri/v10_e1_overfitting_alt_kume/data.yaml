@@ -1,0 +1,9 @@
+# E1: overfitting. Etiketler DEGISTIRILMEZ, goruntu kopyalanmaz.
+# Yalnizca train goruntu listesi 1000 kareye indirilir; augmentasyon
+# kapatmasi egitim protokolunde beyan edilir (e_serisi.E1).
+path: C:/Users/ASUS/Desktop/HYZ/dataset
+train: C:/Users/ASUS/Desktop/termal_teshis/veri_surumleri/v10_e1_overfitting_alt_kume/train_images.txt
+val: C:/Users/ASUS/Desktop/HYZ/dataset/images/val
+test: C:/Users/ASUS/Desktop/HYZ/dataset/images/test
+nc: 4
+names: [tasit, insan, UAP, UAI]

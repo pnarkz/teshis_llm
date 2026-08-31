@@ -59,6 +59,18 @@ AJANA_VERILMEYEN: dict[str, str] = {
     REFERANS_SENARYO: "karsilastirma tabani (kosu_01 olarak sunulur)",
     "v00n": "farkli taban model (yolo26n); kendi ciftinin referansi",
     "D1n": "farkli taban model (yolo26n); v00n ile karsilastirilir",
+    # E serisi: bozulan sey VERI degil, EGITIM PROTOKOLU. Ajanin tum
+    # karsilastirma mantigi "protokol sabit, yalnizca veri surumu degisir"
+    # varsayimina dayanir; E kosulari bu varsayimi kokunden bozar. Ayrica
+    # E kosularinin verisi tertemizdir (v00_saglikli), yani ajanin bulmasi
+    # gereken bir veri bozulmasi yoktur.
+    #
+    # Bu, E kosularinin ajana hic verilmeyecegi anlamina gelmez: egitim
+    # arizalarinin teshisi projenin dogal bir sonraki adimidir. Ancak kendi
+    # referansi (ayni sapmalar haric ayni ayarlar) ve kendi cevap anahtariyla
+    # AYRI bir deneme olarak kurulmalidir - mevcut veri bozulma denemesine
+    # karistirilmamalidir.
+    "E2": "egitim protokolu sapmasi (E serisi); verisi temiz, ayri deneme konusu",
 }
 # Ajan yalnizca AYNI kilitli kumede olculmus kosulari karsilastirabilir.
 # Farkli bir degerlendirme kumesinde olculen bir kosu (orn. D6a'nin sizintili

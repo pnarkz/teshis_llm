@@ -163,6 +163,17 @@ VARSAYILAN_BILGI = {
 }
 
 scenario_info = {
+    "E2": {
+        "problem": "Yetersiz egitim denemesi (E serisi) - HIPOTEZ DESTEKLENMEDI",
+        "change": "Veri bozulmaz; epoch sayisi 11'den 5'e dusurulur.",
+        "signal": "Beklenen: train ve val birlikte dusuk. Olculen: v00'dan ayirt edilemiyor.",
+        "why": ("D serisi main_model.pt uzerinden fine-tune eder ve bu model zaten "
+                "yakinsamistir - epoch 1'de mAP50 0.930. Yakinsamis bir modelde epoch "
+                "kesmek underfitting URETMEZ. mAP50-95 hatta v00'un uzerinde (+0.0094). "
+                "Underfitting'i gostermek icin genel amacli bir modelden baslamak "
+                "gerekir; ayrinti docs/BULGULAR.md."),
+        "status": "Tamamlandi (negatif sonuc)",
+    },
     "E4 imgsz512": {
         "problem": "Egitim/cikarim cozunurluk uyumsuzlugu (E serisi)",
         "change": "Veri HIC bozulmaz. v00 modeli, egitildigi 768 yerine 512'de olculur.",

@@ -1,0 +1,63 @@
+{
+  "format": "dataset_manifest_v1",
+  "version": "v10_e1_overfitting_alt_kume",
+  "scenario": "E1",
+  "created_at_utc": "2026-08-31T18:11:32.160893+00:00",
+  "source_dataset": "C:\\Users\\ASUS\\Desktop\\HYZ\\dataset",
+  "source_dataset_unchanged": true,
+  "copy_mode": "manifest_only",
+  "bozulma": null,
+  "not": "E1'de veri BOZULMAZ; yalnizca kucultulur. Asil sapma egitim protokolundedir (augmentasyon kapali, 200 epoch) ve senaryolar/egitim_protokolu.yaml -> e_serisi.E1 altinda beyan edilir.",
+  "ornekleme": {
+    "yontem": "kaynak grubuna gore tabakali (en buyuk artik)",
+    "seed": 42,
+    "gerekce": "Rastgele secim kaynak paylarini kaydirir ve E1'e ikinci bir degisken (kaynak dagilimi kaymasi, D5'in konusu) katardi."
+  },
+  "counts": {
+    "tam_kume_kare": 17515,
+    "alt_kume_kare": 1000,
+    "alt_kume_bbox": 7794,
+    "sinif_bbox": {
+      "tasit": 4919,
+      "insan": 2854,
+      "UAP": 15,
+      "UAI": 6
+    }
+  },
+  "kaynak_dagilimi": {
+    "aaterm": {
+      "tam_kume": 11064,
+      "alt_kume": 632,
+      "tam_pay": 0.6317,
+      "alt_pay": 0.632
+    },
+    "hituav": {
+      "tam_kume": 2292,
+      "alt_kume": 131,
+      "tam_pay": 0.1309,
+      "alt_pay": 0.131
+    },
+    "sentetik": {
+      "tam_kume": 273,
+      "alt_kume": 15,
+      "tam_pay": 0.0156,
+      "alt_pay": 0.015
+    },
+    "termal": {
+      "tam_kume": 3785,
+      "alt_kume": 216,
+      "tam_pay": 0.2161,
+      "alt_pay": 0.216
+    },
+    "tf2026": {
+      "tam_kume": 101,
+      "alt_kume": 6,
+      "tam_pay": 0.0058,
+      "alt_pay": 0.006
+    }
+  },
+  "files": {
+    "data_yaml": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v10_e1_overfitting_alt_kume\\data.yaml",
+    "train_images_list": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v10_e1_overfitting_alt_kume\\train_images.txt"
+  }
+}

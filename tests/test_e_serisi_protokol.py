@@ -136,3 +136,63 @@ def test_e4_egitim_gerektirmez():
     egitim = ayar["kosu_ayarlari"]["egitim_imgsz"]
     assert egitim in olcum, "olcum listesi egitim cozunurlugunu de icermeli (kontrol noktasi)"
     assert len(olcum) >= 3, "tek bir uyumsuz deger egri cizmeye yetmez"
+
+
+# --------------------------------------------------------------------------
+# optimizer=auto tuzagi
+#
+# Ultralytics, optimizer='auto' iken lr0 ve momentum degerlerini YOK SAYAR ve
+# kendisi secer (E1 log'u: "ignoring 'lr0=0.001' ... AdamW(lr=0.00125)").
+# Bu, sessiz bir tuzaktir: protokole lr0 yazilir, args.yaml'a da yazilir, ama
+# egitimde kullanilmaz. E3'un tum tezi "lr0 100 kat yuksek" oldugu icin, bu
+# fark edilmeseydi E3 saglikli bir kosuya donusur ve "kararsizlik gozlenmedi"
+# diye raporlanirdi.
+# --------------------------------------------------------------------------
+
+
+def test_ogrenme_orani_degistiren_senaryo_optimizeri_de_belirtir():
+    """lr0'i degistiren bir sapma, optimizer'i acikca yazmak ZORUNDADIR.
+
+    Aksi halde optimizer=auto devrede kalir, lr0 yok sayilir ve senaryo
+    sessizce etkisiz hale gelir - hatasiz calisir, yanlis sonuc verir.
+    """
+    taban = protokol.egitim_kwargs()
+    kusurlu = []
+    for kod in E_KODLARI:
+        sapmalar = protokol.e_senaryo_ayarlari(kod)["sapmalar"] or {}
+        if "lr0" not in sapmalar:
+            continue
+        birlesik = protokol.egitim_kwargs_e(kod)
+        if str(birlesik.get("optimizer", "auto")).lower() == "auto":
+            kusurlu.append(kod)
+    assert not kusurlu, (
+        f"Bu senaryolar lr0'i degistiriyor ama optimizer 'auto' kaliyor: {kusurlu}. "
+        "Ultralytics bu durumda lr0'i yok sayar; sapma etkisiz olur. "
+        f"(protokol tabani optimizer={taban.get('optimizer')})"
+    )
+
+
+def test_protokol_optimizer_alanini_acikca_tasir():
+    """optimizer protokolde yazili olmali; varsayilana birakilmamali.
+
+    Yazili olmadigi surece lr0'in baglayici olup olmadigi okunamaz.
+    """
+    assert "optimizer" in protokol.egitim_kwargs(), (
+        "senaryolar/egitim_protokolu.yaml 'sabit' bloku optimizer alanini "
+        "icermeli; lr0'in baglayici olup olmadigi buna bagli."
+    )
+
+
+def test_lr0_baglayici_degilse_protokol_bunu_belgeler():
+    """optimizer 'auto' ise, YAML bunun ne anlama geldigini yaziyor olmali.
+
+    Bu bir belge testidir ve bilerek boyle: lr0'in inert oldugu gercegi
+    yalnizca kodda degil, protokolu okuyan kisinin gordugu yerde durmalidir.
+    """
+    ham = protokol.PROTOKOL_YOLU.read_text(encoding="utf-8")
+    if str(protokol.egitim_kwargs().get("optimizer", "auto")).lower() != "auto":
+        pytest.skip("optimizer acikca belirtilmis; uyari gerekmiyor")
+    assert "yok sayar" in ham or "BAGLAYICI DEGIL" in ham, (
+        "optimizer=auto iken lr0'in uygulanmadigi protokol dosyasinda "
+        "aciklanmali; aksi halde okuyan kisi lr0'in gecerli oldugunu sanir."
+    )

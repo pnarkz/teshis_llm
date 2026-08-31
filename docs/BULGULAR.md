@@ -869,6 +869,82 @@ sapmalari oradan okur, kosu manifestine `protokol_sapmalari` alani olarak
 yazar ve baslangicta ekrana basar. Boylece hangi kosunun protokolden nerede
 ayrildigi hem YAML'dan hem kosu ciktisinin kendisinden okunabilir.
 
+### E2 Sonucu — HIPOTEZ DESTEKLENMEDI: yakinsamis modelde epoch kesmek underfitting uretmez
+
+E2'nin konfigdeki beklenen kaniti: *"train ve val birlikte dusuk, loss hala
+iner."* Olculen bunun tam tersi.
+
+| Olcum | v00 (referans) | E2 (5 epoch) | Fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9200 | 0.9118 | -0.0081 |
+| mAP50-95 | 0.6707 | 0.6800 | **+0.0094** |
+| Precision | 0.9175 | 0.9118 | -0.0057 |
+| Recall | 0.8785 | 0.8391 | -0.0394 |
+
+Sinif bazinda: `tasit` +0.0020, `insan` +0.0141, `UAP` +0.0000, `UAI` -0.0487
+(n=17). Yani E2, referanstan ayirt edilemiyor; mAP50-95'te hatta onun
+**uzerinde**.
+
+**Neden.** D serisi protokolu `main_model.pt` uzerinden fine-tune eder ve bu
+model zaten yakinsamistir. E2'nin egitim egrisi bunu acikca gosteriyor:
+
+| epoch | mAP50 | mAP50-95 |
+|---|---:|---:|
+| 1 | 0.9301 | 0.6810 |
+| 3 | 0.8457 | 0.6155 |
+| 5 | 0.9247 | 0.6911 |
+
+Model **birinci epoch'ta zaten 0.93**. Ortadaki dus-cik dalgalanmasi
+fine-tune gurultusu; bes epoch sonunda baslangic seviyesine donuyor.
+Yakinsamis bir modelde epoch sayisini kesmek underfitting uretmez, cunku
+ogrenilecek sey zaten ogrenilmistir.
+
+**Ders.** "Az epoch = underfitting" esitligi yalnizca sifirdan (veya genel
+amacli bir modelden) egitimde gecerlidir. Bu, D1'in ilk hipoteziyle ayni
+turden bir hatadir: senaryonun tezi, kurulumun gerceklerini hesaba katmadan
+yazilmisti.
+
+Underfitting'i bu projede gostermenin dogru yolu, `yolo26n.pt` gibi genel
+amacli bir modelden az epoch ile baslamak ve **v00n** referansiyla
+karsilastirmaktir (v00n zaten mevcut: 23 epoch, mAP50 0.8126). Bu kosu
+yapilmadi; E2 negatif sonuc olarak kayda gecti.
+
+- reports/senaryo_E2/d1_metrics.json
+- experiments/run_20260830_221852_E2_42/results.csv (egitim egrisi)
+
+### optimizer=auto tuzagi — protokoldeki lr0 hic uygulanmamis
+
+E1 kosusu baslarken Ultralytics'in su satiri fark edildi:
+
+```text
+optimizer: 'optimizer=auto' found, ignoring 'lr0=0.001' and 'momentum=0.937'
+and determining best 'optimizer', 'lr0' and 'momentum' automatically...
+AdamW(lr=0.00125, momentum=0.9)
+```
+
+`optimizer` hicbir yerde belirtilmedigi icin varsayilan `auto` devredeydi ve
+Ultralytics **lr0'i yok sayip** kendi degerini secti. Kontrol edildi: v00,
+E2 ve E1 dahil tum kosularin `args.yaml` dosyasinda `optimizer: auto` yazili.
+
+**Sonuclara etkisi yok.** Tum kosular ayni auto secimini aldigi icin
+birbirleriyle karsilastirilabilirligi bozulmadi; protokolun asil isi
+(kosulari kiyaslanabilir kilmak) yerine getirildi. Bozulan sey, **beyan
+edilen degerin gercegi yansitmamasiydi**: `lr0: 0.001` okunuyordu, AdamW
+0.00125 kosuyordu.
+
+**Asil risk E3'teydi.** E3'un tum tezi "lr0 100 kat yuksek". `optimizer: auto`
+ile bu deger yok sayilacak, E3 sessizce saglikli bir kosuya donusecek ve
+"kararsizlik gozlenmedi" diye raporlanacakti — hatasiz calisan, yanlis
+sonuc veren bir deney. E3'un sapmasi artik `optimizer: AdamW` degerini de
+acikca tasiyor; auto'nun kendi secimi de AdamW oldugu icin tek degisen
+ogrenme oranidir (0.00125 -> 0.10, ~80 kat).
+
+`sabit` blok bilerek `optimizer: auto` olarak birakildi: acik bir optimizer
+yazmak lr0'i baglayici hale getirir ve yeni kosulari mevcut D serisiyle
+karsilastirilamaz kilardi. Uc test bu tuzagi kalicilastiriyor
+(`test_e_serisi_protokol.py`), en onemlisi: **lr0'i degistiren bir sapma,
+optimizer'i acikca yazmak zorundadir.**
+
 ### E4 Sonucu — cikarim cozunurlugu recall'u kor eder, precision'a dokunmaz
 
 E4 tek E senaryosudur ki **egitim gerektirmez**: uyumsuzluk cikarim
