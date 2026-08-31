@@ -869,6 +869,72 @@ sapmalari oradan okur, kosu manifestine `protokol_sapmalari` alani olarak
 yazar ve baslangicta ekrana basar. Boylece hangi kosunun protokolden nerede
 ayrildigi hem YAML'dan hem kosu ciktisinin kendisinden okunabilir.
 
+### E1 Sonucu — asiri uyum gerceklesti, ama checkpoint secimi onu TAMAMEN gizliyor
+
+E1'in beklenen kaniti: *"train yuksek, val dusuk, train_val farki acilir."*
+Egitim egrisi bunu birebir verdi. Ama kilitli sette olculen sonuc, E1'in
+neredeyse saglikli gorunmesine yol acti — ve sebebi, senaryonun kendisi
+kadar onemli.
+
+**Egitim egrisi: ders kitabi asiri uyum.** 1000 kare, 200 epoch, augmentasyon
+tamamen kapali.
+
+| | epoch 1 | epoch 200 | degisim |
+|---|---:|---:|---:|
+| train_box_loss | 1.0218 | 0.1245 | **-0.8974** |
+| train_cls_loss | 0.5025 | 0.0966 | -0.4059 |
+| val_box_loss | 1.3867 | 1.4803 | **+0.0936** |
+| val_cls_loss | 0.7748 | 1.2745 | **+0.4997** |
+| mAP50 (val) | 0.9366 | 0.8449 | -0.0918 |
+
+train kaybi cokerken (box loss 8 kat asagi) val kaybi **yukseliyor**.
+train/val cls_loss farki 0.2723'ten 1.1778'e cikiyor: **4.3 kat**. Model 1000
+kareyi ezberliyor ve genelleme yetenegini kaybediyor.
+
+**Ama kilitli settaki sonuc bunu gostermiyor.**
+
+| Kilitli tanı seti | v00 | E1 `best.pt` | E1 `last.pt` |
+|---|---:|---:|---:|
+| mAP50 | 0.9200 | 0.9190 (**-0.0010**) | 0.8318 (-0.0881) |
+| mAP50-95 | 0.6707 | 0.6844 (**+0.0138**) | 0.6030 (-0.0677) |
+| Precision | 0.9175 | 0.8818 (-0.0357) | 0.8456 (-0.0719) |
+| Recall | 0.8785 | 0.8771 (**-0.0015**) | 0.8094 (-0.0691) |
+
+`best.pt` ile E1, referanstan **ayirt edilemiyor** — mAP50-95'te hatta onun
+uzerinde. 200 epoch suren, ders kitabi niteliginde bir asiri uyum kosusu,
+standart raporlamayla **tamamen saglikli gorunuyor**.
+
+**Neden.** `best.pt`, en yuksek val mAP50'yi veren epoch'un checkpoint'idir
+ve o epoch **1 numarali epoch**. Model zaten yakinsamis `main_model.pt`'den
+basladigi icin ilk epoch'ta tepedeydi; sonraki 199 epoch onu yalnizca bozdu.
+Checkpoint secimi, kosunun tum kotu gecmisini atiyor.
+
+#### Bu senaryonun asil dersi
+
+Asiri uyum, **metriklerden degil egitim egrisinden** teshis edilir.
+Yalnizca `best.pt` metriklerine bakan bir ajan (veya insan) burada "sorun
+yok" der ve haklidir — o checkpoint gercekten saglikli. Yanlis olan, o
+checkpoint'in kosuyu temsil ettigi varsayimidir.
+
+Bu, D5'in dersinin ("erken durdurmanin gizledigi felaket") daha keskin bir
+tekrari ve iki sey icin dogrudan kanit:
+
+1. **Kanit sozlesmesi neden egitim egrisi ISTIYOR.** Sartname bolum 9 bunu
+   sart kosuyor; E1 nedenini gosteriyor. `kanit.json` bu kosu icin
+   `egitim_egrisi.train_val_farki.fark_acildi_mi = true` yaziyor - metrikler
+   sessizken egri konusuyor.
+2. **`_last_pt` varyantlari neden tutuluyor.** Ayni kosunun iki checkpoint'i
+   arasindaki 0.088'lik mAP50 farki, kosunun saglikli mi bozuk mu oldugu
+   sorusunun cevabini degistiriyor.
+
+`results.csv`'ye iki satir birden yazildi (`E1` ve `E1 last_pt`); tek satir,
+bu senaryo hakkinda yanlis bir izlenim birakirdi.
+
+- reports/senaryo_E1/d1_metrics.json (best.pt)
+- reports/senaryo_E1_last_pt/d1_metrics.json (last.pt)
+- experiments/run_20260831_211150_E1_42/results.csv (egitim egrisi)
+- veri_surumleri/v10_e1_overfitting_alt_kume/manifest.json
+
 ### E2 Sonucu — HIPOTEZ DESTEKLENMEDI: yakinsamis modelde epoch kesmek underfitting uretmez
 
 E2'nin konfigdeki beklenen kaniti: *"train ve val birlikte dusuk, loss hala

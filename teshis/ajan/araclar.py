@@ -71,6 +71,8 @@ AJANA_VERILMEYEN: dict[str, str] = {
     # AYRI bir deneme olarak kurulmalidir - mevcut veri bozulma denemesine
     # karistirilmamalidir.
     "E2": "egitim protokolu sapmasi (E serisi); verisi temiz, ayri deneme konusu",
+    "E1": "egitim protokolu sapmasi (E serisi); verisi temiz, ayri deneme konusu",
+    "E1 last_pt": "ayni kosunun last.pt varyanti; ayri bir senaryo degil",
 }
 # Ajan yalnizca AYNI kilitli kumede olculmus kosulari karsilastirabilir.
 # Farkli bir degerlendirme kumesinde olculen bir kosu (orn. D6a'nin sizintili

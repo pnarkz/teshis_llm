@@ -44,6 +44,10 @@ SENARYO_BEKLENEN: dict[str, str] = {
     # etiket yine de tanimli: ajana verildigi gun dogru cevap "anlamli
     # degisim yok" olmalidir, "yetersiz egitim" degil.
     "E2": "anlamli_degisim_yok",
+    # E1 best.pt asiri uyumu GIZLIYOR (epoch 1 checkpoint'i); dogru cevap
+    # "degisim yok". Asiri uyum yalnizca last.pt ve egitim egrisinde gorunur.
+    "E1": "anlamli_degisim_yok",
+    "E1 last_pt": "asiri_uyum",
 }
 
 # beklenen etiket -> (diagnosis alaninda aranan regex, okunabilir etiket).
@@ -56,6 +60,10 @@ SENARYO_BEKLENEN: dict[str, str] = {
 # olarak ayirt edilir ve sessizce yanlis puanlanmaz.
 ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
     "saglikli_referans": (r"baseline|saglikli|referans|optimal|dengeli|en yuksek", "saglikli referans"),
+    "asiri_uyum": (
+        r"asiri uyum|overfit|ezber|memoriz|train.*val.*fark|genelleme kayb",
+        "asiri uyum",
+    ),
     "cozunurluk_uyumsuzlugu": (
         r"cozunurluk|imgsz|resolution|olcek|kucult|downscal|upscal|boyut uyumsuz",
         "cozunurluk uyumsuzlugu",

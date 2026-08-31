@@ -1,0 +1,24 @@
+{
+  "format": "experiment_manifest_v1",
+  "created_at_utc": "2026-08-31T18:11:50.032624+00:00",
+  "scenario": "E1",
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\main_model.pt",
+  "data": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v10_e1_overfitting_alt_kume\\data.yaml",
+  "device": "0",
+  "seed": 42,
+  "epochs": 200,
+  "batch": 8,
+  "imgsz": 768,
+  "test_evaluated_during_training": false,
+  "e_senaryo": "E1",
+  "protokol_sapmalari": {
+    "patience": 1000,
+    "hsv_v": 0.0,
+    "degrees": 0.0,
+    "translate": 0.0,
+    "scale": 0.0,
+    "fliplr": 0.0,
+    "mosaic": 0.0,
+    "close_mosaic": 0
+  }
+}

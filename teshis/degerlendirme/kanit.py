@@ -64,14 +64,13 @@ def _kosu_satiri(run_id: str) -> dict[str, str]:
 
 def _rapor_klasoru(senaryo: str) -> Path | None:
     """Senaryo adindan rapor klasorunu bulur; demo/data_loader ile ayni kural."""
+    # demo/data_loader.py ile ayni kural: bosluk -> alt cizgi, gerisi konvansiyon.
     ozel = {
         "v00_saglikli": "referans_v00",
-        "D2b final_best": "senaryo_D2b_final_best",
         "v00n": "yolo26n_referans_v00n",
         "D1n": "yolo26n_senaryo_D1n",
-        "E4 imgsz512": "senaryo_E4_imgsz512",
     }
-    klasor = KOK / "reports" / ozel.get(senaryo, f"senaryo_{senaryo}")
+    klasor = KOK / "reports" / ozel.get(senaryo, f"senaryo_{senaryo.replace(' ', '_')}")
     return klasor if klasor.is_dir() else None
 
 

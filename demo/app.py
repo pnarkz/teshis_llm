@@ -163,6 +163,26 @@ VARSAYILAN_BILGI = {
 }
 
 scenario_info = {
+    "E1": {
+        "problem": "Asiri uyum (E serisi) - GERCEKLESTI ama best.pt gizliyor",
+        "change": "Veri bozulmaz, 1000 kareye indirilir; 200 epoch, augmentasyon tamamen kapali.",
+        "signal": "Egitim egrisinde net: train_box_loss 1.02 -> 0.12, val_cls_loss 0.77 -> 1.27.",
+        "why": ("Kilitli sette best.pt referanstan ayirt edilemiyor (mAP50 -0.001), "
+                "cunku best.pt 200 epoch'un 1.'sinden geliyor - model yakinsamis bir "
+                "modelden basladigi icin ilk epoch'ta zaten tepedeydi. Asiri uyum "
+                "yalnizca last.pt'de (mAP50 -0.088) ve egitim egrisinde gorunuyor. "
+                "Ders: asiri uyum metriklerden degil EGRIDEN teshis edilir."),
+        "status": "Tamamlandi",
+    },
+    "E1 last_pt": {
+        "problem": "E1'in son checkpoint'i - asiri uyumun gorundugu yer",
+        "change": "Ayni kosu, best.pt yerine last.pt (epoch 200) olculur.",
+        "signal": "mAP50 0.832 (-0.088), recall 0.809 (-0.069), precision 0.846 (-0.072).",
+        "why": ("Ayni kosunun iki checkpoint'i arasindaki fark, 'bu kosu saglikli mi' "
+                "sorusunun cevabini degistiriyor. Bu yuzden results.csv'ye iki satir "
+                "birden yazildi; tek satir yanlis izlenim birakirdi."),
+        "status": "Tamamlandi",
+    },
     "E2": {
         "problem": "Yetersiz egitim denemesi (E serisi) - HIPOTEZ DESTEKLENMEDI",
         "change": "Veri bozulmaz; epoch sayisi 11'den 5'e dusurulur.",

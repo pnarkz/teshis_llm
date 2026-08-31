@@ -53,19 +53,21 @@ def load_results() -> pd.DataFrame:
 # geride kaliyordu: D6a, D6b, v00n ve D1n eklendiginde demo onlari sessizce
 # "kanit yok" gosteriyordu. Adlandirma kurali docs/MIMARI.md'de tanimlidir.
 OZEL_KLASOR = {
+    # Yalnizca konvansiyonla TURETILEMEYEN adlar burada durur. Bosluk iceren
+    # senaryo adlari ("D2b final_best", "E1 last_pt", "E4 imgsz512") kural
+    # geregi alt cizgiye cevrilir; onlar icin girdi gerekmez.
     "v00_saglikli": "referans_v00",
-    "D2b final_best": "senaryo_D2b_final_best",
     "v00n": "yolo26n_referans_v00n",
     "D1n": "yolo26n_senaryo_D1n",
-    # E4 bir egitim degil, v00 modelinin farkli imgsz ile yeniden
-    # degerlendirilmesidir; klasor adi olcum cozunurlugunu tasir.
-    "E4 imgsz512": "senaryo_E4_imgsz512",
 }
 
 
 def rapor_klasoru(scenario: str) -> Path | None:
-    """Senaryo adindan rapor klasorunu turetir: 'D4' -> reports/senaryo_D4."""
-    ad = OZEL_KLASOR.get(scenario, f"senaryo_{scenario}")
+    """Senaryo adindan rapor klasorunu turetir: 'D4' -> reports/senaryo_D4.
+
+    Bosluklar alt cizgiye cevrilir: 'E1 last_pt' -> reports/senaryo_E1_last_pt.
+    """
+    ad = OZEL_KLASOR.get(scenario, f"senaryo_{scenario.replace(' ', '_')}")
     klasor = ROOT / "reports" / ad
     return klasor if klasor.is_dir() else None
 
