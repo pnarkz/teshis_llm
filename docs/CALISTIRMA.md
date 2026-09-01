@@ -124,3 +124,27 @@ D2b ciktilari:
 
 Beklenen kanit: Eksik etiketler nedeniyle modelin recall'i ve ozellikle false
 negative sayisi artabilir. Config beklentisi precision dususudur; bu beklenti
+
+## Ajan kontrol tekrarlari (kota-bilincli)
+
+Projenin en zayif kanitli iddiasi "ajan bozulma yokken sorun uydurmuyor".
+Elde yalnizca iki saf kontrol var; Wilson %95 araligi [0.000, 0.658].
+
+Tam denemeyi tekrarlamak pahali: 11 kosu x ~2.5 istek = bir gunluk ucretsiz
+kotanin tamami (20 istek/gun). Bunun yerine yalnizca iki kontrol kosusu
+tekrarlanir - ayni kotayla kontrol gozlemi 2'den 8'e cikar:
+
+```bash
+python scripts/ajan_kontrol_tekrari.py --tekrar 3
+```
+
+Kota biterse script bunu ayirt edip temiz durur; ertesi gun:
+
+```bash
+python scripts/ajan_kontrol_tekrari.py --tekrar 3 --devam
+```
+
+Ozet (kosmadan): `python scripts/ajan_kontrol_tekrari.py --ozet`
+
+`GEMINI_API_KEY` ortam degiskeni tanimli olmalidir; anahtar hicbir dosyaya
+yazilmaz, yalnizca `os.environ` uzerinden okunur.
