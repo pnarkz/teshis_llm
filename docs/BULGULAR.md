@@ -1403,5 +1403,50 @@ Anonimlik dogrulandi: `kosu_11`'in arac ciktilari `kosu_10` ile yapisal
 olarak ayni (ayni alanlar, ayni bicim); kontrol kosusu oldugunu ele veren
 hicbir terim gecmiyor.
 
-**Sonraki adim kullanicida:** `python -m teshis.ajan.ajan --devam` (yalnizca
-kosu_11 kosulur, on kosu atlanir).
+### Sonuc: ajan kontrolde sorun UYDURMADI
+
+`kosu_11` icin ajanin cevabi **`saglikli_model_performansi`** — dogru.
+Gerekcesi de saglam:
+
+> "mAP50 degeri 0.9214 ile baseline (0.9200) seviyesine son derece yakindir
+> (fark: +0.0015)... Boyut bazli analizde 16-32 px kucuk nesne recall degeri
+> 0.8707'ye yukselerek referansin (0.8344) uzerine cikmis, belirgin bir
+> sistemsel bozulma tespit edilmemistir."
+
+C2'nin precision farki (-0.0184), gercek bozulma iceren D6b'ninkinin
+(-0.0007) 27 kati olmasina ragmen ajan bunu bozulma olarak okumadi.
+
+**On bir kosu uzerinden nihai skor:** `mean_score` 0.833,
+`mean_score_tespit` 0.894.
+
+### Ajan bir teshis sistemi olarak: hangi hatayi yapiyor?
+
+Ortalama skor tek basina yaniltici: "bozulmayi uydurdu" ile "bozulmayi
+kacirdi" ayni sifiri alir, oysa bir teshis sisteminde bu iki hata tamamen
+farkli sonuclar dogurur. Kosular uce ayrildi
+(`scripts/ajan_hata_turleri.py`):
+
+| Grup | n | Ajanin performansi |
+|---|---:|---|
+| **A. Saf kontrol** (hicbir bozulma yok) | 2 | **2/2 dogru — sifir uydurma** |
+| **B. Bozulma var, imzasi yok** | 3 | 2/3 dogru (D3b'ye yanlis neden atfetti) |
+| **C. Bozulma var ve tespit edilebilir** | 6 | 3.5/6 dogru neden |
+
+C grubunun dagilimi: 3 tam dogru, 1 kismi, 1 yanlis neden (D2a'ya "kucuk
+nesne kaybi" dedi), 1 kacirma (D5'e "saglikli" dedi).
+
+**Baskin hata turu: bozulma uydurmak degil, YANLIS NEDEN atfetmek ve
+kacirmak.** Ajan sorun oldugunu iddia etme konusunda muhafazakar; sorunun
+ADINI koyma konusunda guvenilmez. Pratik acidan bu, tersinden daha iyi bir
+hata profili: uydurulmus bir teshis bosa is yaptirir, yanlis adlandirilmis
+bir teshis en azindan dogru yere bakmayi tetikler.
+
+**Sinir.** Saf kontrol grubunda yalnizca **iki** kosu var. Sifir uydurma iyi
+bir isaret, ancak Wilson %95 araligi **[0.000, 0.658]** — gercek uydurma
+orani hala yuksek olabilir. Bu grubu buyutmenin yolu, v00'u farkli seed'lerle
+(13, 21, ...) tekrarlayip her birini ajana kontrol olarak vermektir; ayni
+kosular C2'nin seed gurultusu tahminini de n=1'den kurtarir. Iki eksigi bir
+olcum kapatiyor - projenin siradaki en yuksek getirili isi budur.
+
+- reports/ajan_denemesi/hata_turleri.json
+- scripts/ajan_hata_turleri.py

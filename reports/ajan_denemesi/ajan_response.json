@@ -138,5 +138,19 @@
     ],
     "next_measurement": "Modelin genel basarisinin korunup korunmadigini teyit etmek icin ek test setleri uzerinde performans ve kaynak_c basariminin takibine devam edilmelidir.",
     "run_id": "kosu_10"
+  },
+  {
+    "diagnosis": "saglikli_model_performansi",
+    "evidence": [
+      "kosu_11'in mAP50 degeri 0.9214 ile baseline (0.9200) seviyesine son derece yakindir (fark: +0.0015).",
+      "mAP50-95 degeri 0.6836 ile referans deger olan 0.6707'nin uzerindedir (fark: +0.0129); genel precision (0.8992) ve recall (0.8671) metrikleri kabul edilebilir sinirlar icindedir.",
+      "Boyut bazli analizde 16-32 px kucuk nesne recall degeri 0.8707'ye yukselerek referansin (0.8344) uzerine cikmis, belirgin bir sistemsel bozulma tespit edilmemistir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI (17 bbox) ve UAP (15 bbox) siniflarinin ornek sayilari 20'nin altinda oldugu icin bu siniflardaki basari/degisim oranlari genellenemez."
+    ],
+    "next_measurement": "Farkli cevre kosullarini ve sinir durumlarini temsil eden yeni test setleri uzerinde dogrulama yapilmasi onerilir.",
+    "run_id": "kosu_11"
   }
 ]

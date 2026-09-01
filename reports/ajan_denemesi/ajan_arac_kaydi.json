@@ -552,5 +552,62 @@
       }
     ],
     "hata": null
+  },
+  "kosu_11": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kosu_metriklerini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_11"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "baseline_farkini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_11"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 2,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_11"
+        },
+        "hata": null
+      },
+      {
+        "tur": 2,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_11"
+        },
+        "hata": null
+      },
+      {
+        "tur": 2,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_11"
+        },
+        "hata": null
+      }
+    ],
+    "hata": null
   }
 }

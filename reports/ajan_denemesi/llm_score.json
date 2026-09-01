@@ -144,8 +144,22 @@
       "tespit_edilebilir": false,
       "tespit_notu": "genel metrik farklari seed gurultusunun icinde: precision -0.0007 ve recall -0.0012, C2 esigi 0.0184 / 0.0114. mAP50 farki (+0.0033) esigin yalnizca iki kati. Bkz. docs/BULGULAR.md 'C2 Kontrolu'.",
       "model_diagnosis": "saglikli_performans"
+    },
+    {
+      "run_id": "kosu_11",
+      "expected": "anlamli_degisim_yok",
+      "expected_label": "anlamli degisim yok",
+      "diagnosis_score": 1.0,
+      "diagnosis_score_tespit": 1.0,
+      "evidence_score": 1.0,
+      "limitation_score": 1.0,
+      "total": 1.0,
+      "total_tespit": 1.0,
+      "tespit_edilebilir": true,
+      "tespit_notu": null,
+      "model_diagnosis": "saglikli_model_performansi"
     }
   ],
-  "mean_score": 0.817,
-  "mean_score_tespit": 0.883
+  "mean_score": 0.833,
+  "mean_score_tespit": 0.894
 }

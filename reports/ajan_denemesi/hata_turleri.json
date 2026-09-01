@@ -1,0 +1,96 @@
+{
+  "kaynak": "reports/ajan_denemesi/llm_score.json",
+  "gruplar": {
+    "saf_kontrol": [
+      {
+        "kosu": "kosu_01",
+        "rol": "Baseline",
+        "ajan_teshisi": "saglikli_referans",
+        "sonuc": "dogru"
+      },
+      {
+        "kosu": "kosu_11",
+        "rol": "C2 seed7",
+        "ajan_teshisi": "saglikli_model_performansi",
+        "sonuc": "dogru"
+      }
+    ],
+    "imzasiz": [
+      {
+        "kosu": "kosu_02",
+        "rol": "D1",
+        "ajan_teshisi": "bozulma_tespit_edilmedi",
+        "sonuc": "dogru"
+      },
+      {
+        "kosu": "kosu_07",
+        "rol": "D3b",
+        "ajan_teshisi": "kaynak_d_performans_kaybi",
+        "sonuc": "uydurdu"
+      },
+      {
+        "kosu": "kosu_10",
+        "rol": "D6b",
+        "ajan_teshisi": "saglikli_performans",
+        "sonuc": "dogru"
+      }
+    ],
+    "tespit_edilebilir": [
+      {
+        "kosu": "kosu_03",
+        "rol": "D2a",
+        "ajan_teshisi": "kucuk_nesne_performans_kaybi",
+        "sonuc": "yanlis_neden"
+      },
+      {
+        "kosu": "kosu_04",
+        "rol": "D2b",
+        "ajan_teshisi": "yuksek_yanlis_pozitif_orani_ve_precision_dususu",
+        "sonuc": "dogru"
+      },
+      {
+        "kosu": "kosu_05",
+        "rol": "D2b final_best",
+        "ajan_teshisi": "Genel hassasiyet (precision) düşüşü ve kaynak_d grubunda recall kaybı",
+        "sonuc": "kismi"
+      },
+      {
+        "kosu": "kosu_06",
+        "rol": "D3",
+        "ajan_teshisi": "UAI sınıfı ile UAP sınıfı arasında belirgin sınıf karışıklığı (17 UAI kutusunun 8'i UAP olarak tahmin edilmiş) yaşanmış, UAI AP50 değeri düşmüş ve genel model Precision değeri ciddi şekilde gerilemiştir.",
+        "sonuc": "dogru"
+      },
+      {
+        "kosu": "kosu_08",
+        "rol": "D4",
+        "ajan_teshisi": "cok_kucuk_nesne_tespit_kaybi",
+        "sonuc": "dogru"
+      },
+      {
+        "kosu": "kosu_09",
+        "rol": "D5",
+        "ajan_teshisi": "saglikli_performans",
+        "sonuc": "kacirdi"
+      }
+    ]
+  },
+  "saf_kontrol_ozeti": {
+    "n": 2,
+    "uydurma": 0,
+    "uydurma_orani": 0.0,
+    "wilson_95": [
+      0.0,
+      0.658
+    ],
+    "yorum": "Sifir uydurma iyi bir isaret, ancak yalnizca iki saf kontrol var; ust sinir yuksek kaliyor. Kesin konusmak icin daha fazla kontrol kosusu (farkli seed'lerle v00 tekrarlari) gerekir."
+  },
+  "tespit_edilebilir_ozeti": {
+    "n": 6,
+    "dogru": 3,
+    "kismi": 1,
+    "yanlis_neden": 1,
+    "kacirdi": 1,
+    "dogru_neden_puani": 3.5
+  },
+  "baskin_hata_turu": "yanlis neden atfetmek ve kacirmak; bozulma uydurmak degil"
+}
