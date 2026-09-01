@@ -111,5 +111,32 @@
     ],
     "next_measurement": "Çok küçük nesnelerin (0-16 px) tespitini iyileştirmek için SAHI (Slicing Aided Hyper Inference) veya yüksek çözünürlüklü giriş boyutu ile değerlendirme yapılmalıdır.",
     "run_id": "kosu_08"
+  },
+  {
+    "diagnosis": "saglikli_performans",
+    "evidence": [
+      "Genel metriklerde mAP50 degeri 0.9092 (baseline 0.9200, fark: -0.0107) ve mAP50_95 degeri 0.6751 (baseline 0.6707, fark: +0.0044) ile saglikli referans seviyesine son derece yakindir.",
+      "Sinif bazli AP50 degerlerinde UAP 0.9950 (fark: 0.0000), insan 0.8216 (fark: +0.0146) ve tasit 0.8730 (fark: -0.0126) seviyesindedir ve hicbir boyut veya kaynak grubunda belirgin bir cokus/bozulma gözlenmemistir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sinifi (17 bbox) ve UAP sinifi (15 bbox) 20 bbox altinda ornek sayisina sahip oldugu icin bu sınıflarda kesin genelleme yapilamaz."
+    ],
+    "next_measurement": "Modelin genel saglikli durumunu korudugu teyit edilmis olup farkli saha kosullarinda performans takibi sürdürülebilir.",
+    "run_id": "kosu_09"
+  },
+  {
+    "diagnosis": "saglikli_performans",
+    "evidence": [
+      "kosu_10 genel mAP50 degeri 0.9233 olup baseline referansina (0.9200) gore +0.0033 artis gostermistir; mAP50_95 degeri ise 0.6707'den 0.6806'ya yukselmistir (+0.0100 fark).",
+      "kaynak_c grubundaki recall degeri referanstaki 0.7145 seviyesinden kosu_10'da 0.8695'e yukselerek +0.1550 belirgin iyilesme kaydetmistir.",
+      "kucuk_16_32 px boyut bandindaki recall degeri referanstaki 0.8344 seviyesinden 0.8916 seviyesine yukselmistir (+0.0572 fark)."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI (17 bbox) ve UAP (15 bbox) siniflarinin ornek sayilari 20 bbox altinda oldugundan bu siniflardaki metrik degisimleri uzerinde kesin genelleme yapilamamaktadir."
+    ],
+    "next_measurement": "Modelin genel basarisinin korunup korunmadigini teyit etmek icin ek test setleri uzerinde performans ve kaynak_c basariminin takibine devam edilmelidir.",
+    "run_id": "kosu_10"
   }
 ]

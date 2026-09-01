@@ -1297,3 +1297,73 @@ cevap `anlamli_degisim_yok`, baska her cevap **yanlis pozitif** sayilir.
 - reports/kontrol_C2_seed7/d1_metrics.json
 - reports/kontrol_C2_seed7/c2_seed_gurultusu.json
 - scripts/kontrol_C2_seed_gurultusu.py
+
+---
+
+## Ajan Denemesi Tamamlandi — arac vermek teshis dogrulugunu OLCULEBILIR SEKILDE artirmadi
+
+Iki kurulum ayni kilitli veriyle, ayni rubrikle ve ayni kosu kumesinde
+(kosu_01..kosu_09) karsilastirildi:
+
+- **Tek atislik:** tum kanit onceden prompt'a konur, model tek cevap verir.
+- **Fonksiyon cagirma:** model kanitin hangi parcasini isteyecegine kendi
+  karar verir (7 arac).
+
+| Rubrik bileseni | Tek atislik | Fonksiyon cagirma | Fark |
+|---|---:|---:|---:|
+| Teshis (kati) | 0.444 | 0.500 | +0.056 |
+| Teshis (tespit-farkindalikli) | 0.556 | 0.611 | +0.056 |
+| Kanit (2 sayisal deger) | 1.000 | 1.000 | 0.000 |
+| Sinir (grup adi + n) | 1.000 | 1.000 | 0.000 |
+| **Toplam** | **0.852** | **0.870** | **+0.018** |
+
+**Fark, dokuz kosuda yarim kosudur.** Iki LLM ornegi, kosu basina tek deneme,
+tekrar yok. Bu buyuklukteki bir farki ornekleme gurultusunden ayirmak mumkun
+degil. Durust sonuc: *"bu ornek buyuklugunde olculebilir bir fark yok"* —
+"fonksiyon cagirma ise yaramiyor" degil.
+
+Bu, arac katmaninin calismadigi anlamina gelmiyor: `kirilim_araci_kullanim_orani`
+**1.0**, yani model on kosunun hepsinde kirilim araclarini cagirdi (kosu basina
+7 arac cagrisi). Araclar kullanildi; sonuc degismedi.
+
+#### Kosu bazinda: kazanc ve kayip birbirini goturuyor
+
+| Kosu | Rol | Tek atislik | Fonksiyon cagirma |
+|---|---|---:|---:|
+| kosu_04 | D2b | 0.00 | **1.00** |
+| kosu_05 | D2b final_best | 0.00 | **0.50** |
+| kosu_09 | D5 | **1.00** | 0.00 |
+| kosu_03 | D2a | 0.00 | 0.00 |
+| kosu_07 | D3b | 0.00 | 0.00 |
+
+Fonksiyon cagirma D2b kosularinda 1.5 puan kazandi, D5'te 1.0 puan kaybetti.
+Ikisinin de basaramadigi iki kosu (D2a, D3b) ayni kaldi. Net kazanc yarim
+puan.
+
+#### Rubrigin iki bileseni doymus durumda
+
+Kanit ve sinir bilesenleri **her iki kurulumda da 1.000**. Yani toplam skor
+(0.852 vs 0.870) aradaki farki oldugundan kucuk gosteriyor; ayirt eden tek
+bilesen teshis. Rubrik bu haliyle "sayisal kanit verdi mi" ve "sinirini
+soyledi mi" sorularini soruyor, ikisini de her iki model kolayca geciyor.
+Sonraki surumde bu bilesenler ya zorlastirilmali ya da agirliklandirilmalidir.
+
+#### D6b muafiyeti: C2 olcumunun geri donusu
+
+Fonksiyon cagirma kurulumu `kosu_10` (D6b) icin "saglikli_performans" dedi ve
+kati rubrikte 0 aldi. Ancak **C2 kontrolu D6b'nin genel metrik farklarinin
+seed gurultusunun icinde oldugunu gosterdi** (precision -0.0007, recall
+-0.0012; esik 0.0184 / 0.0114). Ajanin gordugu kanit bu kosuda bozulmayi
+gostermiyor; "saglikli" demek o kanitla tutarli bir okuma.
+
+D6b bu nedenle `TESPIT_EDILEMEYEN` listesine eklendi — D1 ve D3b'ye zaten
+uygulanan olcut, artik sayisal bir tabana oturuyor. Bu ajani kayirmak degil:
+kati skor (`mean_score` 0.817) degismedi, yalnizca tespit-farkindalikli skor
+0.850'den 0.883'e cikti ve ikisi ayri raporlanmaya devam ediyor.
+
+**On kosu uzerinden fonksiyon cagirma sonucu:** `mean_score` 0.817,
+`mean_score_tespit` 0.883.
+
+- reports/ajan_denemesi/llm_score.json (fonksiyon cagirma, 10 kosu)
+- reports/ajan_denemesi/llm_score_tek_atislik.json (tek atislik, 9 kosu)
+- reports/ajan_denemesi/ajan_arac_kaydi.json (arac cagri kaydi)

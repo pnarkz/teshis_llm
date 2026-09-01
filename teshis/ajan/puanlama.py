@@ -105,6 +105,16 @@ TESPIT_EDILEMEYEN: dict[str, str] = {
         "capraz sinif hatasi 2 -> 4 kutu; bozulma sogurulmus. "
         "Bkz. README 2026-08-26 (7)."
     ),
+    # C2 kontrolu (2026-09-01) ile eklendi. Bu, ajani kayirmak icin degil,
+    # D1 ve D3b'ye zaten uygulanan olcutun artik SAYISAL bir tabani oldugu
+    # icin: D6b'nin genel metrik farklari olculmus seed gurultusunun icinde.
+    # Ajanin gordugu kanit (genel + kirilim metrikleri) bu kosuda bozulmayi
+    # gostermiyor; "saglikli" demek o kanitla tutarli bir okuma.
+    "D6b": (
+        "genel metrik farklari seed gurultusunun icinde: precision -0.0007 ve "
+        "recall -0.0012, C2 esigi 0.0184 / 0.0114. mAP50 farki (+0.0033) esigin "
+        "yalnizca iki kati. Bkz. docs/BULGULAR.md 'C2 Kontrolu'."
+    ),
 }
 
 

@@ -17,7 +17,7 @@
       "total_tespit": 1.0,
       "tespit_edilebilir": true,
       "tespit_notu": null,
-      "model_diagnosis": "saglikli_referans"
+      "model_diagnosis": "referans_kosusu_saglikli"
     },
     {
       "run_id": "kosu_02",
@@ -31,7 +31,7 @@
       "total_tespit": 1.0,
       "tespit_edilebilir": false,
       "tespit_notu": "insan recall -0.0147 (z=-1.22, anlamli degil); hicbir sinifta anlamli fark yok. Bkz. README 2026-08-26 (3).",
-      "model_diagnosis": "bozulma_tespit_edilmedi"
+      "model_diagnosis": "performans_stabil_hafif_iyilesme"
     },
     {
       "run_id": "kosu_03",
@@ -45,35 +45,35 @@
       "total_tespit": 0.667,
       "tespit_edilebilir": true,
       "tespit_notu": null,
-      "model_diagnosis": "kucuk_nesne_performans_kaybi"
+      "model_diagnosis": "cok_kucuk_nesne_ve_kaynak_a_tespit_kaybi"
     },
     {
       "run_id": "kosu_04",
       "expected": "eksik_etiket",
       "expected_label": "eksik etiket",
-      "diagnosis_score": 1.0,
-      "diagnosis_score_tespit": 1.0,
+      "diagnosis_score": 0.0,
+      "diagnosis_score_tespit": 0.0,
       "evidence_score": 1.0,
       "limitation_score": 1.0,
-      "total": 1.0,
-      "total_tespit": 1.0,
+      "total": 0.667,
+      "total_tespit": 0.667,
       "tespit_edilebilir": true,
       "tespit_notu": null,
-      "model_diagnosis": "yuksek_yanlis_pozitif_orani_ve_precision_dususu"
+      "model_diagnosis": "hassasiyet_kaybi_ve_tasit_tespit_dususu"
     },
     {
       "run_id": "kosu_05",
       "expected": "eksik_etiket",
       "expected_label": "eksik etiket",
-      "diagnosis_score": 0.5,
-      "diagnosis_score_tespit": 0.5,
+      "diagnosis_score": 0.0,
+      "diagnosis_score_tespit": 0.0,
       "evidence_score": 1.0,
       "limitation_score": 1.0,
-      "total": 0.833,
-      "total_tespit": 0.833,
+      "total": 0.667,
+      "total_tespit": 0.667,
       "tespit_edilebilir": true,
       "tespit_notu": null,
-      "model_diagnosis": "Genel hassasiyet (precision) düşüşü ve kaynak_d grubunda recall kaybı"
+      "model_diagnosis": "hassasiyet_dusekligi_ve_kaynak_d_performans_kaybi"
     },
     {
       "run_id": "kosu_06",
@@ -87,7 +87,7 @@
       "total_tespit": 1.0,
       "tespit_edilebilir": true,
       "tespit_notu": null,
-      "model_diagnosis": "UAI sınıfı ile UAP sınıfı arasında belirgin sınıf karışıklığı (17 UAI kutusunun 8'i UAP olarak tahmin edilmiş) yaşanmış, UAI AP50 değeri düşmüş ve genel model Precision değeri ciddi şekilde gerilemiştir."
+      "model_diagnosis": "uai_uap_sinif_karisikligi_ve_ciddi_hassasiyet_kaybi"
     },
     {
       "run_id": "kosu_07",
@@ -101,7 +101,7 @@
       "total_tespit": 0.667,
       "tespit_edilebilir": false,
       "tespit_notu": "capraz sinif hatasi 2 -> 4 kutu; bozulma sogurulmus. Bkz. README 2026-08-26 (7).",
-      "model_diagnosis": "kaynak_d_performans_kaybi"
+      "model_diagnosis": "genel_duyarlilik_dususu_ve_kaynak_d_kaybi"
     },
     {
       "run_id": "kosu_08",
@@ -115,37 +115,37 @@
       "total_tespit": 1.0,
       "tespit_edilebilir": true,
       "tespit_notu": null,
-      "model_diagnosis": "cok_kucuk_nesne_tespit_kaybi"
+      "model_diagnosis": "kucuk_nesne_ve_kaynak_a_kritik_tespit_kaybi"
     },
     {
       "run_id": "kosu_09",
       "expected": "kaynak_alani_kaymasi",
       "expected_label": "kaynak/alan kaymasi",
-      "diagnosis_score": 0.0,
-      "diagnosis_score_tespit": 0.0,
+      "diagnosis_score": 1.0,
+      "diagnosis_score_tespit": 1.0,
       "evidence_score": 1.0,
       "limitation_score": 1.0,
-      "total": 0.667,
-      "total_tespit": 0.667,
+      "total": 1.0,
+      "total_tespit": 1.0,
       "tespit_edilebilir": true,
       "tespit_notu": null,
-      "model_diagnosis": "saglikli_performans"
+      "model_diagnosis": "kaynak_c_ve_kucuk_boyutlu_nesne_tespit_iyilesmesi"
     },
     {
       "run_id": "kosu_10",
       "expected": "tekrar_agirligi",
       "expected_label": "tekrar agirligi",
       "diagnosis_score": 0.0,
-      "diagnosis_score_tespit": 1.0,
-      "evidence_score": 1.0,
-      "limitation_score": 1.0,
-      "total": 0.667,
-      "total_tespit": 1.0,
+      "diagnosis_score_tespit": 0.0,
+      "evidence_score": 0.0,
+      "limitation_score": 0.0,
+      "total": 0.0,
+      "total_tespit": 0.0,
       "tespit_edilebilir": false,
       "tespit_notu": "genel metrik farklari seed gurultusunun icinde: precision -0.0007 ve recall -0.0012, C2 esigi 0.0184 / 0.0114. mAP50 farki (+0.0033) esigin yalnizca iki kati. Bkz. docs/BULGULAR.md 'C2 Kontrolu'.",
-      "model_diagnosis": "saglikli_performans"
+      "model_diagnosis": "missing"
     }
   ],
-  "mean_score": 0.817,
-  "mean_score_tespit": 0.883
+  "mean_score": 0.734,
+  "mean_score_tespit": 0.767
 }

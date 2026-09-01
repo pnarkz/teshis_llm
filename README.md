@@ -87,10 +87,11 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   tek atislik LLM denemesi (9 kosu), E4 cozunurluk uyumsuzlugu,
   E2 (negatif sonuc: yakinsamis modelde epoch kesmek underfitting uretmiyor),
   E1 (asiri uyum gerceklesti; best.pt onu tamamen gizliyor),
-  **C2 negatif kontrolu** (seed gurultusu ilk kez olculdu).
-- **Devam ediyor:** function-calling ajan denemesi (8/10 kosu; gunluk API
-  kotasi nedeniyle yarim kaldi, `python -m teshis.ajan.ajan --devam` ile
-  surdurulur). E serisi: E1, E2 ve E4 tamamlandi.
+  **C2 negatif kontrolu** (seed gurultusu ilk kez olculdu), ajan denemesi
+  (tek atislik vs fonksiyon cagirma karsilastirmasi).
+- **Devam ediyor:** yok. Ajan denemesi 10/10 tamamlandi ve puanlandi:
+  fonksiyon cagirma ile tek atislik arasinda **olculebilir fark yok**
+  (teshis 0.500 vs 0.444; dokuz kosuda yarim kosu). Arac kullanim orani 1.0.
 - **Yapilmadi:** E3, `teshis/servis/` (Asama 2), final test kosusu.
 - **Sartname boslugu:** C2 kosuldu ve seed gurultusu olculdu; **D6b'nin genel
   metrikleri bu gurultunun icinde kaliyor**. Ajanin *yanlis pozitif* orani
