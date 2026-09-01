@@ -48,6 +48,9 @@ SENARYO_BEKLENEN: dict[str, str] = {
     # "degisim yok". Asiri uyum yalnizca last.pt ve egitim egrisinde gorunur.
     "E1": "anlamli_degisim_yok",
     "E1 last_pt": "asiri_uyum",
+    # C2: hicbir bozulma yok, yalnizca farkli seed. Dogru cevap "degisim yok";
+    # baska her cevap ajanin YANLIS POZITIF uretmesi demektir.
+    "C2 seed7": "anlamli_degisim_yok",
 }
 
 # beklenen etiket -> (diagnosis alaninda aranan regex, okunabilir etiket).

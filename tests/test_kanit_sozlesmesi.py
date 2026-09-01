@@ -163,3 +163,39 @@ def test_kanit_yalnizca_map_ile_yetinmiyor(kosular):
             anahtar in icerik
             for anahtar in ("boyut_bandi_recall", "kaynak_recall", "egitim_egrisi")
         ), f"{run_id}: mAP ve sinif metrikleri disinda hicbir kanit yok"
+
+
+def test_rapor_klasoru_kurali_tek_kaynaktan_gelir():
+    """demo ve kanit ayni kurali kullanmali; iki kopya kacinilmaz olarak ayrilir.
+
+    GERCEK HATA: kural iki yerde ayri yaziliydi. C2 kontrol kosusu
+    eklendiginde demo onu `kontrol_C2_seed7` olarak buluyordu, kanit uretici
+    `senaryo_C2_seed7` ariyor ve bulamiyordu.
+    """
+    import sys
+
+    from teshis.degerlendirme import kanit as kanit_modulu
+    from teshis.degerlendirme.raporlar import klasor_adi
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from data_loader import rapor_klasoru as demo_klasor
+
+    kaynak = (ROOT / "teshis/degerlendirme/kanit.py").read_text(encoding="utf-8")
+    assert "OZEL_KLASOR" not in kaynak, "kanit.py kendi klasor haritasini tutuyor"
+    assert "raporlar import" in kaynak
+
+    for senaryo in ("D4", "E1 last_pt", "C2 seed7", "v00_saglikli", "D2b final_best"):
+        beklenen = klasor_adi(senaryo)
+        demo_yol = demo_klasor(senaryo)
+        assert demo_yol is not None and demo_yol.name == beklenen, senaryo
+        assert kanit_modulu.rapor_klasoru(senaryo).name == beklenen, senaryo
+
+
+def test_kontrol_kosullari_kontrol_onekini_alir():
+    """Sartname bolum 8 kontrol kosullari senaryo klasoru gibi adlandirilmamali."""
+    from teshis.degerlendirme.raporlar import klasor_adi
+
+    for kod in ("C1", "C2 seed7", "C3 bootstrap"):
+        assert klasor_adi(kod).startswith("kontrol_"), kod
+    for kod in ("D1", "E1", "E4 imgsz512"):
+        assert klasor_adi(kod).startswith("senaryo_"), kod

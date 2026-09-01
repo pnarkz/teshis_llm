@@ -7,6 +7,10 @@ from pathlib import Path
 
 import pandas as pd
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from teshis.degerlendirme.raporlar import rapor_klasoru as _rapor_klasoru
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -52,24 +56,11 @@ def load_results() -> pd.DataFrame:
 # harita degildir. Onceki surum sabit kodlu bir sozlukdu ve her yeni senaryoda
 # geride kaliyordu: D6a, D6b, v00n ve D1n eklendiginde demo onlari sessizce
 # "kanit yok" gosteriyordu. Adlandirma kurali docs/MIMARI.md'de tanimlidir.
-OZEL_KLASOR = {
-    # Yalnizca konvansiyonla TURETILEMEYEN adlar burada durur. Bosluk iceren
-    # senaryo adlari ("D2b final_best", "E1 last_pt", "E4 imgsz512") kural
-    # geregi alt cizgiye cevrilir; onlar icin girdi gerekmez.
-    "v00_saglikli": "referans_v00",
-    "v00n": "yolo26n_referans_v00n",
-    "D1n": "yolo26n_senaryo_D1n",
-}
-
-
+# Rapor klasoru kurali tek kaynaktan gelir; burada kopyasi TUTULMAZ.
+# Iki kopya daha once birbirinden ayrilmisti (C2 kontrol kosusu demo'da
+# bulunuyor, kanit uretiminde bulunmuyordu).
 def rapor_klasoru(scenario: str) -> Path | None:
-    """Senaryo adindan rapor klasorunu turetir: 'D4' -> reports/senaryo_D4.
-
-    Bosluklar alt cizgiye cevrilir: 'E1 last_pt' -> reports/senaryo_E1_last_pt.
-    """
-    ad = OZEL_KLASOR.get(scenario, f"senaryo_{scenario.replace(' ', '_')}")
-    klasor = ROOT / "reports" / ad
-    return klasor if klasor.is_dir() else None
+    return _rapor_klasoru(scenario, ROOT)
 
 
 def evidence_for(scenario: str) -> dict:

@@ -86,14 +86,15 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   D6b), v00 saglikli referans, yolo26n kontrol cifti, ajan arac katmani,
   tek atislik LLM denemesi (9 kosu), E4 cozunurluk uyumsuzlugu,
   E2 (negatif sonuc: yakinsamis modelde epoch kesmek underfitting uretmiyor),
-  E1 (asiri uyum gerceklesti; best.pt onu tamamen gizliyor).
+  E1 (asiri uyum gerceklesti; best.pt onu tamamen gizliyor),
+  **C2 negatif kontrolu** (seed gurultusu ilk kez olculdu).
 - **Devam ediyor:** function-calling ajan denemesi (8/10 kosu; gunluk API
   kotasi nedeniyle yarim kaldi, `python -m teshis.ajan.ajan --devam` ile
   surdurulur). E serisi: E1, E2 ve E4 tamamlandi.
-- **Yapilmadi:** E3, C2 negatif kontrolu, `teshis/servis/` (Asama 2),
-  final test kosusu.
-- **Sartname boslugu (yeni bulundu):** C2 negatif kontrolu (ayni protokol,
-  seed 7) hic kosulmadi — ajanin *yanlis pozitif* orani olculmemis durumda.
+- **Yapilmadi:** E3, `teshis/servis/` (Asama 2), final test kosusu.
+- **Sartname boslugu:** C2 kosuldu ve seed gurultusu olculdu; **D6b'nin genel
+  metrikleri bu gurultunun icinde kaliyor**. Ajanin *yanlis pozitif* orani
+  hala olculmedi: C2 ajana verilmeli (yarim deneme bitince).
   Kanit sozlesmesi (`kanit.json`) artik uretiliyor ama icerigi eksik
   (hata galerileri yok). Yayimlanmis guven
   araliklari sartnamedeki tabakali bootstrap yerine Wilson ile hesaplandi

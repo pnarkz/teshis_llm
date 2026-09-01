@@ -1,0 +1,175 @@
+{
+  "kontrol": "C2 (sartname bolum 8)",
+  "tanim": "v00 ile birebir ayni protokol; tek degisken seed (42 -> 7)",
+  "referans_kosu": {
+    "seed": 42,
+    "epoch": 11,
+    "kaynak": "reports\\referans_v00\\d1_metrics.json"
+  },
+  "kontrol_kosusu": {
+    "seed": 7,
+    "epoch": 19,
+    "kaynak": "reports\\kontrol_C2_seed7\\d1_metrics.json"
+  },
+  "not_erken_durdurma": "Iki kosu farkli epoch'ta durdu (11 vs 19). Erken durdurma noktasi bile seed'e baglidir; bu, gurultunun yalnizca son metrikte degil egitim suresinde de gorundugunu gosterir.",
+  "sinir": "n=1. Tek seed cifti degiskenligin nokta tahminidir, dagilimi degil. Asagidaki esik bir hipotez testi DEGIL, eleme suzgecidir: esigin altinda kalan etki seed degisiminden ayirt edilemez demektir, 'etki yoktur' demek degildir.",
+  "gurultu_tabani": {
+    "mAP50": 0.0015,
+    "mAP50_95": 0.0129,
+    "precision": 0.0184,
+    "recall": 0.0114,
+    "AP_tasit": 0.0021,
+    "AP_insan": 0.0307,
+    "AP_UAP": 0.0,
+    "AP_UAI": 0.0226
+  },
+  "genel_farklar": {
+    "mAP50": 0.0015,
+    "mAP50_95": 0.0129,
+    "precision": -0.0184,
+    "recall": -0.0114
+  },
+  "sinif_ap_farklari": {
+    "tasit": -0.0021,
+    "insan": 0.0307,
+    "UAP": 0.0,
+    "UAI": -0.0226
+  },
+  "d_serisi": [
+    {
+      "senaryo": "D1",
+      "farklar": {
+        "mAP50": 0.005,
+        "mAP50_95": 0.024,
+        "precision": -0.0015,
+        "recall": -0.0166
+      },
+      "gurultuyu_asan_metrikler": [
+        "mAP50",
+        "mAP50_95",
+        "recall"
+      ],
+      "hicbiri_asmiyor": false
+    },
+    {
+      "senaryo": "D2a",
+      "farklar": {
+        "mAP50": -0.0323,
+        "mAP50_95": -0.0544,
+        "precision": -0.0321,
+        "recall": -0.0468
+      },
+      "gurultuyu_asan_metrikler": [
+        "mAP50",
+        "mAP50_95",
+        "precision",
+        "recall"
+      ],
+      "hicbiri_asmiyor": false
+    },
+    {
+      "senaryo": "D2b",
+      "farklar": {
+        "mAP50": -0.013,
+        "mAP50_95": -0.0157,
+        "precision": -0.1087,
+        "recall": 0.0237
+      },
+      "gurultuyu_asan_metrikler": [
+        "mAP50",
+        "mAP50_95",
+        "precision",
+        "recall"
+      ],
+      "hicbiri_asmiyor": false
+    },
+    {
+      "senaryo": "D2b final_best",
+      "farklar": {
+        "mAP50": -0.0207,
+        "mAP50_95": -0.0215,
+        "precision": -0.0852,
+        "recall": -0.0062
+      },
+      "gurultuyu_asan_metrikler": [
+        "mAP50",
+        "mAP50_95",
+        "precision"
+      ],
+      "hicbiri_asmiyor": false
+    },
+    {
+      "senaryo": "D3",
+      "farklar": {
+        "mAP50": -0.0281,
+        "mAP50_95": -0.0215,
+        "precision": -0.2047,
+        "recall": -0.0347
+      },
+      "gurultuyu_asan_metrikler": [
+        "mAP50",
+        "mAP50_95",
+        "precision",
+        "recall"
+      ],
+      "hicbiri_asmiyor": false
+    },
+    {
+      "senaryo": "D3b",
+      "farklar": {
+        "mAP50": -0.0262,
+        "mAP50_95": 0.0042,
+        "precision": 0.0097,
+        "recall": -0.0495
+      },
+      "gurultuyu_asan_metrikler": [
+        "mAP50",
+        "recall"
+      ],
+      "hicbiri_asmiyor": false
+    },
+    {
+      "senaryo": "D4",
+      "farklar": {
+        "mAP50": -0.0224,
+        "mAP50_95": -0.0006,
+        "precision": -0.0642,
+        "recall": -0.0349
+      },
+      "gurultuyu_asan_metrikler": [
+        "mAP50",
+        "precision",
+        "recall"
+      ],
+      "hicbiri_asmiyor": false
+    },
+    {
+      "senaryo": "D5",
+      "farklar": {
+        "mAP50": -0.0107,
+        "mAP50_95": 0.0044,
+        "precision": -0.0363,
+        "recall": -0.0485
+      },
+      "gurultuyu_asan_metrikler": [
+        "mAP50",
+        "precision",
+        "recall"
+      ],
+      "hicbiri_asmiyor": false
+    },
+    {
+      "senaryo": "D6b",
+      "farklar": {
+        "mAP50": 0.0033,
+        "mAP50_95": 0.01,
+        "precision": -0.0007,
+        "recall": -0.0012
+      },
+      "gurultuyu_asan_metrikler": [
+        "mAP50"
+      ],
+      "hicbiri_asmiyor": false
+    }
+  ]
+}

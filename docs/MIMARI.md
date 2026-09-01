@@ -15,6 +15,7 @@ Boylece alfabetik siralama isleri kendiliginden gruplar.
 | `yolo26n_` | Farkli taban modelden gelen kontrol cifti | `reports/yolo26n_senaryo_D1n/` |
 | `eski_` | Superseded kosu; tarihsel kayit, kullanilmaz | `reports/eski_D3_val_sizintili/` |
 | `hata_galerisi_` | Siralanmis hata ornekleri | `reports/hata_galerisi_D2a/` |
+| `kontrol_` | Sartname bolum 8 kontrol kosullari | `reports/kontrol_C2_seed7/` |
 | `_last_pt` | Ayni kosunun `last.pt` checkpoint'i | `reports/senaryo_D5_last_pt/` |
 
 Senaryo kodlari degismez: `D1`, `D2a`, `D2b`, `D3`, `D3b`, `D4`, `D5`,

@@ -484,6 +484,12 @@ Istatistikler `teshis/degerlendirme/bootstrap.py` ile yeniden uretilebilir:
 
 ### D6b Sonucu — temsil payi ile performans arasinda net doz-yanit iliskisi
 
+> **SINIR NOTU (2026-09-01, C2 kontrolu sonrasi).** Bu bolumun **genel
+> metriklerine** dayanan iddialari, olculmus seed gurultusunun icinde kaliyor
+> (Δprecision -0.0007, Δrecall -0.0012; esik 0.0184 / 0.0114). Asagidaki
+> grup bazli doz-yanit iliskisi ayri ve daha ince bir olcumdur, burada
+> sinanmadi. bkz. "C2 Kontrolu" bolumu.
+
 D6b, 175 train karesini **40 kez** tekrarlayarak o sahneleri asiri temsil
 eder. Egitim listesi 17.515 -> 24.340 satira cikar ve bu 175 kare egitimin
 **%28,8'ini** kaplar. D1/D5 gibi manifest-only: etiketler degismez, goruntu
@@ -1206,3 +1212,88 @@ seed ile egitilmis bir kosuda **sorun uydurup uydurmadigini** bilmiyoruz.
 Bu, D veya E serisine bir senaryo daha eklemekten daha degerlidir: bir
 teshis sisteminin yanlis pozitif orani olculmeden dogruluk iddiasi eksik
 kalir. Tek bir egitim kosusu maliyeti vardir (v00 protokolu, seed 7).
+
+---
+
+## C2 Kontrolu — seed gurultusu ilk kez olculdu, ve bazi bulgular onun icinde kaliyor
+
+Sartname bolum 8'in C2 kontrolu: *"Ayni yapilandirma, seed 7 — Ajan seed
+kaynakli dalgalanmayi 'sorun' saniyor mu?"* Projedeki her kosu seed 42 ile
+egitilmisti; bu kontrol hic yapilmamisti. Yani "bozulma etkisi" diye
+raporlanan her seyin altinda duran gurultu tabani bilinmiyordu.
+
+C2, v00 ile **birebir ayni protokolu** kullanir; tek degisken seed'dir
+(manifest: `protokol_sapmalari: {}`).
+
+### Olculen gurultu
+
+| Metrik | v00 (seed 42) | C2 (seed 7) | Fark |
+|---|---:|---:|---:|
+| mAP50 | 0.9200 | 0.9214 | +0.0015 |
+| mAP50-95 | 0.6707 | 0.6836 | +0.0129 |
+| Precision | 0.9175 | 0.8992 | **-0.0184** |
+| Recall | 0.8785 | 0.8671 | -0.0114 |
+| AP tasit | 0.8856 | 0.8835 | -0.0021 |
+| AP insan | 0.8070 | 0.8377 | **+0.0307** |
+| AP UAP | 0.9950 | 0.9950 | 0.0000 |
+| AP UAI | 0.9922 | 0.9696 | -0.0226 |
+
+Iki sey dikkat cekiyor. Birincisi, `AP insan` yalnizca seed degisiminden
+**+0.031** oynuyor — bu, birkac senaryonun sinif bazli iddiasindan buyuk.
+Ikincisi, iki kosu farkli epoch'ta durdu (11 vs 19): erken durdurma noktasi
+bile seed'e bagli.
+
+### D serisi etkileri bu gurultuyu asiyor mu?
+
+| Senaryo | ΔmAP50 | Δprecision | Δrecall | Gurultuyu asan |
+|---|---:|---:|---:|---|
+| esik (C2) | 0.0015 | 0.0184 | 0.0114 | — |
+| D1 | +0.0050 | -0.0015 | -0.0166 | mAP50, recall |
+| D2a | -0.0323 | -0.0321 | -0.0468 | hepsi |
+| D2b | -0.0130 | -0.1087 | +0.0237 | hepsi |
+| D2b final_best | -0.0207 | -0.0852 | -0.0062 | mAP50, precision |
+| D3 | -0.0281 | -0.2047 | -0.0347 | hepsi |
+| D3b | -0.0262 | +0.0097 | -0.0495 | mAP50, recall |
+| D4 | -0.0224 | -0.0642 | -0.0349 | hepsi |
+| D5 | -0.0107 | -0.0363 | -0.0485 | hepsi |
+| **D6b** | **+0.0033** | **-0.0007** | **-0.0012** | **yalnizca mAP50, o da kil payi** |
+
+**D6b'nin genel metrikleri seed gurultusundan ayirt edilemiyor.** Precision
+(-0.0007) ve recall (-0.0012) gurultunun cok icinde; mAP50 farki (+0.0033)
+esigin (0.0015) yalnizca iki kati. Bu, D6b bolumundeki **grup bazli
+doz-yanit iliskisini gecersiz kilmaz** — o daha ince bir olcumdur ve burada
+sinanmadi — ama D6b'nin *genel* metriklerine dayanan hicbir iddia
+kurulmamalidir. D6b bolumu bu sinira atif yapacak sekilde okunmalidir.
+
+D3b'nin precision farki (+0.0097) da gurultunun altinda; o bolumun zaten
+soyledigi gibi, D3b precision'i degil recall'u etkiliyor.
+
+### E serisi sonuclarini geriye donuk dogruluyor
+
+Bu gurultu tabani, daha once "referanstan ayirt edilemiyor" dedigim iki
+sonucu sayisal olarak destekliyor:
+
+- **E2**: mAP50-95 farki +0.0094 — gurultunun (0.0129) icinde.
+- **E1 `best.pt`**: mAP50 -0.0010, recall -0.0015, mAP50-95 +0.0138 —
+  hepsi gurultu duzeyinde. "best.pt asiri uyumu tamamen gizliyor" ifadesi
+  artik olculmus bir esige dayaniyor.
+
+### Sinir: n=1
+
+**Tek seed cifti, degiskenligin nokta tahminidir; dagilimi degil.** Yukaridaki
+esik bir hipotez testi DEGIL, bir eleme suzgecidir: esigin altinda kalan bir
+etki "seed degisiminden ayirt edilemez" demektir, "etki yoktur" demek
+degildir. Kesin konusmak icin v00'un birkac seed daha ile (13, 21, ...)
+tekrarlanmasi gerekir. Bu, projenin en yuksek getirili sonraki olcumudur.
+
+### Ajan icin anlami
+
+C2, ajana verilmesi **gereken** kosudur: bozulma yokken sorun uyduruyor mu?
+Su an ajanin listesinde degil, cunku `kosu_NN` numaralari `results.csv`
+satir sirasina bagli ve yarim kalan deneme (8/10 kosu) bozulurdu. Deneme
+bitip puanlandiktan sonra ajana eklenecek ilk kosu budur; beklenen dogru
+cevap `anlamli_degisim_yok`, baska her cevap **yanlis pozitif** sayilir.
+
+- reports/kontrol_C2_seed7/d1_metrics.json
+- reports/kontrol_C2_seed7/c2_seed_gurultusu.json
+- scripts/kontrol_C2_seed_gurultusu.py

@@ -73,6 +73,12 @@ AJANA_VERILMEYEN: dict[str, str] = {
     "E2": "egitim protokolu sapmasi (E serisi); verisi temiz, ayri deneme konusu",
     "E1": "egitim protokolu sapmasi (E serisi); verisi temiz, ayri deneme konusu",
     "E1 last_pt": "ayni kosunun last.pt varyanti; ayri bir senaryo degil",
+    # C2, ajana verilmesi GEREKEN kosudur - projenin en degerli negatif
+    # kontrolu: bozulma yokken ajan sorun uyduruyor mu? Su an disarida
+    # tutulmasinin tek nedeni zamanlama: kosu_NN numaralari satir sirasina
+    # bagli ve yarim kalan deneme (8/10 kosu tamamlandi) bozulur. Deneme
+    # bitip puanlandiktan sonra ajana verilecek ilk kosu budur.
+    "C2 seed7": "negatif kontrol; yarim deneme bitince ajana EKLENMELI",
 }
 # Ajan yalnizca AYNI kilitli kumede olculmus kosulari karsilastirabilir.
 # Farkli bir degerlendirme kumesinde olculen bir kosu (orn. D6a'nin sizintili

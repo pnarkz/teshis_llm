@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Any
 
 from .bootstrap import VAL_DIAGNOSTIC_BBOX_N, wilson_araligi, tabakali_goruntu_bootstrap
+from .raporlar import rapor_klasoru
 
 KOK = Path(__file__).resolve().parents[2]
 RESULTS_CSV = KOK / "results.csv"
@@ -60,18 +61,6 @@ def _kosu_satiri(run_id: str) -> dict[str, str]:
             if satir["run_id"] == run_id:
                 return satir
     raise KeyError(f"{run_id} results.csv'de yok")
-
-
-def _rapor_klasoru(senaryo: str) -> Path | None:
-    """Senaryo adindan rapor klasorunu bulur; demo/data_loader ile ayni kural."""
-    # demo/data_loader.py ile ayni kural: bosluk -> alt cizgi, gerisi konvansiyon.
-    ozel = {
-        "v00_saglikli": "referans_v00",
-        "v00n": "yolo26n_referans_v00n",
-        "D1n": "yolo26n_senaryo_D1n",
-    }
-    klasor = KOK / "reports" / ozel.get(senaryo, f"senaryo_{senaryo.replace(' ', '_')}")
-    return klasor if klasor.is_dir() else None
 
 
 def _egitim_egrisi(kosu_dizini: Path) -> dict[str, Any] | None:
@@ -169,7 +158,7 @@ def kanit_uret(run_id: str) -> dict[str, Any]:
     senaryo = satir["scenario"]
     kosu_dizini = KOK / Path(satir["weights_path"]).parent.parent
 
-    rapor = _rapor_klasoru(senaryo)
+    rapor = rapor_klasoru(senaryo)
     metrikler = _oku(rapor / "d1_metrics.json") if rapor else None
     kirilim = _oku(KOK / f"reports/kirilim/{run_id}.json")
     manifest = _oku(kosu_dizini / "run_manifest.json")
