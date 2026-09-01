@@ -28,7 +28,11 @@ Kosu klasorleri `run_YYYYMMDD_HHMMSS_<senaryo>_<seed>` bicimindedir.
 termal_teshis/
   README.md                     Giris kapisi ve belge haritasi
   config.yaml                   Ortam ve yol ayarlari
-  results.csv                   Tum kosularin tek satirlik kaydi
+  results.csv                   Tum kosularin tek satirlik kaydi.
+                                Satir EKLEMEK icin teshis/degerlendirme/
+                                kayit_defteri.py kullanilir; elle duzenlenmez.
+                                Yeni satirlar SONA eklenir (ajanin kosu_NN
+                                numaralari satir sirasina baglidir).
   main_model.pt                 Ana model (D serisi bu modelden fine-tune edilir)
   yolo26n.pt                    Genel amacli model (yolo26n kontrol cifti icin)
 
@@ -58,12 +62,17 @@ termal_teshis/
       karsilastir.py            Iki modeli ayni sette karsilastirir
       hata_galerisi.py          Siralanmis hata ornekleri uretir
       kanit.py                  Sartname bolum 9 kanit sozlesmesi (kanit.json)
+      kayit_defteri.py          results.csv'ye satir eklemenin TEK yolu
+      raporlar.py               Senaryo adi -> rapor klasoru (tek kaynak)
     ajan/
       araclar.py                Function-calling araclari (anonim metrik okuma)
       semalar.py                Arac bildirimleri + teshis cikti semasi
       ajan.py                   Gemini function-calling orkestrasyonu
       puanlama.py               Pilot puanlama rubrigi (tek kaynak)
-    servis/                     Asama 2 (henuz bos iskelet)
+
+  (Asama 2 - calisma zamani servisi - PLANLANDI, BASLANMADI. Sartname
+   bolum 7'de tanimli; kod iskeleti tutulmuyor cunku bes adet tek satirlik
+   bos dosya, yapilmamis bir isi yapilmis gibi gosteriyordu.)
 
   senaryolar/                   Degistirilemez senaryo tanimlari
     katalog.yaml                Senaryo kodlarinin tek listesi

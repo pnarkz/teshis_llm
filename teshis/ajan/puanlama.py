@@ -51,6 +51,14 @@ SENARYO_BEKLENEN: dict[str, str] = {
     # C2: hicbir bozulma yok, yalnizca farkli seed. Dogru cevap "degisim yok";
     # baska her cevap ajanin YANLIS POZITIF uretmesi demektir.
     "C2 seed7": "anlamli_degisim_yok",
+    # last_pt varyantlari ayri senaryo degildir; ajana verilmezler (bkz.
+    # araclar.ajana_uygun_mu). Beklenen teshis, ait olduklari kosununkiyle
+    # aynidir - paket hazirlayici her results.csv satiri icin bir karsilik
+    # aradigi icin burada tanimli olmalari gerekir.
+    "v00_saglikli last_pt": "saglikli_referans",
+    "D4 last_pt": "kucuk_nesne_sinyal_kaybi",
+    "D5 last_pt": "kaynak_alani_kaymasi",
+    "D6b last_pt": "tekrar_agirligi",
 }
 
 # beklenen etiket -> (diagnosis alaninda aranan regex, okunabilir etiket).

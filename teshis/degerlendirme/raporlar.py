@@ -21,6 +21,7 @@ KOK = Path(__file__).resolve().parents[2]
 # uymayan durumlar girer; her yeni senaryo icin girdi eklemek gerekmez.
 OZEL_KLASOR: dict[str, str] = {
     "v00_saglikli": "referans_v00",
+    "v00_saglikli last_pt": "referans_v00_last_pt",
     "v00n": "yolo26n_referans_v00n",
     "D1n": "yolo26n_senaryo_D1n",
 }

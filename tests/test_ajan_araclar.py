@@ -17,23 +17,17 @@ def test_kosu_listesi_baseline_ile_baslar():
     assert len(liste) == len(set(liste))
 
 
-def test_ajanin_gordugu_kosular_uygunluk_kosullariyla_birebir_ortusur():
+def test_ajanin_gordugu_kosular_uygunluk_yuklemiyle_birebir_ortusur():
     """Ajan, uygun olan HER kosuyu gorur ve uygun olmayan HICBIRINI gormez.
 
-    Sadece sayi karsilastirmak yetmiyordu: E4 satiri eklendiginde bu test
-    uretimdeki filtreyi kopyaladigi icin o da birlikte kaydi ve sizinti
-    gorunmez kaldi. Kume esitligi hem eksigi hem fazlayi yakalar.
-
-    v00 referans kosusu results.csv'de bir satirdir ama ajana ayri bir senaryo
-    olarak sunulmaz; kosu_01 olarak karsilastirma tabani rolunu ustlenir.
+    Uygunluk kosullari araclar.ajana_uygun_mu icinde TEK kaynakta durur; bu
+    test onu kullanir, kopyalamaz. Kopyalayan onceki surum uretimle birlikte
+    guncellenmedigi icin uc sizintiyi de kaciridi (E4, E2, last_pt).
     """
-    frame = pd.read_csv(araclar.RESULTS_CSV)
-    referans = araclar._referans_satiri()
+    frame = araclar._scenario_rows()
     uygun = {
         str(r.run_id) for r in frame.itertuples()
-        if r.scenario not in araclar.AJANA_VERILMEYEN
-        and r.evaluation_set == araclar.KILITLI_DEGERLENDIRME_SETI
-        and r.imgsz_eval == referans["imgsz_eval"]
+        if araclar.ajana_uygun_mu(frame.loc[r.Index])
     }
     gorunen = set(araclar.anonim_kosu_haritasi().values())
     assert gorunen == uygun, (
@@ -42,6 +36,22 @@ def test_ajanin_gordugu_kosular_uygunluk_kosullariyla_birebir_ortusur():
     )
     assert araclar.kosu_listesini_getir()[0] == "kosu_01"
     assert len(araclar.kosu_listesini_getir()) == len(uygun) + 1
+
+
+def test_checkpoint_varyantlari_ajana_verilmez():
+    """last_pt satirlari ayri senaryo degil; ayni kosunun baska bir anidir.
+
+    Deftere eklendiklerinde ajanin listesine kosu_12..kosu_15 olarak sizdilar.
+    Bu, ayni sinifin ucuncu sizintisiydi (once E4, sonra E2), bu yuzden ad
+    listesine madde eklemek yerine yapisal olarak kapatildi.
+    """
+    frame = araclar._scenario_rows()
+    gorunen = set(araclar.anonim_kosu_haritasi().values())
+    sizan = [
+        str(r.run_id) for r in frame.itertuples()
+        if not str(r.weights_path).endswith("best.pt") and str(r.run_id) in gorunen
+    ]
+    assert not sizan, f"last.pt kosulari ajana verilmis: {sizan}"
 
 
 def test_referans_kosusu_ajana_senaryo_olarak_sunulmaz():

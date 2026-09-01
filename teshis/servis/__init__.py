@@ -1,1 +1,0 @@
-"""Calisma zamani servis modulleri."""

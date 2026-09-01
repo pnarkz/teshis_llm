@@ -121,6 +121,28 @@ def _referans_satiri() -> "pd.Series":
     return satir.iloc[0]
 
 
+def ajana_uygun_mu(satir) -> bool:
+    """Bir results.csv satiri ajana verilebilir mi?
+
+    TEK KAYNAK: hem uretim hem testler bu yuklemi kullanir. Daha once filtre
+    kosullari testlerde ayrica yazilmisti ve uretimle birlikte guncellenmedigi
+    icin sizintilari GORMEDI - E4, E2 ve last_pt satirlari sirayla ajanin
+    listesine girdi.
+
+    Kosullar, hepsi ayni amaca hizmet eder: ajanin gordugu her kosu saglikli
+    referanstan TEK bir sekilde ayrilmalidir - veri surumu.
+    """
+    if satir["scenario"] in AJANA_VERILMEYEN:
+        return False
+    if satir["evaluation_set"] != KILITLI_DEGERLENDIRME_SETI:
+        return False
+    if str(satir["imgsz_eval"]) != str(_referans_satiri()["imgsz_eval"]):
+        return False
+    # Checkpoint secimi bir senaryo degildir; last_pt satirlari ayni kosunun
+    # baska bir anidir.
+    return str(satir["weights_path"]).endswith("best.pt")
+
+
 def anonim_kosu_haritasi() -> dict[str, str]:
     """kosu_NN -> gercek run_id eslemesi. YALNIZCA yerel puanlama/rapor icin; ajana verilmez.
 
@@ -138,17 +160,19 @@ def anonim_kosu_haritasi() -> dict[str, str]:
     1. AJANA_VERILMEYEN: referans ve farkli taban modelden gelen kosular.
     2. Ayni kilitli degerlendirme kumesi (D6a'nin sizintili kumesi disarida).
     3. Ayni cikarim cozunurlugu (E4'un imgsz taramasi disarida).
+    4. Ayni checkpoint secimi: yalnizca `best.pt` kosulari.
 
     Ucuncusu olmadan E4 kosulari "bozulmus" gibi gorunurdu: veri tertemiz,
     fark yalnizca imgsz'den geliyor.
+
+    Dorduncusu de ayni turden bir korumadir: `last_pt` satirlari AYRI BIR
+    SENARYO DEGIL, ayni kosunun baska bir checkpoint'idir. Deftere
+    eklendiklerinde ajanin listesine kosu_12..kosu_15 olarak sizdilar. Bu,
+    ayni sinifin ucuncu sizintisiydi (once E4, sonra E2); bu yuzden ad
+    listesine bir madde daha eklemek yerine YAPISAL olarak kapatildi.
     """
     frame = _scenario_rows()
-    referans_imgsz = _referans_satiri()["imgsz_eval"]
-    senaryolar = frame[
-        (~frame["scenario"].isin(AJANA_VERILMEYEN))
-        & (frame["evaluation_set"] == KILITLI_DEGERLENDIRME_SETI)
-        & (frame["imgsz_eval"] == referans_imgsz)
-    ]
+    senaryolar = frame[frame.apply(ajana_uygun_mu, axis=1)]
     return {
         f"kosu_{index + 2:02d}": str(run_id)
         for index, run_id in enumerate(senaryolar["run_id"])

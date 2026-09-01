@@ -95,7 +95,7 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   yanlis neden atfetmek ve kacirmak. Onceki bulgu gecerli:
   fonksiyon cagirma ile tek atislik arasinda **olculebilir fark yok**
   (teshis 0.500 vs 0.444; dokuz kosuda yarim kosu). Arac kullanim orani 1.0.
-- **Yapilmadi:** E3, `teshis/servis/` (Asama 2), final test kosusu.
+- **Yapilmadi:** E3, Asama 2 (calisma zamani servisi), final test kosusu.
 - **Sartname boslugu:** C2 kosuldu ve seed gurultusu olculdu; **D6b'nin genel
   metrikleri bu gurultunun icinde kaliyor**. Ajanin *yanlis pozitif* orani
   hala olculmedi: C2 ajana verilmeli (yarim deneme bitince).

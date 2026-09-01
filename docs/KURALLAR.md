@@ -45,7 +45,8 @@ Ana Python paketi:
 - teshis/egitim: egitim kosucusu ve kosu manifestleri.
 - teshis/degerlendirme: model, metrik, hata ve kanit analizi.
 - teshis/ajan: ajan araclari, semalar ve puanlama.
-- teshis/servis: API, log, ariza ve anomali katmani.
+- (teshis/servis: Asama 2 icin planlandi, henuz baslanmadi; bos iskelet
+  tutulmuyor.)
 
 Senaryolar:
 
@@ -93,3 +94,18 @@ Ajan bu sirayi okumadan yeni senaryo veya veri bolmesi baslatmamalidir. Aktif
 kosu varsa once surec ve log kontrol edilir. Mevcut dosyalar silinmez; yeni
 deney ayri klasore yazilir. Her degisiklik sonrasi syntax, Git status ve tekrar
 calistirma komutu raporlanir.
+
+## Kayit defteri (results.csv)
+
+- Satir eklemenin tek yolu `teshis/degerlendirme/kayit_defteri.py`'dir.
+  Metrikler ELLE verilmez, olcum dosyasindan okunur; boylece defterdeki sayi
+  ile raporun sayisi ayrisamaz.
+- `run_id` ve `scenario` BENZERSIZ olmalidir. Iki kosu ayni senaryo adini
+  tasidiginda demo ve kanit ureticisi hangisinin hangisi oldugunu ayirt
+  edemez (d2b_main / d2b_final bu yuzden karismisti).
+- Yeni satirlar **sona** eklenir. Ajanin `kosu_NN` numaralari satir sirasina
+  dayanir; ortaya eklenen bir satir tamamlanmis denemeleri gecersiz kilar.
+- Uretilmis her olcumun defterde bir satiri olmalidir. Bilincli istisnalar
+  `kayit_defteri.DEFTER_DISI` altinda **gerekcesiyle** yazilir.
+- Ajanin hangi kosulari gorecegi `araclar.ajana_uygun_mu` yukleminde tek
+  kaynakta tanimlidir. Testler bu yuklemi kullanir, kopyalamaz.
