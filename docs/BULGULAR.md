@@ -1367,3 +1367,41 @@ kati skor (`mean_score` 0.817) degismedi, yalnizca tespit-farkindalikli skor
 - reports/ajan_denemesi/llm_score.json (fonksiyon cagirma, 10 kosu)
 - reports/ajan_denemesi/llm_score_tek_atislik.json (tek atislik, 9 kosu)
 - reports/ajan_denemesi/ajan_arac_kaydi.json (arac cagri kaydi)
+
+---
+
+## Yanlis Pozitif Denemesi Hazir — C2 ajana `kosu_11` olarak eklendi
+
+Tamamlanan deneme ajanin **dogru pozitif** oranini olcuyordu: bozulma varken
+buluyor mu? Olculmeyen sey tersiydi: **bozulma YOKKEN sorun uyduruyor mu?**
+Bir teshis sisteminin dogruluk iddiasi bu olcum olmadan tek yonlu kalir.
+
+C2 (v00 ile birebir ayni protokol, yalnizca seed 7) ajanin kosu listesine
+eklendi. Numaralandirma satir sirasina dayandigi ve C2 satiri `results.csv`'nin
+SONUNA yazildigi icin `kosu_02..kosu_10` korundu; C2 `kosu_11` oldu.
+Tamamlanmis on kosunun puanlari birebir ayni kaldi (dogrulandi).
+
+#### Kurulumun ilginc tarafi
+
+Ajanin gordugu farklar:
+
+| Kosu | Gercek durum | ΔmAP50 | Δprecision | Δrecall |
+|---|---|---:|---:|---:|
+| kosu_10 | D6b — **gercek bozulma var** | +0.0033 | -0.0007 | -0.0012 |
+| kosu_11 | C2 — **hicbir bozulma yok** | +0.0015 | **-0.0184** | **-0.0114** |
+
+**C2, D6b'den daha "bozuk" gorunuyor.** Bozulma icermeyen kontrol kosusunun
+precision farki, gercek bir bozulma iceren kosunun 27 katı. Ajan yalnizca
+farkin buyuklugune bakiyorsa kosu_11'e "sorun var" demeli — ve yanilmis
+olacak.
+
+Beklenen dogru cevap `anlamli_degisim_yok`; baska her cevap **yanlis
+pozitif** sayilir. Uc test bu kontrolu koruyor: C2'nin ajana verildigi,
+numaralarin kaymadigi ve beklenen cevabin dogru tanimlandigi.
+
+Anonimlik dogrulandi: `kosu_11`'in arac ciktilari `kosu_10` ile yapisal
+olarak ayni (ayni alanlar, ayni bicim); kontrol kosusu oldugunu ele veren
+hicbir terim gecmiyor.
+
+**Sonraki adim kullanicida:** `python -m teshis.ajan.ajan --devam` (yalnizca
+kosu_11 kosulur, on kosu atlanir).

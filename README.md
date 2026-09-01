@@ -89,7 +89,10 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   E1 (asiri uyum gerceklesti; best.pt onu tamamen gizliyor),
   **C2 negatif kontrolu** (seed gurultusu ilk kez olculdu), ajan denemesi
   (tek atislik vs fonksiyon cagirma karsilastirmasi).
-- **Devam ediyor:** yok. Ajan denemesi 10/10 tamamlandi ve puanlandi:
+- **Devam ediyor:** yanlis pozitif denemesi. C2 ajana `kosu_11` olarak
+  eklendi (bozulma yok; dogru cevap "degisim yok"). Paket hazir, tek koşu
+  kaldi: `python -m teshis.ajan.ajan --devam`.
+- **Tamamlandi:** ajan denemesi 10/10 puanlandi:
   fonksiyon cagirma ile tek atislik arasinda **olculebilir fark yok**
   (teshis 0.500 vs 0.444; dokuz kosuda yarim kosu). Arac kullanim orani 1.0.
 - **Yapilmadi:** E3, `teshis/servis/` (Asama 2), final test kosusu.

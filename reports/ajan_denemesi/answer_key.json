@@ -16,7 +16,7 @@
     "expected": "eksik_etiket"
   },
   "kosu_05": {
-    "hidden_role": "D2b",
+    "hidden_role": "D2b final_best",
     "expected": "eksik_etiket"
   },
   "kosu_06": {
@@ -38,5 +38,9 @@
   "kosu_10": {
     "hidden_role": "D6b",
     "expected": "tekrar_agirligi"
+  },
+  "kosu_11": {
+    "hidden_role": "C2 seed7",
+    "expected": "anlamli_degisim_yok"
   }
 }

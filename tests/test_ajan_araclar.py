@@ -217,3 +217,65 @@ def test_taban_model_sapmalari_beyan_edilmis_olanlarla_sinirli():
         f"Beyan edilmemis taban model sapmasi: {beyansiz}. Ya kosuyu ajandan "
         "cikarin ya da BILINEN_TABAN_MODEL_SAPMASI'na gerekcesiyle ekleyin."
     )
+
+
+def test_c2_negatif_kontrolu_ajana_veriliyor():
+    """C2 ajanin kosu listesinde OLMALI: yanlis pozitif orani ancak boyle olculur.
+
+    C2'de hicbir bozulma yoktur; v00 ile birebir ayni protokol, yalnizca seed
+    farkli. Ajan burada bir "sorun" bulursa bu, uydurulmus bir teshistir. Bu
+    kontrol olmadan projenin merkezi iddiasi ("ajan bozulmayi metrik
+    imzasindan teshis edebilir") tek yonlu olcumus olur: dogru pozitifler
+    sayilir, yanlis pozitifler sayilmaz.
+    """
+    import csv
+
+    from teshis.ajan import araclar
+
+    with open(araclar.RESULTS_CSV, encoding="utf-8") as f:
+        c2 = [s for s in csv.DictReader(f) if s["scenario"].startswith("C2")]
+    if not c2:
+        pytest.skip("C2 kosusu henuz results.csv'de yok")
+
+    gorunen = set(araclar.anonim_kosu_haritasi().values())
+    eksik = [s["run_id"] for s in c2 if s["run_id"] not in gorunen]
+    assert not eksik, (
+        f"C2 negatif kontrolu ajana verilmiyor: {eksik}. "
+        "Bu kosu olmadan ajanin yanlis pozitif orani olculemez."
+    )
+
+
+def test_c2_eklenmesi_mevcut_kosu_numaralarini_kaydirmadi():
+    """Yeni kosu SONA eklenmeli; ortaya girmesi tamamlanmis denemeyi gecersiz kilar.
+
+    kosu_NN numaralari results.csv satir sirasina dayanir. C2 satiri sona
+    eklendigi icin kosu_02..kosu_10 korunur; bir gun basa veya ortaya bir
+    satir eklenirse bu test kirilir ve deneme kayitlarinin gecersizlestigi
+    fark edilir.
+    """
+    from teshis.ajan import araclar
+
+    harita = araclar.anonim_kosu_haritasi()
+    beklenen = {
+        "kosu_02": "d1_v2_20260825",
+        "kosu_03": "d2a_20260820",
+        "kosu_04": "d2b_20260820_main",
+        "kosu_05": "d2b_20260820_final",
+        "kosu_06": "d3_v2_20260826",
+        "kosu_07": "d3b_20260826",
+        "kosu_08": "d4_20260826",
+        "kosu_09": "d5_20260826",
+        "kosu_10": "d6b_20260828",
+    }
+    kayan = {k: (v, harita.get(k)) for k, v in beklenen.items() if harita.get(k) != v}
+    assert not kayan, (
+        f"Tamamlanmis denemenin kosu numaralari kaymis: {kayan}. "
+        "reports/ajan_denemesi/ altindaki cevaplar artik gecersizdir."
+    )
+
+
+def test_c2_beklenen_cevabi_degisim_yok():
+    """C2'nin dogru cevabi 'anlamli degisim yok'; baska her cevap yanlis pozitiftir."""
+    from teshis.ajan.puanlama import SENARYO_BEKLENEN
+
+    assert SENARYO_BEKLENEN["C2 seed7"] == "anlamli_degisim_yok"
