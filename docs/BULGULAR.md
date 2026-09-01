@@ -1,10 +1,85 @@
 # Senaryo Bulgulari
 
-Her senaryonun olcum sonuclari ve yorumu. Otoriter karsilastirma tablosu
-"v00 Saglikli Referans" bolumundedir; tek tek senaryo bolumleri o tablonun
-ayrintisini verir.
+Bu belge kronolojik olarak buyudu ve duzeltmeler ust uste bindi. **Guncel
+durumu ogrenmek icin yalnizca asagidaki ozeti okumak yeterlidir**; devamindaki
+bolumler her bulgunun nasil elde edildigini ve nerede duzeltildigini anlatir.
 
 Istatistikler `teshis/degerlendirme/bootstrap.py` ile yeniden uretilebilir.
+Otoriter karsilastirma tablosu "v00 Saglikli Referans" bolumundedir.
+
+---
+
+# GUNCEL SONUCLAR (2026-09-01)
+
+## Arastirma sorusuna cevap: henuz yok
+
+Projenin sorusu: *"Bir LLM, termal tespit modelindeki bozulmayi yeterli
+kanitla teshis edebilir mi?"*
+
+**Su anki durustluk sinirimiz: bu soruyu cevaplayacak orneklem yok.** Elde
+1 model, kosu basina 1 ornek, 11 kosu ve yalnizca 2 saf kontrol var.
+Olculen skor (`mean_score` 0.833) bir NOKTA TAHMINIDIR; guven araligi
+hesaplanamaz cunku tekrar yok.
+
+Cevaplayabildigimiz daha dar bir soru var ve cevabi degerli:
+
+> **Ajan, kanitta iz birakmayan bir bozulmada sorun UYDURUYOR mu?**
+> Iki saf kontrolde (Baseline, C2 seed 7) uydurmadi (2/2). Wilson %95
+> araligi **[0.000, 0.658]** — isaret olumlu, kanit zayif.
+
+Baskin hata turu uydurmak degil, **yanlis neden atfetmek** (D2a, D3b) ve
+**kacirmak** (D5). Ayrinti: "Ajan bir teshis sistemi olarak" bolumu.
+
+## Senaryolarin durumu
+
+Asagidaki "gurultu" sutunu, farkin **olculmus seed degiskenliginin** uzerinde
+olup olmadigini soyler (esik: mAP50 0.0015, precision 0.0184, recall 0.0114;
+kaynak C2 kontrolu).
+
+| Senaryo | Ne bozuldu | ΔmAP50 | Δrecall | Gurultuyu asiyor mu |
+|---|---|---:|---:|---|
+| D2a | lokalizasyon gurultusu | -0.0323 | -0.0468 | **evet, hepsinde** |
+| D3 | UAP/UAI sinif karisikligi | -0.0281 | -0.0347 | **evet, hepsinde** |
+| D4 | kucuk nesne sinyal kaybi | -0.0224 | -0.0349 | **evet, hepsinde** |
+| D5 | kaynak alani kaymasi | -0.0107 | -0.0485 | **evet, hepsinde** |
+| D2b | eksik etiket | -0.0130 | +0.0237 | **evet** (precision -0.109) |
+| D3b | tasit/insan karisikligi | -0.0262 | -0.0495 | evet (precision haric) |
+| D1 | sinif yetersizligi | +0.0050 | -0.0166 | zayif; **hipotez desteklenmedi** |
+| D6b | tekrar agirligi | +0.0033 | -0.0012 | **hayir — gurultu icinde** |
+| E4 (imgsz 512) | cikarim cozunurlugu | -0.3179 | -0.3608 | **evet, en buyuk etki** |
+| E1 `last.pt` | asiri uyum | -0.0881 | -0.0691 | **evet** |
+| E1 `best.pt` | ayni kosu, farkli checkpoint | -0.0010 | -0.0015 | hayir — **checkpoint gizliyor** |
+| E2 | az epoch | -0.0081 | -0.0394 | zayif; **hipotez desteklenmedi** |
+
+Ayri kategoride olculenler (dogrudan karsilastirilamaz): **D6a** sizintili
+kumede olculdu; **v00n / D1n** farkli taban modelden gelir; **D2b final_best**
+farkli baslangic modelinden.
+
+## Uc ana ders
+
+1. **Checkpoint secimi bir teshis kor noktasidir.** E1'de 200 epoch suren
+   ders kitabi niteliginde bir asiri uyum, `best.pt` ile raporlandiginda
+   referanstan ayirt edilemiyor (ΔmAP50 -0.0010). Asiri uyum metrikten degil
+   **egitim egrisinden** okunur. Ayni ders D5'te de gecerli.
+2. **Gurultu tabani olculmeden "etki" denemez.** C2 kontrolu, D6b'nin genel
+   metriklerinin seed degiskenliginin icinde kaldigini gosterdi. Bu kontrol
+   olmasaydi D6b bir bulgu olarak duruyordu.
+3. **Bozulmanin turu, metrik imzasindan okunur.** Cozunurluk uyumsuzlugu
+   recall'u cokertirken precision'a dokunmuyor (E4); etiket bozulmalari
+   precision'i da bozuyor (D2b, D3). Ikisini ayirt eden budur.
+
+## Bilinen ve kapatilmamis eksikler
+
+| Eksik | Etki | Durum |
+|---|---|---|
+| Tekrar yok (n=1 her yerde) | hicbir sonuca guven araligi verilemiyor | **v00 seed 13 ve 21 kosuyor** |
+| Yayimlanmis GA'larin cogu Wilson | araliklar ~1.5 kat dar | yalnizca C2'de dogru yontem var |
+| Puanlama rubriginin 2/3 bileseni doymus | toplam skor ayirt etmiyor | acik |
+| Kanit sozlesmesi 0/18 tam | 17 kosuda hata galerisi yok | acik |
+| D6b grup bazli doz-yanit | gurultu esigine karsi sinanmadi | acik |
+| E3, Asama 2 (`teshis/servis/`) | hic yapilmadi | acik |
+
+---
 
 ### v00 Saglikli Referans ve Senaryo Karsilastirmasi (OTORITER TABLO)
 
