@@ -153,8 +153,79 @@ def karsilastirma() -> dict:
             "demek degildir."
         ),
         "gurultu_tabani": taban,
+        "alt_grup_bandi": alt_grup_bandi(),
         "d_serisi": senaryolar,
     }
+
+
+# ---------------------------------------------------------------------------
+# ALT GRUP GURULTUSU
+#
+# Genel metriklerin gurultu bandi, alt gruplar icin YETERSIZDIR. Bunu somut
+# bir yanlis pozitif gosterdi: ajan, hicbir bozulma icermeyen bir kontrol
+# kosusunda (seed 13) "kaynak_d grubunda belirgin recall kaybi" teshisi koydu
+# ve "yuksek" guven verdi. Gerekcesi saglamdi - o grupta recall 0.9906'dan
+# 0.8585'e dusmustu ve HER IKI istatistik testi de anlamli diyordu (kutu
+# birimli z=-3.64, p=2.7e-04; goruntu birimli araliklar bile ortusmuyordu).
+#
+# Sorun testlerde degil, KARSILASTIRMA TABANINDA: tek bir referans kosusu,
+# yayilimi 0.13 olan bir dagilimdan cekilmis TEK bir gozlemdir. Dort saglikli
+# kosuda ayni grubun recall'u 0.8585 ile 0.9906 arasinda degisiyor.
+#
+# Bu yuzden her alt grup icin AYRI bir band hesaplanir.
+# ---------------------------------------------------------------------------
+
+KIRILIM_ALANLARI = ("kaynak_recall", "boyut_bandi_recall", "sinif_recall")
+
+
+def _kirilim_dosyalari() -> dict[int, dict]:
+    """Kontrol kosularinin (ve referansin) kirilim olcumleri: seed -> icerik."""
+    from teshis.degerlendirme.raporlar import klasor_adi  # noqa: F401
+
+    defter = _defter()
+    dosyalar: dict[int, dict] = {}
+    for senaryo, satir in defter.items():
+        kontrol = senaryo.startswith("C") and senaryo[1:2].isdigit()
+        if not (kontrol or senaryo == "v00_saglikli"):
+            continue
+        if not satir["weights_path"].endswith("best.pt"):
+            continue
+        yol = ROOT / f"reports/kirilim/{satir['run_id']}.json"
+        if yol.is_file():
+            dosyalar[int(satir["seed"])] = json.loads(yol.read_text(encoding="utf-8"))
+    return dict(sorted(dosyalar.items()))
+
+
+def alt_grup_bandi() -> dict:
+    """Her kirilim grubu icin saglikli kosular arasindaki yayilimi dondurur."""
+    dosyalar = _kirilim_dosyalari()
+    if len(dosyalar) < 2:
+        return {}
+    referans = dosyalar[min(dosyalar)] if 42 not in dosyalar else dosyalar[42]
+
+    sonuc: dict[str, dict] = {}
+    for alan in KIRILIM_ALANLARI:
+        sonuc[alan] = {}
+        for grup, deger in referans.get(alan, {}).items():
+            recallar = [
+                d[alan][grup]["recall"] for d in dosyalar.values()
+                if grup in d.get(alan, {})
+            ]
+            if len(recallar) < 2:
+                continue
+            sonuc[alan][grup] = {
+                "bbox_n": deger["gercek_kutu"],
+                "recallar": [round(r, 4) for r in recallar],
+                "band": round(max(recallar) - min(recallar), 4),
+                "std": round(statistics.stdev(recallar), 4),
+            }
+    sonuc["_kosu_sayisi"] = len(dosyalar)
+    sonuc["_sinir"] = (
+        f"n={len(dosyalar)} saglikli kosu. Band, gozlenen max-min'dir ve az "
+        "gozlemle gercek yayilimi OLDUGUNDAN KUCUK gosterir. Bandi asmayan bir "
+        "alt grup farki, saf seed degisiminden ayirt edilemez."
+    )
+    return sonuc
 
 
 def main() -> None:
@@ -189,6 +260,24 @@ def main() -> None:
               f"{f['recall']:>+9.4f}   {asan}")
 
     print(f"\nSINIR: {sonuc['sinir']}")
+
+    alt = alt_grup_bandi()
+    if alt:
+        print("")
+        print(f"=== Alt grup gurultusu (n={alt['_kosu_sayisi']} saglikli kosu) ===")
+        for alan in KIRILIM_ALANLARI:
+            if not alt.get(alan):
+                continue
+            print("")
+            print(f"  {alan}")
+            basliklar = ('grup', 'bbox', 'band', 'std')
+            print("    {:<20} {:>6} {:>8} {:>8}".format(*basliklar))
+            for grup, d in sorted(alt[alan].items(), key=lambda kv: -kv[1]["band"]):
+                isaret = "  <<< genis" if d["band"] > 0.05 else ""
+                print("    {:<20} {:>6} {:>8.4f} {:>8.4f}{}".format(
+                    grup, d["bbox_n"], d["band"], d["std"], isaret))
+        print("")
+        print("  " + alt["_sinir"])
 
     if not args.yazma:
         CIKTI.mkdir(parents=True, exist_ok=True)

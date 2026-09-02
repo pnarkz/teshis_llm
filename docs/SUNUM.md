@@ -89,12 +89,19 @@ arasinda durdu.
 
 | Durum | Sonuc |
 |---|---|
-| Hicbir bozulma yokken (2 kosu) | **2/2 dogru** — sorun uydurmadi |
+| Hicbir bozulma yokken (4 kosu) | 3/4 dogru — **birinde sorun uydurdu** |
 | Bozulma var, tespit edilebilir (6 kosu) | 3.5/6 dogru nedeni buldu |
 
-Baskin hata turu **uydurmak degil**, yanlis nedene atfetmek ve kacirmak.
-Pratikte bu tersinden iyi bir profil: uydurulmus bir teshis bosa is
-yaptirir, yanlis adlandirilmis bir teshis en azindan dogru yere baktirir.
+Baskin hata turu yine de **uydurmak degil**, yanlis nedene atfetmek ve
+kacirmak. Ama uydurma da sifir degil.
+
+**Uydurdugu tek vaka ogretici.** Bozulma icermeyen bir kosuda "kaynak_d
+grubunda belirgin recall kaybi" dedi ve haksiz degildi: o grupta deger
+gercekten 0.99'dan 0.86'ya dusmustu ve iki ayri istatistik testi de bunu
+"anlamli" buluyordu. Ancak ayni grubun degeri, hicbir bozulma icermeyen
+dort saglikli modelde 0.86 ile 0.99 arasinda geziniyor. Yani ajan gercek
+bir sayiyi dogru okudu, ama **tek bir referansla** karsilastirdigi icin
+rastgeleligi bozulma sandi.
 
 Bir de olumsuz sonuc: ajana **arac vermek** (kendi kanitini secmesine izin
 vermek) teshis dogrulugunu olculebilir sekilde artirmadi (0.500 vs 0.444;

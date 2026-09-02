@@ -1,0 +1,59 @@
+{
+  "kosu_12": {
+    "arac_cagrilari": [
+      {
+        "tur": 1,
+        "arac": "baseline_metriklerini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kosu_metriklerini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_12"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "baseline_farkini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_12"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "boyut_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_12"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "kaynak_bazli_recall_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_12"
+        },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "sinif_karisikligini_getir",
+        "argumanlar": {
+          "kosu_id": "kosu_12"
+        },
+        "hata": null
+      }
+    ],
+    "hata": null
+  }
+}

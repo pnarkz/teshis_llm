@@ -1,0 +1,15 @@
+[
+  {
+    "diagnosis": "saglikli_referansla_uyumlu",
+    "evidence": [
+      "kosu_13 mAP50 degeri 0.9259885 (baseline farki +0.006024) ve mAP50_95 degeri 0.6907673 (baseline farki +0.020107) ile referans performansla tam uyum gostermektedir.",
+      "Precision (0.899552, fark -0.017993) ve recall (0.8623181, fark -0.016228) metriklerinde ciddi bir kayip yok; tum boyut bantlarinda recall stabil seyretmektedir (kucuk_16_32 px bandinda recall 0.8255 iken referans 0.8344'tur)."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sinifi (17 bbox) ve UAP sinifi (15 bbox) 20 bbox altinda ornek sayisina sahip oldugundan bu nadir siniflardaki genelleme sinirlidir."
+    ],
+    "next_measurement": "Model performansi saglikli referansla uyumlu oldugundan mevcut model yapisiyla rutin izlemeye devam edilebilir.",
+    "run_id": "kosu_13"
+  }
+]

@@ -23,12 +23,18 @@ hesaplanamaz cunku tekrar yok.
 
 Cevaplayabildigimiz daha dar bir soru var ve cevabi degerli:
 
-> **Ajan, kanitta iz birakmayan bir bozulmada sorun UYDURUYOR mu?**
-> Iki saf kontrolde (Baseline, C2 seed 7) uydurmadi (2/2). Wilson %95
-> araligi **[0.000, 0.658]** — isaret olumlu, kanit zayif.
+> **Ajan, bozulma yokken sorun UYDURUYOR mu?**
+> Dort saf kontrolun **birinde uydurdu**: kosu_12 (C2 seed 13) icin
+> "kaynak_d grubunda belirgin recall kaybi" dedi, guveni "yuksek" idi.
+> Oran **1/4 = 0.250**, Wilson %95 araligi **[0.046, 0.699]**.
+>
+> Ajan halusinasyon gormedi: rakamlar dogruydu ve her iki istatistik testi
+> de farki anlamli buluyordu. Sorun karsilastirma tabanindaydi — o alt
+> grubun saglikli kosular arasindaki yayilimi zaten **0.1321**. Ayrinti:
+> "Ilk Yanlis Pozitif" bolumu.
 
-Baskin hata turu uydurmak degil, **yanlis neden atfetmek** (D2a, D3b) ve
-**kacirmak** (D5). Ayrinti: "Ajan bir teshis sistemi olarak" bolumu.
+Baskin hata turu yine de uydurmak degil, **yanlis neden atfetmek** (D2a,
+D3b) ve **kacirmak** (D5). Ayrinti: "Ajan bir teshis sistemi olarak" bolumu.
 
 ## Senaryolarin durumu
 
@@ -83,6 +89,7 @@ farkli baslangic modelinden.
 |---|---|---|
 | Egitim tarafinda tekrar | gurultu tabani artik n=3 | **kapatildi** (seed 7, 13, 21) |
 | LLM tarafinda tekrar yok | ajan skoruna guven araligi verilemiyor | acik |
+| Ajan araclari alt grup bandini gostermiyor | fark degerini ham veriyor; ajan tek referansa karsi okuyor ve `tf2026` gibi oynak gruplari sistematik olarak sucluyor | **acik, oncelikli** |
 | Yayimlanmis GA'larin cogu Wilson | araliklar ~1.5 kat dar | uc kontrol kosusunda dogru yontem var; D/E serisi hala Wilson |
 | Puanlama rubriginin 2/3 bileseni doymus | toplam skor ayirt etmiyor | acik |
 | Kanit sozlesmesi 0/18 tam | 17 kosuda hata galerisi yok | acik |
@@ -1555,3 +1562,126 @@ olcum kapatiyor - projenin siradaki en yuksek getirili isi budur.
 
 - reports/ajan_denemesi/hata_turleri.json
 - scripts/ajan_hata_turleri.py
+
+---
+
+## Ilk Yanlis Pozitif — ve neden ajanin suclu olmadigi
+
+Kontrol kosulari ajana verildiginde ajan **kosu_12** (C2 seed 13, hicbir
+bozulma yok) icin sunu dedi:
+
+> **Teshis:** `kaynak_d veri grubuna ozgu belirgin recall kaybi / genelleme dususu`
+> **Guven:** yuksek
+> **Kanit:** "kaynak_d grubunda recall 0.9906'dan 0.8585'e duserek -0.1321
+> oraninda ciddi bir kayip yasamistir."
+
+Bu bir **yanlis pozitiftir**: o kosuda bozulma yoktur.
+
+### Ajan halusinasyon gormedi
+
+Rakamlar dogru. `kaynak_d` = `tf2026` grubunda recall gercekten 0.9906'dan
+0.8585'e dustu. Dahasi, **her iki istatistik testi de bu farki anlamli
+buluyor**:
+
+| Yontem | Sonuc |
+|---|---|
+| Kutu birimli iki oran testi | z = -3.64, **p = 2.7e-04** |
+| Goruntu birimli tabakali bootstrap | v00 [0.9697, 1.0000] vs seed13 [0.8103, 0.9091] — **ortusmuyor** |
+
+Yani ajan makul bir olcut uyguladi ve yine de yanildi. Sorun testlerde
+degil, **karsilastirma tabanindadir**.
+
+### Asil sebep: tek bir referans kosusu
+
+Dort saglikli kosuda (seed 42, 7, 13, 21) ayni grubun recall'u:
+
+| Seed | 42 | 7 | 13 | 21 |
+|---|---:|---:|---:|---:|
+| `tf2026` recall | 0.9906 | 0.9245 | 0.8585 | 0.9434 |
+
+**Yayilim 0.1321** — ajanin "ciddi kayip" dedigi farkin tamami. Tek bir
+referans kosusuyla karsilastirmak, yayilimi 0.13 olan bir dagilimdan
+cekilmis **tek bir gozlemle** karsilastirmaktir.
+
+### Alt grup gurultu bandi
+
+Bu, genel metrikler icin hesaplanan bandin alt gruplarda yetersiz kaldigini
+gosterdi. Her kirilim grubu icin ayri band olculdu (dort saglikli kosu):
+
+| Kirilim | Grup | bbox | Band | Std |
+|---|---|---:|---:|---:|
+| kaynak | **tf2026** | 106 | **0.1321** | 0.0547 |
+| kaynak | **termal** | 858 | **0.1306** | 0.0615 |
+| kaynak | aaterm | 885 | 0.0180 | 0.0080 |
+| kaynak | hituav | 2165 | 0.0130 | 0.0062 |
+| sinif | **UAI** | 17 | **0.1176** | 0.0588 |
+| sinif | insan | 2718 | 0.0457 | 0.0199 |
+| sinif | tasit | 1264 | 0.0237 | 0.0107 |
+| sinif | UAP | 15 | 0.0000 | 0.0000 |
+| boyut | kucuk_16_32 | 2011 | 0.0497 | 0.0226 |
+| boyut | cok_kucuk_16_alti | 1167 | 0.0103 | 0.0047 |
+
+Dikkat: **`termal` 858 bbox'a sahip ama bandi 0.1306.** Yani bu yalnizca
+"kucuk orneklem" sorunu degil; bazi gruplar gercekten oynak.
+
+### D serisinin alt grup iddialari bu banda karsi
+
+**Ayakta kalanlar:**
+
+| Senaryo | Grup | Fark | Band |
+|---|---|---:|---:|
+| D4 | cok_kucuk_16_alti | **-0.4524** | 0.0103 |
+| D3 | UAI | **-0.4706** | 0.1176 |
+| D4 | hituav | **-0.2448** | 0.0130 |
+| D2a | UAI | -0.2353 | 0.1176 |
+| D5 | UAI | -0.2353 | 0.1176 |
+| D4 | insan | -0.1880 | 0.0457 |
+| D2a | cok_kucuk_16_alti | -0.0908 | 0.0103 |
+| D2a | tasit | -0.0744 | 0.0237 |
+
+**Gurultunun icine dusenler (artik iddia kurulamaz):**
+
+| Senaryo | Grup | Fark | Band |
+|---|---|---:|---:|
+| D3 | tf2026 | -0.1321 | 0.1321 (tam sinirda) |
+| D3b | tf2026 | -0.1227 | 0.1321 |
+| D3b | UAI | -0.1176 | 0.1176 (tam sinirda) |
+| D4 | tf2026 | -0.0472 | 0.1321 |
+| D5 | tf2026 | -0.0378 | 0.1321 |
+| D5 | kucuk_16_32 | +0.0468 | 0.0497 |
+| D5 | insan | +0.0401 | 0.0457 |
+
+D6b'nin uc alt grup farki bandi kil payi asiyor (`termal` +0.1550 / 0.1306,
+`kucuk_16_32` +0.0572 / 0.0497, `insan` +0.0507 / 0.0457) ve ucu de **pozitif
+yonde** — bir bozulmadan beklenmeyecek bir imza. Genel metriklerinin tamamen
+gurultu icinde kalmasiyla birlikte okununca, D6b icin "etki var" demek zor.
+
+### Ajanin `kaynak_d` egilimi artik acikliyor
+
+Ajan uc ayri kosuda (`kosu_05`, `kosu_07`, `kosu_12`) `kaynak_d` grubunu
+sucladi. Bu rastlanti degil: `tf2026` en oynak gruplardan biri (band 0.1321)
+ve ajan onu **tek bir referansa** karsi okuyor. Sistematik bir yanlilik,
+ajanin akil yurutmesinden degil, kendisine verilen karsilastirma tabanindan
+geliyor.
+
+**Duzeltme yonu belli:** ajanin araclari fark degerini degil, **farkin alt
+grup bandina oranini** vermelidir. Bu yapilmadi; acik is olarak kaydedildi.
+
+### Guncel yanlis pozitif orani
+
+| Kosu | Gercek durum | Ajanin cevabi | Sonuc |
+|---|---|---|---|
+| kosu_01 | Baseline | saglikli_referans | dogru |
+| kosu_11 | C2 seed 7 | bozulma_saptanmadi | dogru |
+| kosu_12 | C2 seed 13 | kaynak_d recall kaybi | **UYDURDU** |
+| kosu_13 | C2 seed 21 | saglikli_referansla_uyumlu | dogru |
+
+**1/4 = 0.250**, Wilson %95 araligi **[0.046, 0.699]**.
+
+Onceki iki kontrolle "sifir uydurma" gorunuyordu; kontrol sayisi ikiden
+dorde cikinca gercek ortaya cikti. Ayni ders, senaryo bulgularinda oldugu
+gibi kontrol tarafinda da gecerli: **az gozlem iyimser gosterir.**
+
+- reports/ajan_denemesi/kontrol_tekrarlari/
+- reports/kontrol_C2_seed7/c2_seed_gurultusu.json (`alt_grup_bandi`)
+- scripts/kontrol_C2_seed_gurultusu.py

@@ -1,0 +1,17 @@
+[
+  {
+    "diagnosis": "saglikli_referans",
+    "evidence": [
+      "kosu_01 baseline referans kosusudur; mAP50 degeri 0.920, mAP50_95 degeri 0.671, precision 0.918 ve recall 0.879'dur.",
+      "Baseline farki mAP50, mAP50_95, precision ve recall metriklerinde tam olarak 0.000'dir.",
+      "Boyut ve kaynak bazli recall kirilimlarinin tamaminda baseline ile sifir fark (0.0000) tespit edilmistir (orn. buyuk nesne recall %98.73, kaynak_a recall %84.02)."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sinifi 17 bbox ornegine sahiptir (20 bbox altinda).",
+      "UAP sinifi 15 bbox ornegine sahiptir (20 bbox altinda)."
+    ],
+    "next_measurement": "Herhangi bir mudahaleye gerek yoktur; diger kosular kosu_01 referans alinarak analiz edilmelidir.",
+    "run_id": "kosu_01"
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "diagnosis": "bozulma_saptanmadi",
+    "evidence": [
+      "kosu_11 mAP50 degeri 0.9214 olarak gerceklesmis ve baseline (0.9200) ile karsilastirildiginda fark yalnizca +0.0015 seviyesinde kalmistir.",
+      "mAP50_95 degeri 0.6836 ile baseline (0.6707) degerine gore +0.0129 fark gostermektedir.",
+      "Boyut bazli recall analizinde 0-16 px bandindaki recall %74.04 (baseline %74.46, fark -0.0042) ve 16-32 px bandindaki recall %87.07 (baseline %83.44, fark +0.0363) olarak olculmustur.",
+      "Kaynak bazli recall analizinde en buyuk grup olan kaynak_a recall degeri %83.97 (baseline %84.02, fark -0.0005) seviyesindedir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sinifindaki bbox sayisi (17) 20'nin altinda oldugu icin kesin genelleme yapilamamaktadir.",
+      "UAP sinifindaki bbox sayisi (15) 20'nin altinda oldugu icin kesin genelleme yapilamamaktadir."
+    ],
+    "next_measurement": "Farkli hava kosullari veya ek test setleri uzerinde modelin performans kararliliginin izlenmesine devam edilmesi onerilir.",
+    "run_id": "kosu_11"
+  }
+]

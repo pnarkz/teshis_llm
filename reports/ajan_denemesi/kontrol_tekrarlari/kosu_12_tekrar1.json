@@ -1,0 +1,16 @@
+[
+  {
+    "diagnosis": "kaynak_d veri grubuna ozgu belirgin recall kaybi / genelleme dususu",
+    "evidence": [
+      "Genel mAP50 0.919965'ten 0.920724'e (+0.000759) ve precision 0.917545'ten 0.921837'ye (+0.004292) yukselirken, genel recall %87.85'ten %83.55'e gerilemistir (fark: -0.043003).",
+      "Kaynak bazli recall analizinde kaynak_a (+0.0009), kaynak_b (-0.0180) ve kaynak_c (-0.0234) gruplarinda degisim kısıtlı kalırken, kaynak_d grubunda recall 0.9906'dan 0.8585'e duşerek -0.1321 oraninda ciddi bir kayip yasamistir."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sinifinin bbox sayisi 17 olup 20 ornegin altindadir.",
+      "UAP sinifinin bbox sayisi 15 olup 20 ornegin altindadir."
+    ],
+    "next_measurement": "kaynak_d veri grubunun cekim kosullari ve veriseti temsil oranı incelenmeli, bu gruptan ilave egitim verisi eklenerek model performansi tekrar olculmelidir.",
+    "run_id": "kosu_12"
+  }
+]

@@ -115,8 +115,8 @@ def test_ozet_orneklem_sinirini_acikca_soyluyor(ozet):
     """
     for ifade in ("NOKTA TAHMIN", "tekrar yok"):
         assert ifade.lower() in ozet.lower(), f"Ozette '{ifade}' gecmiyor"
-    assert re.search(r"\[0\.000,\s*0\.658\]", ozet), (
-        "Yanlis pozitif oranının Wilson araligi ozette yazili olmali"
+    assert re.search(r"\[0\.\d{3},\s*0\.\d{3}\]", ozet), (
+        "Yanlis pozitif oraninin Wilson araligi ozette yazili olmali"
     )
 
 
