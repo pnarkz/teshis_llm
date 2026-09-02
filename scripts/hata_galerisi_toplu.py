@@ -38,12 +38,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from teshis.degerlendirme.raporlar import klasor_adi  # noqa: E402
+from teshis.degerlendirme.raporlar import galeri_adi  # noqa: E402
 
 
 def galeri_yolu(senaryo: str) -> Path:
-    """Kanit uretici ile AYNI kurali kullanir: reports/hata_galerisi_<senaryo>."""
-    return ROOT / "reports" / f"hata_galerisi_{senaryo.replace(' ', '_')}"
+    """Kanit uretici ile AYNI kurali kullanir (tek kaynak: raporlar.galeri_adi)."""
+    return ROOT / "reports" / galeri_adi(senaryo)
 
 
 def kosular() -> list[dict[str, str]]:

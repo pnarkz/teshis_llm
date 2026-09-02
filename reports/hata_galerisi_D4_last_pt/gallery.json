@@ -1,0 +1,402 @@
+[
+  {
+    "image": "images/001_hituav__1_130_30_0_03841.jpg",
+    "source": "hituav__1_130_30_0_03841.jpg",
+    "false_negatives": 28,
+    "false_positives": 4,
+    "mean_iou": 0.7680549444847189,
+    "score": 32.23194505551528
+  },
+  {
+    "image": "images/002_hituav__1_120_30_0_02808.jpg",
+    "source": "hituav__1_120_30_0_02808.jpg",
+    "false_negatives": 24,
+    "false_positives": 4,
+    "mean_iou": 0.0,
+    "score": 29.0
+  },
+  {
+    "image": "images/003_hituav__1_120_40_0_02847.jpg",
+    "source": "hituav__1_120_40_0_02847.jpg",
+    "false_negatives": 27,
+    "false_positives": 0,
+    "mean_iou": 0.0,
+    "score": 28.0
+  },
+  {
+    "image": "images/004_hituav__1_130_30_0_03807.jpg",
+    "source": "hituav__1_130_30_0_03807.jpg",
+    "false_negatives": 26,
+    "false_positives": 1,
+    "mean_iou": 0.6737097404611048,
+    "score": 27.326290259538894
+  },
+  {
+    "image": "images/005_hituav__1_120_30_0_02792.jpg",
+    "source": "hituav__1_120_30_0_02792.jpg",
+    "false_negatives": 21,
+    "false_positives": 5,
+    "mean_iou": 0.0,
+    "score": 27.0
+  },
+  {
+    "image": "images/006_hituav__1_120_30_0_02799.jpg",
+    "source": "hituav__1_120_30_0_02799.jpg",
+    "false_negatives": 21,
+    "false_positives": 4,
+    "mean_iou": 0.0,
+    "score": 26.0
+  },
+  {
+    "image": "images/007_hituav__1_120_40_0_02851.jpg",
+    "source": "hituav__1_120_40_0_02851.jpg",
+    "false_negatives": 23,
+    "false_positives": 1,
+    "mean_iou": 0.0,
+    "score": 25.0
+  },
+  {
+    "image": "images/008_hituav__1_120_30_0_02821.jpg",
+    "source": "hituav__1_120_30_0_02821.jpg",
+    "false_negatives": 17,
+    "false_positives": 6,
+    "mean_iou": 0.0,
+    "score": 24.0
+  },
+  {
+    "image": "images/009_hituav__1_130_30_0_03832.jpg",
+    "source": "hituav__1_130_30_0_03832.jpg",
+    "false_negatives": 19,
+    "false_positives": 4,
+    "mean_iou": 0.6956698301764748,
+    "score": 23.304330169823526
+  },
+  {
+    "image": "images/010_hituav__1_120_30_0_02784.jpg",
+    "source": "hituav__1_120_30_0_02784.jpg",
+    "false_negatives": 18,
+    "false_positives": 0,
+    "mean_iou": 0.0,
+    "score": 19.0
+  },
+  {
+    "image": "images/011_hituav__1_120_50_0_02872.jpg",
+    "source": "hituav__1_120_50_0_02872.jpg",
+    "false_negatives": 16,
+    "false_positives": 1,
+    "mean_iou": 0.0,
+    "score": 18.0
+  },
+  {
+    "image": "images/012_hituav__1_120_50_0_02884.jpg",
+    "source": "hituav__1_120_50_0_02884.jpg",
+    "false_negatives": 15,
+    "false_positives": 1,
+    "mean_iou": 0.0,
+    "score": 17.0
+  },
+  {
+    "image": "images/013_hituav__1_130_30_0_07136.jpg",
+    "source": "hituav__1_130_30_0_07136.jpg",
+    "false_negatives": 4,
+    "false_positives": 12,
+    "mean_iou": 0.5697293426857561,
+    "score": 16.430270657314242
+  },
+  {
+    "image": "images/014_hituav__1_110_60_0_09140.jpg",
+    "source": "hituav__1_110_60_0_09140.jpg",
+    "false_negatives": 5,
+    "false_positives": 9,
+    "mean_iou": 0.7848867309008292,
+    "score": 14.21511326909917
+  },
+  {
+    "image": "images/015_hituav__1_120_40_0_02833.jpg",
+    "source": "hituav__1_120_40_0_02833.jpg",
+    "false_negatives": 13,
+    "false_positives": 0,
+    "mean_iou": 0.0,
+    "score": 14.0
+  },
+  {
+    "image": "images/016_hituav__1_120_60_0_02909.jpg",
+    "source": "hituav__1_120_60_0_02909.jpg",
+    "false_negatives": 11,
+    "false_positives": 2,
+    "mean_iou": 0.5387113261460456,
+    "score": 13.461288673853954
+  },
+  {
+    "image": "images/017_hituav__1_120_70_0_02954.jpg",
+    "source": "hituav__1_120_70_0_02954.jpg",
+    "false_negatives": 10,
+    "false_positives": 3,
+    "mean_iou": 0.8617468876071123,
+    "score": 13.138253112392889
+  },
+  {
+    "image": "images/018_hituav__1_120_40_0_02857.jpg",
+    "source": "hituav__1_120_40_0_02857.jpg",
+    "false_negatives": 12,
+    "false_positives": 0,
+    "mean_iou": 0.0,
+    "score": 13.0
+  },
+  {
+    "image": "images/019_hituav__1_120_50_0_02861.jpg",
+    "source": "hituav__1_120_50_0_02861.jpg",
+    "false_negatives": 11,
+    "false_positives": 1,
+    "mean_iou": 0.0,
+    "score": 13.0
+  },
+  {
+    "image": "images/020_hituav__1_120_80_0_03004.jpg",
+    "source": "hituav__1_120_80_0_03004.jpg",
+    "false_negatives": 7,
+    "false_positives": 5,
+    "mean_iou": 0.5687756840665715,
+    "score": 12.431224315933429
+  },
+  {
+    "image": "images/021_hituav__1_120_60_0_02922.jpg",
+    "source": "hituav__1_120_60_0_02922.jpg",
+    "false_negatives": 11,
+    "false_positives": 1,
+    "mean_iou": 0.7326225574951557,
+    "score": 12.267377442504845
+  },
+  {
+    "image": "images/022_hituav__1_120_90_0_03014.jpg",
+    "source": "hituav__1_120_90_0_03014.jpg",
+    "false_negatives": 8,
+    "false_positives": 3,
+    "mean_iou": 0.0,
+    "score": 12.0
+  },
+  {
+    "image": "images/023_hituav__1_120_80_0_02978.jpg",
+    "source": "hituav__1_120_80_0_02978.jpg",
+    "false_negatives": 6,
+    "false_positives": 5,
+    "mean_iou": 0.5606669500263126,
+    "score": 11.439333049973687
+  },
+  {
+    "image": "images/024_hituav__1_120_90_0_03018.jpg",
+    "source": "hituav__1_120_90_0_03018.jpg",
+    "false_negatives": 8,
+    "false_positives": 3,
+    "mean_iou": 0.6028735873753546,
+    "score": 11.397126412624646
+  },
+  {
+    "image": "images/025_hituav__1_120_80_0_03000.jpg",
+    "source": "hituav__1_120_80_0_03000.jpg",
+    "false_negatives": 7,
+    "false_positives": 4,
+    "mean_iou": 0.6314134974992593,
+    "score": 11.36858650250074
+  },
+  {
+    "image": "images/026_hituav__1_120_80_0_02992.jpg",
+    "source": "hituav__1_120_80_0_02992.jpg",
+    "false_negatives": 7,
+    "false_positives": 4,
+    "mean_iou": 0.6438828122473278,
+    "score": 11.356117187752671
+  },
+  {
+    "image": "images/027_hituav__1_130_30_0_07126.jpg",
+    "source": "hituav__1_130_30_0_07126.jpg",
+    "false_negatives": 3,
+    "false_positives": 8,
+    "mean_iou": 0.6517434186380161,
+    "score": 11.348256581361984
+  },
+  {
+    "image": "images/028_hituav__1_120_60_0_02925.jpg",
+    "source": "hituav__1_120_60_0_02925.jpg",
+    "false_negatives": 10,
+    "false_positives": 1,
+    "mean_iou": 0.7095817260007308,
+    "score": 11.290418273999268
+  },
+  {
+    "image": "images/029_hituav__1_120_40_0_06014.jpg",
+    "source": "hituav__1_120_40_0_06014.jpg",
+    "false_negatives": 2,
+    "false_positives": 9,
+    "mean_iou": 0.7523224571008297,
+    "score": 11.24767754289917
+  },
+  {
+    "image": "images/030_hituav__1_120_80_0_02983.jpg",
+    "source": "hituav__1_120_80_0_02983.jpg",
+    "false_negatives": 7,
+    "false_positives": 3,
+    "mean_iou": 0.5061094512301784,
+    "score": 10.493890548769821
+  },
+  {
+    "image": "images/031_hituav__1_120_60_0_02914.jpg",
+    "source": "hituav__1_120_60_0_02914.jpg",
+    "false_negatives": 8,
+    "false_positives": 2,
+    "mean_iou": 0.536047844413975,
+    "score": 10.463952155586025
+  },
+  {
+    "image": "images/032_hituav__1_120_70_0_02957.jpg",
+    "source": "hituav__1_120_70_0_02957.jpg",
+    "false_negatives": 8,
+    "false_positives": 2,
+    "mean_iou": 0.5692047028512937,
+    "score": 10.430795297148705
+  },
+  {
+    "image": "images/033_hituav__1_120_60_0_02918.jpg",
+    "source": "hituav__1_120_60_0_02918.jpg",
+    "false_negatives": 8,
+    "false_positives": 2,
+    "mean_iou": 0.5755562954191871,
+    "score": 10.424443704580813
+  },
+  {
+    "image": "images/034_hituav__1_120_90_0_03021.jpg",
+    "source": "hituav__1_120_90_0_03021.jpg",
+    "false_negatives": 7,
+    "false_positives": 3,
+    "mean_iou": 0.5891951006552006,
+    "score": 10.4108048993448
+  },
+  {
+    "image": "images/035_hituav__1_130_30_0_07125.jpg",
+    "source": "hituav__1_130_30_0_07125.jpg",
+    "false_negatives": 3,
+    "false_positives": 7,
+    "mean_iou": 0.6205638054086716,
+    "score": 10.379436194591328
+  },
+  {
+    "image": "images/036_hituav__1_120_90_0_03017.jpg",
+    "source": "hituav__1_120_90_0_03017.jpg",
+    "false_negatives": 7,
+    "false_positives": 3,
+    "mean_iou": 0.6682350829795939,
+    "score": 10.331764917020406
+  },
+  {
+    "image": "images/037_hituav__1_120_80_0_02997.jpg",
+    "source": "hituav__1_120_80_0_02997.jpg",
+    "false_negatives": 8,
+    "false_positives": 1,
+    "mean_iou": 0.0,
+    "score": 10.0
+  },
+  {
+    "image": "images/038_hituav__1_120_80_0_02975.jpg",
+    "source": "hituav__1_120_80_0_02975.jpg",
+    "false_negatives": 6,
+    "false_positives": 3,
+    "mean_iou": 0.5229250542133259,
+    "score": 9.477074945786674
+  },
+  {
+    "image": "images/039_hituav__1_120_80_0_02981.jpg",
+    "source": "hituav__1_120_80_0_02981.jpg",
+    "false_negatives": 7,
+    "false_positives": 2,
+    "mean_iou": 0.5492528956992057,
+    "score": 9.450747104300794
+  },
+  {
+    "image": "images/040_hituav__1_120_90_0_03040.jpg",
+    "source": "hituav__1_120_90_0_03040.jpg",
+    "false_negatives": 7,
+    "false_positives": 2,
+    "mean_iou": 0.5774657380840894,
+    "score": 9.42253426191591
+  },
+  {
+    "image": "images/041_hituav__1_120_60_0_02911.jpg",
+    "source": "hituav__1_120_60_0_02911.jpg",
+    "false_negatives": 7,
+    "false_positives": 2,
+    "mean_iou": 0.6253744500439418,
+    "score": 9.374625549956058
+  },
+  {
+    "image": "images/042_hituav__1_120_30_0_09278.jpg",
+    "source": "hituav__1_120_30_0_09278.jpg",
+    "false_negatives": 2,
+    "false_positives": 7,
+    "mean_iou": 0.6410048332725223,
+    "score": 9.358995166727478
+  },
+  {
+    "image": "images/043_hituav__1_110_90_0_02763.jpg",
+    "source": "hituav__1_110_90_0_02763.jpg",
+    "false_negatives": 8,
+    "false_positives": 1,
+    "mean_iou": 0.6678669417178087,
+    "score": 9.332133058282192
+  },
+  {
+    "image": "images/044_hituav__1_120_70_0_02939.jpg",
+    "source": "hituav__1_120_70_0_02939.jpg",
+    "false_negatives": 7,
+    "false_positives": 2,
+    "mean_iou": 0.6692358557502366,
+    "score": 9.330764144249763
+  },
+  {
+    "image": "images/045_hituav__1_110_70_0_02700.jpg",
+    "source": "hituav__1_110_70_0_02700.jpg",
+    "false_negatives": 8,
+    "false_positives": 1,
+    "mean_iou": 0.7117032560229901,
+    "score": 9.28829674397701
+  },
+  {
+    "image": "images/046_hituav__1_120_40_0_06008.jpg",
+    "source": "hituav__1_120_40_0_06008.jpg",
+    "false_negatives": 4,
+    "false_positives": 5,
+    "mean_iou": 0.7354920786453174,
+    "score": 9.264507921354683
+  },
+  {
+    "image": "images/047_hituav__1_110_60_0_09137.jpg",
+    "source": "hituav__1_110_60_0_09137.jpg",
+    "false_negatives": 3,
+    "false_positives": 6,
+    "mean_iou": 0.7968158286755916,
+    "score": 9.20318417132441
+  },
+  {
+    "image": "images/048_termal__thermal_04699_png.rf.b1598e9f5835cc03736f47380a80e0c3.jpg",
+    "source": "termal__thermal_04699_png.rf.b1598e9f5835cc03736f47380a80e0c3.jpg",
+    "false_negatives": 1,
+    "false_positives": 7,
+    "mean_iou": 0.0,
+    "score": 9.0
+  },
+  {
+    "image": "images/049_hituav__1_120_80_0_02970.jpg",
+    "source": "hituav__1_120_80_0_02970.jpg",
+    "false_negatives": 6,
+    "false_positives": 2,
+    "mean_iou": 0.5978486236429985,
+    "score": 8.402151376357
+  },
+  {
+    "image": "images/050_hituav__1_130_30_0_07127.jpg",
+    "source": "hituav__1_130_30_0_07127.jpg",
+    "false_negatives": 1,
+    "false_positives": 7,
+    "mean_iou": 0.6292552963229361,
+    "score": 8.370744703677063
+  }
+]

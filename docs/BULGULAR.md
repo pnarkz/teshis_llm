@@ -91,9 +91,9 @@ farkli baslangic modelinden.
 | LLM tarafinda tekrar yok | ajan skoruna guven araligi verilemiyor | acik |
 | Ajan araclari alt grup bandini gostermiyor | — | **kapatildi** (`gurultu.py`) |
 | Band eklendikten sonra deneme yeniden kosulmadi | ajanin cevaplarinin degisip degismedigi bilinmiyor | acik |
-| Yayimlanmis GA'larin cogu Wilson | araliklar ~1.5 kat dar | uc kontrol kosusunda dogru yontem var; D/E serisi hala Wilson |
+| Yayimlanmis GA'lar Wilson'di (~1.5 kat dar) | — | **kapatildi: 24/24 kosu tabakali bootstrap** |
 | Puanlama rubriginin 2/3 bileseni doymus | toplam skor ayirt etmiyor | acik |
-| Kanit sozlesmesi 0/18 tam | 17 kosuda hata galerisi yok | acik |
+| Kanit sozlesmesi | — | **kapatildi: 24/24 tam** |
 | D6b grup bazli doz-yanit | genel metrikleri gurultu icinde; grup analizi sinanmadi | acik |
 | Referans tek kosu (v00) | v00 saglikli kosularin en zayifi; en iyi epoch'u 1 | acik |
 | E3, Asama 2 (`teshis/servis/`) | hic yapilmadi | acik |
@@ -1245,7 +1245,7 @@ Kalan is: `goruntu_kayitlari` iceren yeni kirilim olcumleri uretmek
 (`metrikler.py` artik bunu yaziyor, ancak mevcut `reports/kirilim/*.json`
 dosyalari eski surumle uretildi ve bu alani icermiyor).
 
-### 2. Kanit sozlesmesi (`kanit.json`) — KAPATILDI (icerik hala eksik)
+### 2. Kanit sozlesmesi (`kanit.json`) — TAMAMEN KAPATILDI
 
 Sartname bolum 9, her egitim kosusu icin tek bir
 `experiments/<kosu_adi>/kanit.json` uretilmesini istiyor: sinif bazli
@@ -1257,16 +1257,32 @@ Bu bilgilerin tamami projede **mevcuttu**, ancak dort ayri yere dagilmisti:
 `reports/senaryo_*/d1_metrics.json`, `reports/kirilim/*.json`,
 `experiments/*/results.csv`, `experiments/*/run_manifest.json`.
 
-`teshis/degerlendirme/kanit.py` bunlari tek semada birlestiriyor ve 15
-kosunun tamami icin dosya uretiyor. Ancak **hicbiri sozlesmeyi tam
-karsilamiyor**; modul eksigi silmiyor, `sozlesme_durumu.eksikler` altinda
-tek tek yaziyor:
+`teshis/degerlendirme/kanit.py` bunlari tek semada birlestiriyor. Ilk
+surumde **hicbir kosu sozlesmeyi tam karsilamiyordu**; uc madde eksikti ve
+modul bunlari silmek yerine `sozlesme_durumu.eksikler` altinda tek tek
+yaziyordu.
 
-| Eksik madde | Etkilenen kosu |
-|---|---|
-| hata ornekleri (`hata_galerisi_*`) | 15 / 15 — yalnizca D2a'nin galerisi var |
-| goruntu birimli guven araligi | kirilimi olan kosular (eski olcum, `goruntu_kayitlari` yok) |
-| boyut/kaynak kirilimi | d6a, v00n, d1n, E4, E2 (`reports/kirilim/` dosyasi yok) |
+Ucu de kapatildi (2026-09-03):
+
+| Eksik madde | Onceki durum | Simdi |
+|---|---|---|
+| boyut/kaynak kirilimi | 11 kosuda olcum yok | 24/24 uretildi |
+| goruntu birimli guven araligi | 21 kosu Wilson kullaniyordu (~1.5 kat dar) | 24/24 tabakali bootstrap |
+| hata ornekleri | 23/24 kosuda galeri yok | 24/24 uretildi |
+
+**24 kosunun tamami sozlesmeyi tam karsiliyor.** `test_kanit_sozlesmesi_tam`
+bunu kalicilastiriyor: yeni bir kosu eklendiginde kirilim veya galeri
+unutulursa test kirilir.
+
+Iki toplu uretici eklendi (`scripts/kirilim_toplu_olc.py`,
+`scripts/hata_galerisi_toplu.py`). Ikisi de her kosuyu KENDI degerlendirme
+cozunurlugunde isler ve cikis kodu 0 olsa bile beklenen dosyanin gercekten
+yazildigini dogrular.
+
+Bu sirada ayni sinif hata bir kez daha cikti: galeri klasoru adi iki yerde
+ayri yaziliydi (toplu uretici boslugu alt cizgiye ceviriyor, kanit uretici
+cevirmiyordu) ve 10 kosunun galerisi uretildigi halde "eksik" gorunuyordu.
+Kural `raporlar.galeri_adi` altinda tek kaynaga tasindi.
 
 Ogrenme orani alani iki deger tasir: `lr0_beyan_edilen` (0.001) ve
 `lr0_gecerli` (0.00125). `optimizer=auto` beyani yok saydigi icin yalnizca

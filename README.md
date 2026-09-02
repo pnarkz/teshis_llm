@@ -100,8 +100,7 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   **bes iddia zayifladi**; D6b artik hicbir metrikte gurultuyu asmiyor.
   Ajanin yanlis pozitif orani hala dar bir kanita dayaniyor (2 kontrol,
   Wilson [0.000, 0.658]); seed 13 ve 21 ajana verilmeyi bekliyor.
-  Kanit sozlesmesi (`kanit.json`) artik uretiliyor ama icerigi eksik
-  (hata galerileri yok). Yayimlanmis guven
+  Kanit sozlesmesi (`kanit.json`) 24/24 kosuda TAM. Yayimlanmis guven
   araliklari sartnamedeki tabakali bootstrap yerine Wilson ile hesaplandi
   (~1.5 kat dar). Ayrinti: [docs/BULGULAR.md](docs/BULGULAR.md)
   'Sartnameye Uyum Denetimi'.

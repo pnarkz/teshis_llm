@@ -95,10 +95,8 @@
     "benzersiz_kaynak_sayisi": 4
   },
   "sozlesme_durumu": {
-    "tam_mi": false,
-    "eksikler": [
-      "hata ornekleri: reports/hata_galerisi_D1/ yok. `python -m teshis.degerlendirme.hata_galerisi` ile uretilir."
-    ]
+    "tam_mi": true,
+    "eksikler": []
   },
   "boyut_bandi_recall": {
     "cok_kucuk_16_alti": {
@@ -199,5 +197,51 @@
       },
       "fark_acildi_mi": true
     }
+  },
+  "hata_ornekleri": {
+    "kaynak": "reports/hata_galerisi_D1/gallery.json",
+    "ornek_sayisi": 50,
+    "en_kotu_bes": [
+      {
+        "image": "images/001_hituav__1_120_50_0_02884.jpg",
+        "source": "hituav__1_120_50_0_02884.jpg",
+        "false_negatives": 10,
+        "false_positives": 8,
+        "mean_iou": 0.6425728620191075,
+        "score": 18.357427137980892
+      },
+      {
+        "image": "images/002_hituav__1_130_30_0_03841.jpg",
+        "source": "hituav__1_130_30_0_03841.jpg",
+        "false_negatives": 13,
+        "false_positives": 5,
+        "mean_iou": 0.6939603251201013,
+        "score": 18.306039674879898
+      },
+      {
+        "image": "images/003_hituav__1_130_30_0_07136.jpg",
+        "source": "hituav__1_130_30_0_07136.jpg",
+        "false_negatives": 3,
+        "false_positives": 11,
+        "mean_iou": 0.571877232012754,
+        "score": 14.428122767987245
+      },
+      {
+        "image": "images/004_hituav__1_120_30_0_02792.jpg",
+        "source": "hituav__1_120_30_0_02792.jpg",
+        "false_negatives": 4,
+        "false_positives": 10,
+        "mean_iou": 0.7507212047605523,
+        "score": 14.249278795239448
+      },
+      {
+        "image": "images/005_hituav__1_130_30_0_03832.jpg",
+        "source": "hituav__1_130_30_0_03832.jpg",
+        "false_negatives": 4,
+        "false_positives": 9,
+        "mean_iou": 0.7043300117330361,
+        "score": 13.295669988266964
+      }
+    ]
   }
 }

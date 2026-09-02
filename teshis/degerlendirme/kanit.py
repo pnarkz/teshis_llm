@@ -40,7 +40,7 @@ from pathlib import Path
 from typing import Any
 
 from .bootstrap import VAL_DIAGNOSTIC_BBOX_N, wilson_araligi, tabakali_goruntu_bootstrap
-from .raporlar import rapor_klasoru
+from .raporlar import galeri_adi, galeri_klasoru, rapor_klasoru
 
 KOK = Path(__file__).resolve().parents[2]
 RESULTS_CSV = KOK / "results.csv"
@@ -175,7 +175,8 @@ def kanit_uret(run_id: str) -> dict[str, Any]:
     kirilim = _oku(KOK / f"reports/kirilim/{run_id}.json")
     manifest = _oku(kosu_dizini / "run_manifest.json")
     egri = _egitim_egrisi(kosu_dizini)
-    galeri = _oku(KOK / f"reports/hata_galerisi_{senaryo}/gallery.json")
+    galeri_dizin = galeri_klasoru(senaryo)
+    galeri = _oku(galeri_dizin / "gallery.json") if galeri_dizin else None
 
     if metrikler is None:
         raise FileNotFoundError(
@@ -202,7 +203,7 @@ def kanit_uret(run_id: str) -> dict[str, Any]:
         )
     if galeri is None:
         eksikler.append(
-            f"hata ornekleri: reports/hata_galerisi_{senaryo}/ yok. "
+            f"hata ornekleri: reports/{galeri_adi(senaryo)}/ yok. "
             "`python -m teshis.degerlendirme.hata_galerisi` ile uretilir."
         )
 
@@ -265,7 +266,7 @@ def kanit_uret(run_id: str) -> dict[str, Any]:
         kanit["egitim_egrisi"] = egri
     if galeri:
         kanit["hata_ornekleri"] = {
-            "kaynak": f"reports/hata_galerisi_{senaryo}/gallery.json",
+            "kaynak": f"reports/{galeri_adi(senaryo)}/gallery.json",
             "ornek_sayisi": len(galeri),
             "en_kotu_bes": galeri[:5],
         }

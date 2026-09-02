@@ -58,3 +58,22 @@ def rapor_klasoru(senaryo: str, kok: Path = KOK) -> Path | None:
     """Var olan rapor klasorunu dondurur; yoksa None."""
     klasor = kok / "reports" / klasor_adi(senaryo)
     return klasor if klasor.is_dir() else None
+
+
+def galeri_adi(senaryo: str) -> str:
+    """Hata galerisi klasoru adi: reports/hata_galerisi_<senaryo>.
+
+    Bosluklar alt cizgiye cevrilir - tipki rapor klasorlerinde oldugu gibi.
+    Bu kural bir kez daha iki yerde ayri yazildi ve ayrildi: toplu uretici
+    boslugu cevirirken kanit uretici cevirmiyordu, bu yuzden 10 kosunun
+    galerisi uretildigi halde "eksik" gorunuyordu.
+
+    >>> galeri_adi("C2 seed21")
+    'hata_galerisi_C2_seed21'
+    """
+    return f"hata_galerisi_{senaryo.replace(' ', '_')}"
+
+
+def galeri_klasoru(senaryo: str, kok: Path = KOK) -> Path | None:
+    klasor = kok / "reports" / galeri_adi(senaryo)
+    return klasor if (klasor / "gallery.json").is_file() else None

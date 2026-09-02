@@ -234,3 +234,47 @@ def test_iki_recall_olcumu_ayri_alanlarda():
     kaynak = (ROOT / "teshis/degerlendirme/kanit.py").read_text(encoding="utf-8")
     assert "recall_kirilim" in kaynak
     assert "ga_hangi_olcum" in kaynak
+
+
+def test_galeri_adi_tek_kaynaktan_gelir():
+    """Galeri klasoru adi iki yerde ayri yazilmamali.
+
+    GERCEK HATA: toplu uretici boslugu alt cizgiye ceviriyordu, kanit uretici
+    cevirmiyordu. 10 kosunun galerisi uretildigi halde "eksik" gorunuyordu
+    (orn. 'C2 seed21' -> 'hata_galerisi_C2_seed21' vs '...C2 seed21').
+    """
+    import importlib.util
+
+    from teshis.degerlendirme.raporlar import galeri_adi
+
+    assert galeri_adi("C2 seed21") == "hata_galerisi_C2_seed21"
+    assert galeri_adi("D4") == "hata_galerisi_D4"
+
+    kaynak = (ROOT / "teshis/degerlendirme/kanit.py").read_text(encoding="utf-8")
+    assert 'f"reports/hata_galerisi_{senaryo}' not in kaynak, (
+        "kanit.py galeri adini kendi kuruyor; raporlar.galeri_adi kullanilmali"
+    )
+
+    spec = importlib.util.spec_from_file_location(
+        "galeri_toplu", ROOT / "scripts/hata_galerisi_toplu.py"
+    )
+    modul = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modul)
+    for senaryo in ("C2 seed21", "D2b final_best", "E1 last_pt", "D4"):
+        assert modul.galeri_yolu(senaryo).name == galeri_adi(senaryo), senaryo
+
+
+def test_kanit_sozlesmesi_tam(kosular):
+    """Her kosu sartname bolum 9'daki tum maddeleri karsilamali.
+
+    Bu test bilerek KATI: sozlesme bir kez tam hale geldikten sonra, yeni bir
+    kosu eklendiginde kirilim veya galeri unutulursa hemen gorunur olmali.
+    Gecici bir eksik varsa DEFTER_DISI benzeri bir gerekce mekanizmasi degil,
+    olcumun kendisi uretilmelidir.
+    """
+    eksikler = {}
+    for run_id in kosular:
+        durum = kanit.kanit_uret(run_id)["sozlesme_durumu"]
+        if not durum["tam_mi"]:
+            eksikler[run_id] = durum["eksikler"]
+    assert not eksikler, f"Sozlesmeyi tam karsilamayan kosular: {eksikler}"
