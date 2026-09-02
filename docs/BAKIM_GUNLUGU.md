@@ -9,6 +9,41 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-09-02 — Iki hata: `--kosu` sonucu diske yazmiyordu, 503 kota sanildi
+
+**Hata 1: kaybolan API cagrilari.** `teshis/ajan/ajan.py --kosu <id>` sonucu
+yalnizca **ekrana basiyor**, `--output` yolunu hic kullanmiyordu.
+`scripts/ajan_kontrol_tekrari.py` bu komutu `subprocess.run(capture_output=True)`
+ile cagirdigi icin cikti yakalandi ve atildi.
+
+Sonuc: **kosu_12 ve kosu_13 gercekten kosuldu, API kotasi harcandi, cevaplar
+kayboldu** ve script "tamam" diye raporladi. Bu iki kosu yeni eklenen
+bagimsiz kontrollerdi (seed 13 ve 21) — yani en degerli olcumler.
+
+Iki duzeltme yapildi:
+
+1. `--kosu` artik sonucu `--output` yoluna yaziyor (`--devam` ile onceki
+   cevaplari koruyarak). Arac kaydi da yaziliyor.
+2. Tekrar scripti, komut basarili donse bile **dosyanin gercekten yazildigini
+   dogruluyor**; yazilmamissa kosuyu basarisiz sayiyor. Sessiz kayip bir daha
+   ayni sekilde olamaz.
+
+`tests/test_ajan_tek_kosu.py` bu davranisi API anahtari olmadan dogruluyor
+(`teshis_uret` taklit ediliyor).
+
+**Hata 2: gecici sunucu hatasi kota sanildi.** Script'in hata siniflandirmasi
+yalnizca "kota/quota" ariyordu; her sey basarisiz oldugunda kullaniciya
+"kota yenilendiginde devam edin" diyordu. Gercek kosuda gelen hata
+**503 UNAVAILABLE (high demand)** idi — gecici bir sunucu yogunlugu, hemen
+tekrar denenebilirdi. Kullaniciya bir gun bosuna beklemesi soylenmis olurdu.
+
+Hata turleri artik ayrilmis durumda: `GECICI SUNUCU HATASI` (hemen tekrar),
+`GUNLUK KOTA BITTI` (ertesi gun), `BILINMEYEN HATA` (son satir basilir).
+
+**Ders.** Bir alt surece is devrederken cikis kodu yeterli kanit degildir;
+**beklenen ciktinin varligi** dogrulanmalidir. Ozellikle is maliyetliyse
+(API kotasi, GPU saati) sessiz kayip pahaliya patlar.
+
 ### 2026-08-30 — E serisi baslatildi: protokol sapmalari beyan edilir hale getirildi
 
 **Sorun.** E senaryolari (egitim arizalari) ortak egitim protokolunu KASITLI

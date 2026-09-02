@@ -415,8 +415,26 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.kosu:
+        # Tek kosu da SONUCU DISKE YAZAR.
+        #
+        # Ilk surum sonucu yalnizca ekrana basiyordu. scripts/ajan_kontrol_tekrari.py
+        # bu komutu subprocess ile capture_output=True cagirdigi icin iki gercek
+        # kosunun cevabi yakalanip ATILDI - API kotasi harcandi, sonuc kayboldu.
+        # Cikti yolu artik tek kosuda da onurlandiriliyor.
         teshis, kayit = teshis_uret(args.kosu, model=args.model)
-        print(json.dumps({"teshis": teshis, "arac_cagrilari": kayit}, indent=2, ensure_ascii=False))
+        hatalar = semalar.teshis_dogrula(teshis)
+        if hatalar:
+            teshis["_sema_hatalari"] = hatalar
+            print(f"  {args.kosu}: UYARI sema hatalari {hatalar}")
+        mevcut, mevcut_kayit = (
+            _mevcut_sonuclari_oku(args.output, args.log) if args.devam else ({}, {})
+        )
+        mevcut[args.kosu] = teshis
+        mevcut_kayit[args.kosu] = {"arac_cagrilari": kayit, "hata": None}
+        _kaydet(args.output, args.log, mevcut, mevcut_kayit)
+        print(json.dumps({"teshis": teshis, "arac_cagrilari": kayit},
+                         indent=2, ensure_ascii=False))
+        print(f"saved={args.output.resolve()}")
         return
 
     print(f"ajan denemesi basliyor: model={args.model}")

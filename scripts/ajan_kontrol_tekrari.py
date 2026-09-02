@@ -54,8 +54,25 @@ def _dosya(kosu: str, tekrar: int) -> Path:
     return CIKTI / f"{kosu}_tekrar{tekrar}.json"
 
 
+# Gecici sunucu hatasi ile gunluk kota bitisi AYRI seylerdir: birincisinde
+# hemen tekrar denenir, ikincisinde ertesi gunu beklemek gerekir. Ilk surum
+# ikisini de "kota" diye raporladi ve kullaniciya bir gun beklemesini soyledi.
+GECICI_HATALAR = ("503", "unavailable", "high demand", "overloaded",
+                  "500", "internal error", "deadline exceeded")
+KOTA_HATALARI = ("quota", "kota", "resource_exhausted", "429")
+
+
+def _hata_turu(ciktilar: str) -> str:
+    metin = ciktilar.lower()
+    if any(k in metin for k in KOTA_HATALARI):
+        return "GUNLUK KOTA BITTI"
+    if any(k in metin for k in GECICI_HATALAR):
+        return "GECICI SUNUCU HATASI (hemen tekrar denenebilir)"
+    return "BILINMEYEN HATA"
+
+
 def kosuyu_calistir(kosu: str, tekrar: int) -> bool:
-    """Tek bir kontrol kosusunu calistirir. Kota bittiyse False doner."""
+    """Tek bir kontrol kosusunu calistirir. Basarisizsa False doner."""
     hedef = _dosya(kosu, tekrar)
     sonuc = subprocess.run(
         [sys.executable, "-m", "teshis.ajan.ajan",
@@ -66,11 +83,18 @@ def kosuyu_calistir(kosu: str, tekrar: int) -> bool:
     )
     ciktilar = (sonuc.stdout or "") + (sonuc.stderr or "")
     if sonuc.returncode != 0:
-        if "kota" in ciktilar.lower() or "quota" in ciktilar.lower():
-            print(f"  {kosu} tekrar {tekrar}: GUNLUK KOTA BITTI, duruluyor.")
-            print("  Kota yenilendiginde --devam ile surdurun.")
-            return False
-        print(f"  {kosu} tekrar {tekrar}: HATA\n{ciktilar[-600:]}")
+        tur = _hata_turu(ciktilar)
+        print(f"  {kosu} tekrar {tekrar}: {tur}")
+        if tur == "BILINMEYEN HATA":
+            son_satir = (ciktilar.strip().splitlines() or [""])[-1]
+            print(f"    {son_satir[:200]}")
+        return False
+    # Basarili gorunse bile dosya yazilmis mi diye BAKILIR. Ilk surumde
+    # `--kosu` sonucu yalnizca ekrana basiyordu; script "tamam" diyordu ama
+    # diskte hicbir sey yoktu ve iki kosunun API maliyeti bosa gitti.
+    if not hedef.is_file():
+        print(f"  {kosu} tekrar {tekrar}: KOMUT BASARILI AMA DOSYA YAZILMADI")
+        print(f"    beklenen: {hedef}")
         return False
     print(f"  {kosu} tekrar {tekrar}: tamam -> {hedef.name}")
     return True
