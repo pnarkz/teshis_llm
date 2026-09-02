@@ -42,5 +42,13 @@
   "kosu_11": {
     "hidden_role": "C2 seed7",
     "expected": "anlamli_degisim_yok"
+  },
+  "kosu_12": {
+    "hidden_role": "C2 seed13",
+    "expected": "anlamli_degisim_yok"
+  },
+  "kosu_13": {
+    "hidden_role": "C2 seed21",
+    "expected": "anlamli_degisim_yok"
   }
 }

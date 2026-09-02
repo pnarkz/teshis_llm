@@ -137,12 +137,24 @@ def _sinif_metrikleri(
         }
         if kayitlar:
             # Sartnameye uygun yontem: tabakali, goruntu birimli bootstrap.
+            #
+            # DIKKAT: bu aralik `recall` alanina AIT DEGILDIR. Iki farkli olcum
+            # var ve karistirilmalari somut bir hataya yol acti:
+            #   - `recall`        : d1_sonuc.py (Ultralytics val, kendi conf esigi)
+            #   - `recall_kirilim`: metrikler.py (conf=0.25, IoU=0.5 eslestirme)
+            # Ilk surumde Ultralytics recall'u metrikler.py'nin araligiyla
+            # eslestirilmisti; sonuc, nokta tahminin KENDI ARALIGININ DISINDA
+            # kalmasiydi (tasit: 0.8568, aralik [0.8708, 0.9088]). Aralik artik
+            # ait oldugu olcumle birlikte veriliyor.
             boot = tabakali_goruntu_bootstrap(kayitlar, grup=ad, tekrar=1000)
+            satir["recall_kirilim"] = round(boot["oran"], 4)
             satir["recall_ga"] = [round(boot["alt"], 4), round(boot["ust"], 4)]
+            satir["ga_hangi_olcum"] = "recall_kirilim"
             satir["ga_yontemi"] = "tabakali_goruntu_bootstrap (sartnameye uygun)"
         elif n:
             alt, ust = wilson_araligi(round(r * n), n)
             satir["recall_ga"] = [round(alt, 4), round(ust, 4)]
+            satir["ga_hangi_olcum"] = "recall"
             satir["ga_yontemi"] = (
                 "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz "
                 "sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin "

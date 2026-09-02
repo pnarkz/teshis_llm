@@ -65,17 +65,23 @@ gorunuyor (mAP50 -0.088).
 ### 2.4 "Fark var" demeden once gurultuyu olcmek gerekiyor
 
 Ayni veriyle, ayni ayarlarla, **yalnizca rastgelelik tohumu degistirilerek**
-egitilen iki model arasinda bile fark cikiyor:
+egitilen dort model arasinda belirgin fark cikiyor. Uc kontrol kosusunda
+(seed 7, 13, 21) gozlenen en buyuk sapmalar:
 
-- precision farki: 0.018
-- recall farki: 0.011
-- `insan` sinifi AP farki: **0.031**
+- recall: **0.043**
+- precision: 0.018
+- `insan` sinifi AP: **0.031**
 
-Bu, bazi senaryolarin "etkisinden" buyuk. Nitekim bir senaryomuz (D6b) bu
-olcum sonrasi **bulgu olmaktan cikti**: farki, saf rastgelelikten ayirt
-edilemiyor.
+Bu, bircok senaryonun "etkisinden" buyuk. Ilk olcumu tek bir kontrol
+kosusuyla yapmistik ve gurultuyu **4 kat kucuk** gosteriyordu; uc kosuya
+cikinca bes iddia zayifladi ve bir senaryo (D6b) **tamamen bulgu olmaktan
+cikti** — hicbir metrikte rastgelelikten ayirt edilemiyor.
 
-> **Ders:** kontrol kosusu olmadan yapilan her "etki" iddiasi risklidir.
+Ayrica egitim suresi bile seed'e bagli: ayni protokol 11 ile 30 epoch
+arasinda durdu.
+
+> **Ders:** kontrol kosusu olmadan yapilan her "etki" iddiasi risklidir —
+> ve **tek** kontrol kosusu da yetmez.
 
 ### 2.5 Ajan: sorun uydurmuyor, ama sorunun adini koymakta zayif
 
@@ -102,15 +108,19 @@ Bu, sunumun en onemli bolumu.
 
 Projenin asil sorusu "bir LLM bozulmayi teshis edebilir mi?" idi.
 **Bu soruyu cevaplayacak orneklem henuz yok:** tek model, kosu basina tek
-deneme, 11 kosu ve yalnizca 2 saf kontrol. Olculen skor bir nokta
-tahminidir; tekrar olmadigi icin guven araligi hesaplanamaz.
+deneme, 11 kosu ve ajana verilmis yalnizca 2 saf kontrol. Olculen skor bir
+nokta tahminidir; tekrar olmadigi icin guven araligi hesaplanamaz.
 
 Ajanin "sorun uydurmama" orani icin verebilecegimiz aralik
 **%0 ile %66** arasi. Isaret olumlu, kanit zayif.
 
-Eksigi kapatan olcum belli ve suan **kosuyor**: saglikli modelin farkli
-rastgelelik tohumlariyla tekrarlanmasi. Ayni kosular hem gurultu tahminini
-hem kontrol grubunu buyutuyor.
+Iyi haber: eksigin **egitim tarafi kapandi**. Saglikli model uc farkli
+tohumla tekrarlandi ve gurultu tabani artik uc gozleme dayaniyor. Bu
+kosulardan ikisi (seed 13 ve 21) ayni zamanda ajan icin **yeni bagimsiz
+kontrol** demek — henuz ajana verilmediler.
+
+Kalan eksik LLM tarafinda: ajanin ayni girdiye kac kez ayni cevabi verdigi
+olculmedi. Bu olculdugunde "sorun uydurmama" araligi daralir.
 
 ---
 

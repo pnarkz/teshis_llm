@@ -1,39 +1,103 @@
 {
-  "kontrol": "C2 (sartname bolum 8)",
-  "tanim": "v00 ile birebir ayni protokol; tek degisken seed (42 -> 7)",
-  "referans_kosu": {
+  "kontrol": "C2 (sartname bolum 8) - coklu seed",
+  "tanim": "v00 ile birebir ayni protokol; tek degisken seed",
+  "referans": {
     "seed": 42,
-    "epoch": 11,
-    "kaynak": "reports\\referans_v00\\d1_metrics.json"
+    "epoch": 11
   },
-  "kontrol_kosusu": {
-    "seed": 7,
-    "epoch": 19,
-    "kaynak": "reports\\kontrol_C2_seed7\\d1_metrics.json"
-  },
-  "not_erken_durdurma": "Iki kosu farkli epoch'ta durdu (11 vs 19). Erken durdurma noktasi bile seed'e baglidir; bu, gurultunun yalnizca son metrikte degil egitim suresinde de gorundugunu gosterir.",
-  "sinir": "n=1. Tek seed cifti degiskenligin nokta tahminidir, dagilimi degil. Asagidaki esik bir hipotez testi DEGIL, eleme suzgecidir: esigin altinda kalan etki seed degisiminden ayirt edilemez demektir, 'etki yoktur' demek degildir.",
+  "kontrol_kosulari": [
+    {
+      "senaryo": "C2 seed7",
+      "seed": 7,
+      "epoch": 19
+    },
+    {
+      "senaryo": "C2 seed13",
+      "seed": 13,
+      "epoch": 30
+    },
+    {
+      "senaryo": "C2 seed21",
+      "seed": 21,
+      "epoch": 30
+    }
+  ],
+  "gozlem_sayisi": 3,
+  "not_erken_durdurma": "Kontrol kosulari 11 ile 30 epoch arasinda durdu. Erken durdurma noktasi bile seed'e baglidir; gurultu yalnizca son metrikte degil egitim suresinde de gorunur.",
+  "sinir": "n=3 kontrol kosusu. Esik, GOZLENEN EN BUYUK sapmadir; bir hipotez testi degil, eleme suzgecidir. Esigin altinda kalan bir etki 'seed degisiminden ayirt edilemez' demektir, 'etki yoktur' demek degildir.",
   "gurultu_tabani": {
-    "mAP50": 0.0015,
-    "mAP50_95": 0.0129,
-    "precision": 0.0184,
-    "recall": 0.0114,
-    "AP_tasit": 0.0021,
-    "AP_insan": 0.0307,
-    "AP_UAP": 0.0,
-    "AP_UAI": 0.0226
-  },
-  "genel_farklar": {
-    "mAP50": 0.0015,
-    "mAP50_95": 0.0129,
-    "precision": -0.0184,
-    "recall": -0.0114
-  },
-  "sinif_ap_farklari": {
-    "tasit": -0.0021,
-    "insan": 0.0307,
-    "UAP": 0.0,
-    "UAI": -0.0226
+    "mAP50": {
+      "esik": 0.006,
+      "farklar": [
+        0.0015,
+        0.0008,
+        0.006
+      ],
+      "std": 0.0029
+    },
+    "mAP50_95": {
+      "esik": 0.0201,
+      "farklar": [
+        0.0129,
+        0.0171,
+        0.0201
+      ],
+      "std": 0.0036
+    },
+    "precision": {
+      "esik": 0.0184,
+      "farklar": [
+        -0.0184,
+        0.0043,
+        -0.018
+      ],
+      "std": 0.013
+    },
+    "recall": {
+      "esik": 0.043,
+      "farklar": [
+        -0.0114,
+        -0.043,
+        -0.0162
+      ],
+      "std": 0.017
+    },
+    "AP_tasit": {
+      "esik": 0.0216,
+      "farklar": [
+        -0.0021,
+        0.0158,
+        0.0216
+      ],
+      "std": 0.0124
+    },
+    "AP_insan": {
+      "esik": 0.0307,
+      "farklar": [
+        0.0307,
+        -0.001,
+        0.0025
+      ],
+      "std": 0.0173
+    },
+    "AP_UAP": {
+      "esik": 0.0,
+      "farklar": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "std": 0.0
+    },
+    "AP_UAI": {
+      "esik": 0.0226,
+      "farklar": [
+        -0.0226,
+        -0.0118,
+        0.0
+      ],
+      "std": 0.0113
+    }
   },
   "d_serisi": [
     {
@@ -45,9 +109,7 @@
         "recall": -0.0166
       },
       "gurultuyu_asan_metrikler": [
-        "mAP50",
-        "mAP50_95",
-        "recall"
+        "mAP50_95"
       ],
       "hicbiri_asmiyor": false
     },
@@ -77,9 +139,7 @@
       },
       "gurultuyu_asan_metrikler": [
         "mAP50",
-        "mAP50_95",
-        "precision",
-        "recall"
+        "precision"
       ],
       "hicbiri_asmiyor": false
     },
@@ -109,8 +169,7 @@
       "gurultuyu_asan_metrikler": [
         "mAP50",
         "mAP50_95",
-        "precision",
-        "recall"
+        "precision"
       ],
       "hicbiri_asmiyor": false
     },
@@ -138,8 +197,7 @@
       },
       "gurultuyu_asan_metrikler": [
         "mAP50",
-        "precision",
-        "recall"
+        "precision"
       ],
       "hicbiri_asmiyor": false
     },
@@ -166,10 +224,8 @@
         "precision": -0.0007,
         "recall": -0.0012
       },
-      "gurultuyu_asan_metrikler": [
-        "mAP50"
-      ],
-      "hicbiri_asmiyor": false
+      "gurultuyu_asan_metrikler": [],
+      "hicbiri_asmiyor": true
     }
   ]
 }

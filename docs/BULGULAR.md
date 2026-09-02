@@ -33,23 +33,32 @@ Baskin hata turu uydurmak degil, **yanlis neden atfetmek** (D2a, D3b) ve
 ## Senaryolarin durumu
 
 Asagidaki "gurultu" sutunu, farkin **olculmus seed degiskenliginin** uzerinde
-olup olmadigini soyler (esik: mAP50 0.0015, precision 0.0184, recall 0.0114;
-kaynak C2 kontrolu).
+olup olmadigini soyler. Esikler **uc kontrol kosusundan** gelir (seed 7, 13, 21;
+hepsi v00 ile birebir ayni protokol): mAP50 0.0060, precision 0.0184,
+recall 0.0430, mAP50-95 0.0201.
 
-| Senaryo | Ne bozuldu | ΔmAP50 | Δrecall | Gurultuyu asiyor mu |
+| Senaryo | Ne bozuldu | ΔmAP50 | Δrecall | Gurultuyu asan metrikler |
 |---|---|---:|---:|---|
-| D2a | lokalizasyon gurultusu | -0.0323 | -0.0468 | **evet, hepsinde** |
-| D3 | UAP/UAI sinif karisikligi | -0.0281 | -0.0347 | **evet, hepsinde** |
-| D4 | kucuk nesne sinyal kaybi | -0.0224 | -0.0349 | **evet, hepsinde** |
-| D5 | kaynak alani kaymasi | -0.0107 | -0.0485 | **evet, hepsinde** |
-| D2b | eksik etiket | -0.0130 | +0.0237 | **evet** (precision -0.109) |
-| D3b | tasit/insan karisikligi | -0.0262 | -0.0495 | evet (precision haric) |
-| D1 | sinif yetersizligi | +0.0050 | -0.0166 | zayif; **hipotez desteklenmedi** |
-| D6b | tekrar agirligi | +0.0033 | -0.0012 | **hayir — gurultu icinde** |
-| E4 (imgsz 512) | cikarim cozunurlugu | -0.3179 | -0.3608 | **evet, en buyuk etki** |
-| E1 `last.pt` | asiri uyum | -0.0881 | -0.0691 | **evet** |
-| E1 `best.pt` | ayni kosu, farkli checkpoint | -0.0010 | -0.0015 | hayir — **checkpoint gizliyor** |
-| E2 | az epoch | -0.0081 | -0.0394 | zayif; **hipotez desteklenmedi** |
+| D2a | lokalizasyon gurultusu | -0.0323 | -0.0468 | **hepsi** |
+| D5 | kaynak alani kaymasi | -0.0107 | -0.0485 | mAP50, precision, recall |
+| D3 | UAP/UAI sinif karisikligi | -0.0281 | -0.0347 | mAP50, mAP50-95, precision |
+| D2b final_best | eksik etiket (farkli taban) | -0.0207 | -0.0062 | mAP50, mAP50-95, precision |
+| D4 | kucuk nesne sinyal kaybi | -0.0224 | -0.0349 | mAP50, precision |
+| D2b | eksik etiket | -0.0130 | +0.0237 | mAP50, precision (**-0.109**) |
+| D3b | tasit/insan karisikligi | -0.0262 | -0.0495 | mAP50, recall |
+| D1 | sinif yetersizligi | +0.0050 | -0.0166 | yalnizca mAP50-95; **hipotez desteklenmedi** |
+| **D6b** | tekrar agirligi | +0.0033 | -0.0012 | **HICBIRI — tamamen gurultu icinde** |
+| E4 (imgsz 512) | cikarim cozunurlugu | -0.3179 | -0.3608 | **hepsi; en buyuk etki** |
+| E1 `last.pt` | asiri uyum | -0.0881 | -0.0691 | **hepsi** |
+| E1 `best.pt` | ayni kosu, farkli checkpoint | -0.0010 | -0.0015 | hicbiri — **checkpoint gizliyor** |
+| E2 | az epoch | -0.0081 | -0.0394 | mAP50 (zayif); **hipotez desteklenmedi** |
+
+> **Gurultu tabani uc kosuya cikinca bes iddia zayifladi.** n=1 tahmini
+> gurultuyu ciddi bicimde KUCUK gosteriyordu: recall esigi 0.0114'ten
+> 0.0430'a (3.8 kat), mAP50 esigi 0.0015'ten 0.0060'a (4 kat), `tasit` AP
+> esigi 0.0021'den 0.0216'ya (10 kat) cikti. D1 mAP50 ve recall iddialarini,
+> D2b ve D4 recall iddialarini, D6b ise **son kalan** iddiasini kaybetti.
+> Ayrinti: "C2 Kontrolu" bolumu.
 
 Ayri kategoride olculenler (dogrudan karsilastirilamaz): **D6a** sizintili
 kumede olculdu; **v00n / D1n** farkli taban modelden gelir; **D2b final_best**
@@ -72,11 +81,13 @@ farkli baslangic modelinden.
 
 | Eksik | Etki | Durum |
 |---|---|---|
-| Tekrar yok (n=1 her yerde) | hicbir sonuca guven araligi verilemiyor | **v00 seed 13 ve 21 kosuyor** |
-| Yayimlanmis GA'larin cogu Wilson | araliklar ~1.5 kat dar | yalnizca C2'de dogru yontem var |
+| Egitim tarafinda tekrar | gurultu tabani artik n=3 | **kapatildi** (seed 7, 13, 21) |
+| LLM tarafinda tekrar yok | ajan skoruna guven araligi verilemiyor | acik |
+| Yayimlanmis GA'larin cogu Wilson | araliklar ~1.5 kat dar | uc kontrol kosusunda dogru yontem var; D/E serisi hala Wilson |
 | Puanlama rubriginin 2/3 bileseni doymus | toplam skor ayirt etmiyor | acik |
 | Kanit sozlesmesi 0/18 tam | 17 kosuda hata galerisi yok | acik |
-| D6b grup bazli doz-yanit | gurultu esigine karsi sinanmadi | acik |
+| D6b grup bazli doz-yanit | genel metrikleri gurultu icinde; grup analizi sinanmadi | acik |
+| Referans tek kosu (v00) | v00 saglikli kosularin en zayifi; en iyi epoch'u 1 | acik |
 | E3, Asama 2 (`teshis/servis/`) | hic yapilmadi | acik |
 
 ---
@@ -1290,87 +1301,106 @@ kalir. Tek bir egitim kosusu maliyeti vardir (v00 protokolu, seed 7).
 
 ---
 
-## C2 Kontrolu — seed gurultusu ilk kez olculdu, ve bazi bulgular onun icinde kaliyor
+## C2 Kontrolu — seed gurultusu, ve n=1'in ne kadar yaniltici oldugu
 
-Sartname bolum 8'in C2 kontrolu: *"Ayni yapilandirma, seed 7 — Ajan seed
+Sartname bolum 8'in C2 kontrolu: *"Ayni yapilandirma, farkli seed — Ajan seed
 kaynakli dalgalanmayi 'sorun' saniyor mu?"* Projedeki her kosu seed 42 ile
-egitilmisti; bu kontrol hic yapilmamisti. Yani "bozulma etkisi" diye
-raporlanan her seyin altinda duran gurultu tabani bilinmiyordu.
+egitilmisti; "bozulma etkisi" diye raporlanan her seyin altinda duran gurultu
+tabani bilinmiyordu.
 
-C2, v00 ile **birebir ayni protokolu** kullanir; tek degisken seed'dir
-(manifest: `protokol_sapmalari: {}`).
+Uc kontrol kosusu yapildi. Hepsi v00 ile **birebir ayni protokolu** kullanir
+(manifest: `protokol_sapmalari: {}`); tek degisken seed'dir.
+
+| Kosu | Seed | Toplam epoch | En iyi epoch | mAP50 (kilitli set) |
+|---|---:|---:|---:|---:|
+| v00 (referans) | 42 | 11 | **1** | 0.9200 |
+| C2 | 7 | 19 | 9 | 0.9214 |
+| C2 seed13 | 13 | 30 | 11 | 0.9207 |
+| C2 seed21 | 21 | 30 | 16 | 0.9260 |
 
 ### Olculen gurultu
 
-| Metrik | v00 (seed 42) | C2 (seed 7) | Fark |
+| Metrik | seed 7 | seed 13 | seed 21 | Esik (en buyuk) | Std |
+|---|---:|---:|---:|---:|---:|
+| mAP50 | +0.0015 | +0.0008 | +0.0060 | **0.0060** | 0.0029 |
+| mAP50-95 | +0.0129 | +0.0171 | +0.0201 | **0.0201** | 0.0036 |
+| Precision | -0.0184 | +0.0043 | -0.0180 | **0.0184** | 0.0130 |
+| Recall | -0.0114 | -0.0430 | -0.0162 | **0.0430** | 0.0170 |
+| AP tasit | -0.0021 | +0.0158 | +0.0216 | **0.0216** | 0.0124 |
+| AP insan | +0.0307 | -0.0010 | +0.0025 | **0.0307** | 0.0173 |
+| AP UAP | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| AP UAI | -0.0226 | -0.0118 | 0.0000 | **0.0226** | 0.0113 |
+
+### n=1 gurultuyu ciddi bicimde KUCUK gosteriyordu
+
+Bu bolumun ilk surumu tek bir kontrol kosusuna dayaniyordu. Uc kosuya
+cikildiginda esikler buyudu:
+
+| Metrik | n=1 esigi | n=3 esigi | Kat |
 |---|---:|---:|---:|
-| mAP50 | 0.9200 | 0.9214 | +0.0015 |
-| mAP50-95 | 0.6707 | 0.6836 | +0.0129 |
-| Precision | 0.9175 | 0.8992 | **-0.0184** |
-| Recall | 0.8785 | 0.8671 | -0.0114 |
-| AP tasit | 0.8856 | 0.8835 | -0.0021 |
-| AP insan | 0.8070 | 0.8377 | **+0.0307** |
-| AP UAP | 0.9950 | 0.9950 | 0.0000 |
-| AP UAI | 0.9922 | 0.9696 | -0.0226 |
+| mAP50 | 0.0015 | 0.0060 | **4.0x** |
+| recall | 0.0114 | 0.0430 | **3.8x** |
+| AP tasit | 0.0021 | 0.0216 | **10.3x** |
+| mAP50-95 | 0.0129 | 0.0201 | 1.6x |
+| precision | 0.0184 | 0.0184 | 1.0x |
 
-Iki sey dikkat cekiyor. Birincisi, `AP insan` yalnizca seed degisiminden
-**+0.031** oynuyor — bu, birkac senaryonun sinif bazli iddiasindan buyuk.
-Ikincisi, iki kosu farkli epoch'ta durdu (11 vs 19): erken durdurma noktasi
-bile seed'e bagli.
+**Bes iddia zayifladi:**
 
-### D serisi etkileri bu gurultuyu asiyor mu?
+| Senaryo | n=1'de asiyordu | n=3'te kaybettigi |
+|---|---|---|
+| D1 | mAP50, recall | **mAP50, recall** (yalnizca mAP50-95 kaldi) |
+| D2b | mAP50-95, recall | mAP50-95, recall |
+| D3 | recall | recall |
+| D4 | recall | recall |
+| **D6b** | mAP50 | **mAP50 — geriye hicbir sey kalmadi** |
 
-| Senaryo | ΔmAP50 | Δprecision | Δrecall | Gurultuyu asan |
-|---|---:|---:|---:|---|
-| esik (C2) | 0.0015 | 0.0184 | 0.0114 | — |
-| D1 | +0.0050 | -0.0015 | -0.0166 | mAP50, recall |
-| D2a | -0.0323 | -0.0321 | -0.0468 | hepsi |
-| D2b | -0.0130 | -0.1087 | +0.0237 | hepsi |
-| D2b final_best | -0.0207 | -0.0852 | -0.0062 | mAP50, precision |
-| D3 | -0.0281 | -0.2047 | -0.0347 | hepsi |
-| D3b | -0.0262 | +0.0097 | -0.0495 | mAP50, recall |
-| D4 | -0.0224 | -0.0642 | -0.0349 | hepsi |
-| D5 | -0.0107 | -0.0363 | -0.0485 | hepsi |
-| **D6b** | **+0.0033** | **-0.0007** | **-0.0012** | **yalnizca mAP50, o da kil payi** |
+Genel oruntu: **recall'a dayanan iddialar en kirilgan olanlar.** Recall'un
+seed degiskenligi (0.043) precision'inkinin (0.018) iki katindan fazla; buna
+ragmen projenin bircok bulgusu recall dususune dayaniyordu.
 
-**D6b'nin genel metrikleri seed gurultusundan ayirt edilemiyor.** Precision
-(-0.0007) ve recall (-0.0012) gurultunun cok icinde; mAP50 farki (+0.0033)
-esigin (0.0015) yalnizca iki kati. Bu, D6b bolumundeki **grup bazli
-doz-yanit iliskisini gecersiz kilmaz** — o daha ince bir olcumdur ve burada
-sinanmadi — ama D6b'nin *genel* metriklerine dayanan hicbir iddia
-kurulmamalidir. D6b bolumu bu sinira atif yapacak sekilde okunmalidir.
+**D6b artik hicbir metrikte gurultuyu asmiyor.** Genel metriklerine dayanan
+hicbir iddia kurulamaz. (Grup bazli doz-yanit iliskisi ayri ve daha ince bir
+olcumdur; gurultu esigine karsi hala sinanmadi.)
 
-D3b'nin precision farki (+0.0097) da gurultunun altinda; o bolumun zaten
-soyledigi gibi, D3b precision'i degil recall'u etkiliyor.
+### Erken durdurma noktasi da seed'e bagli
 
-### E serisi sonuclarini geriye donuk dogruluyor
+Kosular **11, 19, 30 ve 30** epoch'ta durdu — neredeyse uc kat fark. Gurultu
+yalnizca son metrikte degil, egitim suresinin kendisinde de var.
 
-Bu gurultu tabani, daha once "referanstan ayirt edilemiyor" dedigim iki
-sonucu sayisal olarak destekliyor:
+### Referans secimi hakkinda bir uyari
 
-- **E2**: mAP50-95 farki +0.0094 — gurultunun (0.0129) icinde.
-- **E1 `best.pt`**: mAP50 -0.0010, recall -0.0015, mAP50-95 +0.0138 —
-  hepsi gurultu duzeyinde. "best.pt asiri uyumu tamamen gizliyor" ifadesi
-  artik olculmus bir esige dayaniyor.
+v00'un **en iyi epoch'u 1**. Model zaten yakinsamis `main_model.pt`'den
+basladigi icin ilk epoch'ta tepe yapti; patience 10 ile kosu 11'de durdu.
+Diger seed'ler 30 epoch boyunca arama firsati buldu ve daha yuksek tepeler
+buldular (0.9301 vs 0.9399).
 
-### Sinir: n=1
+Yani **v00, dort saglikli kosunun en zayifi** ve tum senaryolar ona gore
+olculuyor. Fark kilitli sette kucuk (0.9200 vs 0.9207-0.9260) ve gurultu
+bandi bunu zaten kapsiyor, ancak tek bir kosuyu "the referans" ilan etmenin
+kendisi bir sinirdir. Daha saglam bir taban, saglikli kosularin ORTALAMASI
+olurdu.
 
-**Tek seed cifti, degiskenligin nokta tahminidir; dagilimi degil.** Yukaridaki
-esik bir hipotez testi DEGIL, bir eleme suzgecidir: esigin altinda kalan bir
-etki "seed degisiminden ayirt edilemez" demektir, "etki yoktur" demek
-degildir. Kesin konusmak icin v00'un birkac seed daha ile (13, 21, ...)
-tekrarlanmasi gerekir. Bu, projenin en yuksek getirili sonraki olcumudur.
+Bu, E1'de bulunan checkpoint patolojisinin ayni ornegidir: yakinsamis bir
+modelden fine-tune ederken en iyi checkpoint cok erken gelebilir.
 
 ### Ajan icin anlami
 
-C2, ajana verilmesi **gereken** kosudur: bozulma yokken sorun uyduruyor mu?
-Su an ajanin listesinde degil, cunku `kosu_NN` numaralari `results.csv`
-satir sirasina bagli ve yarim kalan deneme (8/10 kosu) bozulurdu. Deneme
-bitip puanlandiktan sonra ajana eklenecek ilk kosu budur; beklenen dogru
-cevap `anlamli_degisim_yok`, baska her cevap **yanlis pozitif** sayilir.
+Uc kontrol kosusunun ucu de bozulma icermez; ajanin **yanlis pozitif** orani
+icin uc bagimsiz vaka demektir. `C2 seed7` ajana `kosu_11` olarak verildi ve
+dogru cevap alindi. `C2 seed13` ve `C2 seed21` deftere eklendi ve ajanin
+listesinde `kosu_12`, `kosu_13` olarak yerlerini aldi; henuz kosulmadilar.
 
-- reports/kontrol_C2_seed7/d1_metrics.json
-- reports/kontrol_C2_seed7/c2_seed_gurultusu.json
+Bunlar tekrar degil **bagimsiz kontrollerdir** (farkli modeller, farkli
+metrikler) — istatistiksel olarak ayni girdinin tekrarindan daha degerli.
+
+### Sinir
+
+n=3. Esik, gozlenen en buyuk sapmadir; bir hipotez testi degil **eleme
+suzgecidir**. Esigin altinda kalan bir etki "seed degisiminden ayirt
+edilemez" demektir, "etki yoktur" demek degildir.
+
+- reports/kontrol_C2_seed7/ ... kontrol_C2_seed13/ ... kontrol_C2_seed21/
+- reports/kontrol_C2_seed7/c2_seed_gurultusu.json (uc kosunun ortak analizi)
 - scripts/kontrol_C2_seed_gurultusu.py
 
 ---

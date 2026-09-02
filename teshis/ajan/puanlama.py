@@ -51,6 +51,11 @@ SENARYO_BEKLENEN: dict[str, str] = {
     # C2: hicbir bozulma yok, yalnizca farkli seed. Dogru cevap "degisim yok";
     # baska her cevap ajanin YANLIS POZITIF uretmesi demektir.
     "C2 seed7": "anlamli_degisim_yok",
+    # Ek kontrol kosulari: hicbir bozulma yok, yalnizca farkli seed. Bunlar
+    # tekrar degil BAGIMSIZ kontrollerdir (farkli modeller, farkli metrikler);
+    # istatistiksel olarak ayni girdinin tekrarindan daha degerlidir.
+    "C2 seed13": "anlamli_degisim_yok",
+    "C2 seed21": "anlamli_degisim_yok",
     # last_pt varyantlari ayri senaryo degildir; ajana verilmezler (bkz.
     # araclar.ajana_uygun_mu). Beklenen teshis, ait olduklari kosununkiyle
     # aynidir - paket hazirlayici her results.csv satiri icin bir karsilik

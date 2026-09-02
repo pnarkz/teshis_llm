@@ -1,28 +1,28 @@
 {
   "format": "kanit_sozlesmesi_v1",
-  "run_id": "c2_seed7_20260901",
-  "senaryo": "C2 seed7",
+  "run_id": "c2_seed13_20260902",
+  "senaryo": "C2 seed13",
   "kural": "Tek basina mAP hicbir teshis icin yeterli kanit sayilmaz.",
   "degerlendirme_seti": "val_diagnostic",
   "genel_metrikler": {
-    "mAP50": 0.9214,
-    "mAP50_95": 0.6836,
-    "precision": 0.8992,
-    "recall": 0.8671
+    "mAP50": 0.9207,
+    "mAP50_95": 0.6878,
+    "precision": 0.9218,
+    "recall": 0.8355
   },
   "sinif_metrikleri": [
     {
       "sinif": "tasit",
       "bbox_n": 1264,
-      "precision": 0.8672,
-      "recall": 0.8371,
-      "f1": 0.8519,
-      "ap50": 0.8835,
-      "ap50_95": 0.5641,
-      "recall_kirilim": 0.8877,
+      "precision": 0.8814,
+      "recall": 0.8568,
+      "f1": 0.8689,
+      "ap50": 0.9014,
+      "ap50_95": 0.5842,
+      "recall_kirilim": 0.89,
       "recall_ga": [
-        0.8671,
-        0.9078
+        0.8708,
+        0.9088
       ],
       "ga_hangi_olcum": "recall_kirilim",
       "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
@@ -30,15 +30,15 @@
     {
       "sinif": "insan",
       "bbox_n": 2718,
-      "precision": 0.867,
-      "recall": 0.7491,
-      "f1": 0.8037,
-      "ap50": 0.8377,
-      "ap50_95": 0.4467,
-      "recall_kirilim": 0.833,
+      "precision": 0.8684,
+      "recall": 0.7506,
+      "f1": 0.8052,
+      "ap50": 0.806,
+      "ap50_95": 0.417,
+      "recall_kirilim": 0.7873,
       "recall_ga": [
-        0.8127,
-        0.8507
+        0.7609,
+        0.8111
       ],
       "ga_hangi_olcum": "recall_kirilim",
       "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
@@ -46,11 +46,11 @@
     {
       "sinif": "UAP",
       "bbox_n": 15,
-      "precision": 0.9436,
+      "precision": 0.9376,
       "recall": 1.0,
-      "f1": 0.971,
+      "f1": 0.9678,
       "ap50": 0.995,
-      "ap50_95": 0.8826,
+      "ap50_95": 0.8803,
       "recall_kirilim": 1.0,
       "recall_ga": [
         1.0,
@@ -62,11 +62,11 @@
     {
       "sinif": "UAI",
       "bbox_n": 17,
-      "precision": 0.9189,
-      "recall": 0.8824,
-      "f1": 0.9003,
-      "ap50": 0.9696,
-      "ap50_95": 0.841,
+      "precision": 1.0,
+      "recall": 0.7348,
+      "f1": 0.8471,
+      "ap50": 0.9804,
+      "ap50_95": 0.8695,
       "recall_kirilim": 0.8824,
       "recall_ga": [
         0.7059,
@@ -79,10 +79,10 @@
   "yapilandirma": {
     "veri_surumu": "v00_saglikli",
     "baslangic_modeli": "main_model.pt",
-    "seed": 7,
+    "seed": 13,
     "imgsz_egitim": 768,
     "imgsz_degerlendirme": 768,
-    "epochs": 19,
+    "epochs": 30,
     "batch": 8,
     "lr0_beyan_edilen": 0.001,
     "lr0_gecerli": 0.00125,
@@ -97,29 +97,29 @@
   "sozlesme_durumu": {
     "tam_mi": false,
     "eksikler": [
-      "hata ornekleri: reports/hata_galerisi_C2 seed7/ yok. `python -m teshis.degerlendirme.hata_galerisi` ile uretilir."
+      "hata ornekleri: reports/hata_galerisi_C2 seed13/ yok. `python -m teshis.degerlendirme.hata_galerisi` ile uretilir."
     ]
   },
   "boyut_bandi_recall": {
     "cok_kucuk_16_alti": {
       "gercek_kutu": 1167,
-      "yakalanan": 864,
-      "recall": 0.7404
+      "yakalanan": 863,
+      "recall": 0.7395
     },
     "kucuk_16_32": {
       "gercek_kutu": 2011,
-      "yakalanan": 1751,
-      "recall": 0.8707
+      "yakalanan": 1651,
+      "recall": 0.821
     },
     "orta_32_64": {
       "gercek_kutu": 520,
-      "yakalanan": 488,
-      "recall": 0.9385
+      "yakalanan": 470,
+      "recall": 0.9038
     },
     "buyuk_64_ustu": {
       "gercek_kutu": 316,
-      "yakalanan": 313,
-      "recall": 0.9905
+      "yakalanan": 311,
+      "recall": 0.9842
     }
   },
   "bant_tanimi": {
@@ -131,76 +131,75 @@
   "kaynak_recall": {
     "aaterm": {
       "gercek_kutu": 885,
-      "yakalanan": 795,
-      "recall": 0.8983
+      "yakalanan": 790,
+      "recall": 0.8927
     },
     "tf2026": {
       "gercek_kutu": 106,
-      "yakalanan": 98,
-      "recall": 0.9245
+      "yakalanan": 91,
+      "recall": 0.8585
     },
     "hituav": {
       "gercek_kutu": 2165,
-      "yakalanan": 1818,
-      "recall": 0.8397
+      "yakalanan": 1821,
+      "recall": 0.8411
     },
     "termal": {
       "gercek_kutu": 858,
-      "yakalanan": 705,
-      "recall": 0.8217
+      "yakalanan": 593,
+      "recall": 0.6911
     }
   },
   "karisiklik_matrisi": {
     "UAI": {
-      "UAP": 1,
       "UAI": 15,
-      "bulunamadi": 1
+      "bulunamadi": 2
     },
     "UAP": {
       "UAP": 15
     },
     "insan": {
-      "insan": 2264,
-      "bulunamadi": 449,
-      "tasit": 5
+      "insan": 2140,
+      "bulunamadi": 572,
+      "tasit": 6
     },
     "tasit": {
-      "bulunamadi": 141,
-      "tasit": 1122,
-      "insan": 1
+      "tasit": 1125,
+      "bulunamadi": 136,
+      "insan": 3
     }
   },
   "background_fn": {
-    "UAI": 1,
+    "UAI": 2,
     "UAP": 0,
-    "insan": 449,
-    "tasit": 141
+    "insan": 572,
+    "tasit": 136
   },
-  "toplam_tahmin": 4466,
+  "toplam_tahmin": 4089,
   "egitim_egrisi": {
-    "epoch_sayisi": 19,
+    "epoch_sayisi": 30,
     "en_iyi_epoch": {
-      "epoch": 9,
-      "mAP50": 0.93541
+      "epoch": 11,
+      "mAP50": 0.93986
     },
-    "son_epoch_mAP50": 0.91864,
+    "son_epoch_mAP50": 0.92513,
     "val_cls_loss_dip_epoch": {
-      "epoch": 18,
-      "val_cls_loss": 0.8451
+      "epoch": 1,
+      "val_cls_loss": 0.85831
     },
-    "dip_sonrasi_yukselis": 0.0626,
+    "dip_sonrasi_yukselis": 0.0777,
     "train_val_farki": {
       "ilk_epoch": {
-        "train_cls_loss": 0.53298,
-        "val_cls_loss": 0.94244,
-        "fark": 0.4095
+        "train_cls_loss": 0.53354,
+        "val_cls_loss": 0.85831,
+        "fark": 0.3248
       },
       "son_epoch": {
-        "train_cls_loss": 0.49951,
-        "val_cls_loss": 0.90769,
-        "fark": 0.4082
+        "train_cls_loss": 0.42199,
+        "val_cls_loss": 0.93597,
+        "fark": 0.514
       },
-      "fark_acildi_mi": false
+      "fark_acildi_mi": true
     }
   }
 }

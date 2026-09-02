@@ -11,12 +11,18 @@ Tam denemeyi tekrarlamak bu araligi daraltmanin pahali yoludur: 11 kosu x
 ~2.5 API istegi = bir gunluk ucretsiz kotanin tamami (20 istek/gun). Uc tam
 tekrar uc gun surer.
 
-Ayni kotayla yalnizca iki kontrolu uc kez tekrarlamak, 6 kosu (~15 istek)
-eder ve **tek gunde biter**. Kazanc dogrudan zayif noktaya gider: kontrol
-gozlemi 2'den 8'e cikar (2 orijinal + 6 tekrar).
+Ayni kotayla yalnizca kontrol kosularini tekrarlamak cok daha ucuzdur ve
+kazanc dogrudan zayif noktaya gider.
 
-Sinir: tekrarlar ayni modelin ayni girdiye verdigi farkli orneklerdir.
-Modelin KARARLILIGINI olcer, farkli modellerde genellenebilirligi degil.
+Iki tur kontrol var ve degerleri esit degil:
+
+- **Bagimsiz kontroller** (kosu_12, kosu_13): farkli seed'le egitilmis
+  BASKA modeller. Her biri yeni bir gozlemdir.
+- **Tekrarlar** (kosu_01, kosu_11): ayni girdiye verilen farkli ornekler.
+  Modelin KARARLILIGINI olcer, yeni bilgi eklemez.
+
+Bu yuzden once bagimsiz kontroller kosulur. Ilk tekrar turu dort kosudur
+(~10 istek) ve kontrol gozlemini 2'den 6'ya cikarir.
 
 Kullanim:
     python scripts/ajan_kontrol_tekrari.py --tekrar 3
@@ -37,7 +43,11 @@ CIKTI = ROOT / "reports/ajan_denemesi/kontrol_tekrarlari"
 
 # Bozulma icermeyen kosular. kosu_01 saglikli referans, kosu_11 C2 seed 7.
 # Ikisinde de dogru cevap "degisim yok"; baska her cevap uydurmadir.
-KONTROL_KOSULARI = ["kosu_01", "kosu_11"]
+#
+# kosu_12 ve kosu_13 (seed 13 ve 21) TEKRAR DEGIL, bagimsiz kontrollerdir:
+# farkli modeller, farkli metrikler. Istatistiksel olarak ayni girdinin
+# tekrarindan daha degerlidirler, bu yuzden once onlar kosulur.
+KONTROL_KOSULARI = ["kosu_12", "kosu_13", "kosu_01", "kosu_11"]
 
 
 def _dosya(kosu: str, tekrar: int) -> Path:

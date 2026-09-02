@@ -69,16 +69,42 @@ def test_ozet_tablosundaki_farklar_results_csv_ile_uyusuyor(ozet, satirlar, v00)
     assert not hatali, hatali
 
 
-def test_ozetteki_gurultu_esigi_c2_olcumunden_geliyor(ozet, satirlar, v00):
-    """Esik degerleri C2 kontrolunun gercek farklarindan turetilmis olmali."""
-    c2 = satirlar.get("C2 seed7")
-    if c2 is None:
-        pytest.skip("C2 kontrolu henuz results.csv'de yok")
+def _kontrol_satirlari(satirlar: dict) -> list[dict]:
+    """v00 ile ayni protokolde, yalnizca seed'i farkli olan kosular."""
+    return [
+        s for ad, s in satirlar.items()
+        if ad.startswith("C") and ad[1:2].isdigit()
+        and s["weights_path"].endswith("best.pt")
+    ]
+
+
+def test_ozetteki_gurultu_esigi_tum_kontrollerden_geliyor(ozet, satirlar, v00):
+    """Esik, TEK bir kontrolden degil, kontrollerin tamamindan gelmeli.
+
+    n=1 esigi gurultuyu ciddi bicimde kucuk gosteriyordu: uc kontrole
+    cikildiginda recall esigi 3.8 kat, mAP50 esigi 4 kat buyudu ve bes iddia
+    zayifladi. Ozet eski esigi tasirsa okuyucu gecersiz bir tabloya bakar.
+    """
+    kontroller = _kontrol_satirlari(satirlar)
+    if not kontroller:
+        pytest.skip("kontrol kosusu yok")
     for alan in ("mAP50", "precision", "recall"):
-        esik = abs(float(c2[alan]) - v00[alan])
+        esik = max(abs(float(s[alan]) - v00[alan]) for s in kontroller)
         assert f"{esik:.4f}" in ozet, (
-            f"Ozetteki {alan} esigi C2 olcumuyle ({esik:.4f}) uyusmuyor"
+            f"Ozetteki {alan} esigi ({esik:.4f}) {len(kontroller)} kontrol "
+            "kosusundan hesaplanandan farkli"
         )
+
+
+def test_ozet_kac_kontrolden_hesaplandigini_soyluyor(ozet, satirlar):
+    """Okuyucu esigin kac gozleme dayandigini bilmelidir."""
+    n = len(_kontrol_satirlari(satirlar))
+    if not n:
+        pytest.skip("kontrol kosusu yok")
+    sayi_adi = {1: "bir", 2: "iki", 3: "uc", 4: "dort"}.get(n, str(n))
+    assert sayi_adi in ozet.lower() or f"n={n}" in ozet, (
+        f"Ozet, esigin {n} kontrol kosusundan geldigini soylemiyor"
+    )
 
 
 def test_ozet_orneklem_sinirini_acikca_soyluyor(ozet):
@@ -103,8 +129,12 @@ def test_ozet_gurultu_icinde_kalan_senaryoyu_isaretliyor(ozet, satirlar, v00):
         abs(float(d6b[a]) - v00[a]) <= esik[a] for a in ("precision", "recall")
     )
     assert icinde, "D6b artik gurultunun icinde degil; ozet guncellenmeli"
-    d6b_satiri = next(s for s in ozet.splitlines() if s.startswith("| D6b "))
-    assert "hayir" in d6b_satiri.lower(), (
+    tablo = ozet[:ozet.index("Bilinen ve kapatilmamis eksikler")]
+    d6b_satiri = next(
+        s for s in tablo.splitlines()
+        if s.startswith("|") and s.split("|")[1].strip().strip("*") == "D6b"
+    )
+    assert ("hayir" in d6b_satiri.lower() or "hicbiri" in d6b_satiri.lower()), (
         f"D6b satiri gurultu icinde oldugunu soylemiyor: {d6b_satiri}"
     )
 

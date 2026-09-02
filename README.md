@@ -87,8 +87,8 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   tek atislik LLM denemesi (9 kosu), E4 cozunurluk uyumsuzlugu,
   E2 (negatif sonuc: yakinsamis modelde epoch kesmek underfitting uretmiyor),
   E1 (asiri uyum gerceklesti; best.pt onu tamamen gizliyor),
-  **C2 negatif kontrolu** (seed gurultusu ilk kez olculdu), ajan denemesi
-  (tek atislik vs fonksiyon cagirma karsilastirmasi).
+  **C2 negatif kontrolu** (seed 7, 13, 21 — gurultu tabani n=3), ajan
+  denemesi (tek atislik vs fonksiyon cagirma karsilastirmasi).
 - **Devam ediyor:** yok.
 - **Tamamlandi:** ajan denemesi 11/11 puanlandi (`mean_score` 0.833). Ajan
   saf kontrolde (Baseline, C2) **sorun uydurmadi** (2/2); baskin hata turu
@@ -96,9 +96,10 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   fonksiyon cagirma ile tek atislik arasinda **olculebilir fark yok**
   (teshis 0.500 vs 0.444; dokuz kosuda yarim kosu). Arac kullanim orani 1.0.
 - **Yapilmadi:** E3, Asama 2 (calisma zamani servisi), final test kosusu.
-- **Sartname boslugu:** C2 kosuldu ve seed gurultusu olculdu; **D6b'nin genel
-  metrikleri bu gurultunun icinde kaliyor**. Ajanin *yanlis pozitif* orani
-  hala olculmedi: C2 ajana verilmeli (yarim deneme bitince).
+- **Sartname boslugu:** Gurultu tabani uc kontrol kosusuna cikarildi ve
+  **bes iddia zayifladi**; D6b artik hicbir metrikte gurultuyu asmiyor.
+  Ajanin yanlis pozitif orani hala dar bir kanita dayaniyor (2 kontrol,
+  Wilson [0.000, 0.658]); seed 13 ve 21 ajana verilmeyi bekliyor.
   Kanit sozlesmesi (`kanit.json`) artik uretiliyor ama icerigi eksik
   (hata galerileri yok). Yayimlanmis guven
   araliklari sartnamedeki tabakali bootstrap yerine Wilson ile hesaplandi

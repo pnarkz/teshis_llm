@@ -199,3 +199,38 @@ def test_kontrol_kosullari_kontrol_onekini_alir():
         assert klasor_adi(kod).startswith("kontrol_"), kod
     for kod in ("D1", "E1", "E4 imgsz512"):
         assert klasor_adi(kod).startswith("senaryo_"), kod
+
+
+def test_nokta_tahmin_kendi_guven_araliginin_icinde(kosular):
+    """Bir guven araligi, ait oldugu olcumu ICERMEK zorundadir.
+
+    GERCEK HATA: kanit.py, Ultralytics'in recall'unu (d1_sonuc.py, kendi conf
+    esigi) metrikler.py'nin araligiyla (conf=0.25, IoU=0.5 eslestirme)
+    eslestiriyordu. Iki farkli olcum oldugu icin nokta tahmin araligin
+    DISINDA kaliyordu: tasit recall 0.8568, aralik [0.8708, 0.9088].
+
+    Bu test, hangi olcumun hangi araliga ait oldugunu `ga_hangi_olcum`
+    alanindan okur ve tutarliligi dogrular.
+    """
+    hatali = []
+    for run_id in kosular:
+        for sinif in kanit.kanit_uret(run_id)["sinif_metrikleri"]:
+            if "recall_ga" not in sinif:
+                continue
+            hangi = sinif.get("ga_hangi_olcum")
+            assert hangi, f"{run_id}/{sinif['sinif']}: GA var ama hangi olcume ait yazmiyor"
+            assert hangi in sinif, f"{run_id}/{sinif['sinif']}: '{hangi}' alani yok"
+            nokta, (alt, ust) = sinif[hangi], sinif["recall_ga"]
+            if not (alt <= nokta <= ust):
+                hatali.append(
+                    f"{run_id}/{sinif['sinif']}: {hangi}={nokta} "
+                    f"araligin [{alt}, {ust}] disinda"
+                )
+    assert not hatali, hatali
+
+
+def test_iki_recall_olcumu_ayri_alanlarda():
+    """Farkli esiklerle olculen iki recall ayni alanda toplanmamali."""
+    kaynak = (ROOT / "teshis/degerlendirme/kanit.py").read_text(encoding="utf-8")
+    assert "recall_kirilim" in kaynak
+    assert "ga_hangi_olcum" in kaynak

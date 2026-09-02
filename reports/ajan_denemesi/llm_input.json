@@ -1582,6 +1582,288 @@
           }
         }
       }
+    },
+    "kosu_12": {
+      "mAP50": 0.9207238,
+      "mAP50_95": 0.6877573,
+      "precision": 0.921837,
+      "recall": 0.8355429,
+      "class_AP50": {
+        "tasit": 0.9014474,
+        "insan": 0.8060311,
+        "UAP": 0.995,
+        "UAI": 0.9804167
+      },
+      "validation_images": 1056,
+      "bbox_counts": {
+        "tasit": 1264,
+        "insan": 2718,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": 0.000759,
+        "mAP50_95": 0.017097,
+        "precision": 0.004292,
+        "recall": -0.043003
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": 0.015801,
+        "insan": -0.00096,
+        "UAP": 0.0,
+        "UAI": -0.011806
+      },
+      "boyut_bandi_recall": {
+        "bant_tanimi_px": {
+          "cok_kucuk_16_alti": "0-16 px",
+          "kucuk_16_32": "16-32 px",
+          "orta_32_64": "32-64 px",
+          "buyuk_64_ustu": "64+ px"
+        },
+        "bantlar": {
+          "cok_kucuk_16_alti": {
+            "bbox_n": 1167,
+            "recall": 0.7395,
+            "referans_recall": 0.7446,
+            "fark": -0.0051
+          },
+          "kucuk_16_32": {
+            "bbox_n": 2011,
+            "recall": 0.821,
+            "referans_recall": 0.8344,
+            "fark": -0.0134
+          },
+          "orta_32_64": {
+            "bbox_n": 520,
+            "recall": 0.9038,
+            "referans_recall": 0.9308,
+            "fark": -0.027
+          },
+          "buyuk_64_ustu": {
+            "bbox_n": 316,
+            "recall": 0.9842,
+            "referans_recall": 0.9873,
+            "fark": -0.0031
+          }
+        }
+      },
+      "kaynak_grubu_recall": {
+        "aciklama": "Kaynak gruplari anonimlestirilmistir; sira bbox sayisina gore sabittir.",
+        "kaynaklar": {
+          "kaynak_a": {
+            "bbox_n": 2165,
+            "recall": 0.8411,
+            "referans_recall": 0.8402,
+            "fark": 0.0009
+          },
+          "kaynak_b": {
+            "bbox_n": 885,
+            "recall": 0.8927,
+            "referans_recall": 0.9107,
+            "fark": -0.018
+          },
+          "kaynak_c": {
+            "bbox_n": 858,
+            "recall": 0.6911,
+            "referans_recall": 0.7145,
+            "fark": -0.0234
+          },
+          "kaynak_d": {
+            "bbox_n": 106,
+            "recall": 0.8585,
+            "referans_recall": 0.9906,
+            "fark": -0.1321
+          }
+        }
+      },
+      "sinif_karisikligi": {
+        "UAI": {
+          "toplam_gercek_kutu": 17,
+          "tahminler": {
+            "UAI": 15,
+            "bulunamadi": 2
+          },
+          "referans_tahminler": {
+            "UAI": 17
+          }
+        },
+        "UAP": {
+          "toplam_gercek_kutu": 15,
+          "tahminler": {
+            "UAP": 15
+          },
+          "referans_tahminler": {
+            "UAP": 15
+          }
+        },
+        "insan": {
+          "toplam_gercek_kutu": 2718,
+          "tahminler": {
+            "insan": 2140,
+            "bulunamadi": 572,
+            "tasit": 6
+          },
+          "referans_tahminler": {
+            "insan": 2180,
+            "bulunamadi": 534,
+            "tasit": 4
+          }
+        },
+        "tasit": {
+          "toplam_gercek_kutu": 1264,
+          "tahminler": {
+            "tasit": 1125,
+            "bulunamadi": 136,
+            "insan": 3
+          },
+          "referans_tahminler": {
+            "tasit": 1131,
+            "bulunamadi": 131,
+            "insan": 2
+          }
+        }
+      }
+    },
+    "kosu_13": {
+      "mAP50": 0.9259885,
+      "mAP50_95": 0.6907673,
+      "precision": 0.899552,
+      "recall": 0.8623181,
+      "class_AP50": {
+        "tasit": 0.9072185,
+        "insan": 0.8095133,
+        "UAP": 0.995,
+        "UAI": 0.9922222
+      },
+      "validation_images": 1056,
+      "bbox_counts": {
+        "tasit": 1264,
+        "insan": 2718,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "delta_vs_kosu_01": {
+        "mAP50": 0.006024,
+        "mAP50_95": 0.020107,
+        "precision": -0.017993,
+        "recall": -0.016228
+      },
+      "class_AP50_delta_vs_kosu_01": {
+        "tasit": 0.021572,
+        "insan": 0.002522,
+        "UAP": 0.0,
+        "UAI": 0.0
+      },
+      "boyut_bandi_recall": {
+        "bant_tanimi_px": {
+          "cok_kucuk_16_alti": "0-16 px",
+          "kucuk_16_32": "16-32 px",
+          "orta_32_64": "32-64 px",
+          "buyuk_64_ustu": "64+ px"
+        },
+        "bantlar": {
+          "cok_kucuk_16_alti": {
+            "bbox_n": 1167,
+            "recall": 0.7498,
+            "referans_recall": 0.7446,
+            "fark": 0.0052
+          },
+          "kucuk_16_32": {
+            "bbox_n": 2011,
+            "recall": 0.8255,
+            "referans_recall": 0.8344,
+            "fark": -0.0089
+          },
+          "orta_32_64": {
+            "bbox_n": 520,
+            "recall": 0.95,
+            "referans_recall": 0.9308,
+            "fark": 0.0192
+          },
+          "buyuk_64_ustu": {
+            "bbox_n": 316,
+            "recall": 1.0,
+            "referans_recall": 0.9873,
+            "fark": 0.0127
+          }
+        }
+      },
+      "kaynak_grubu_recall": {
+        "aciklama": "Kaynak gruplari anonimlestirilmistir; sira bbox sayisina gore sabittir.",
+        "kaynaklar": {
+          "kaynak_a": {
+            "bbox_n": 2165,
+            "recall": 0.8527,
+            "referans_recall": 0.8402,
+            "fark": 0.0125
+          },
+          "kaynak_b": {
+            "bbox_n": 885,
+            "recall": 0.9062,
+            "referans_recall": 0.9107,
+            "fark": -0.0045
+          },
+          "kaynak_c": {
+            "bbox_n": 858,
+            "recall": 0.6958,
+            "referans_recall": 0.7145,
+            "fark": -0.0187
+          },
+          "kaynak_d": {
+            "bbox_n": 106,
+            "recall": 0.9434,
+            "referans_recall": 0.9906,
+            "fark": -0.0472
+          }
+        }
+      },
+      "sinif_karisikligi": {
+        "UAI": {
+          "toplam_gercek_kutu": 17,
+          "tahminler": {
+            "UAI": 15,
+            "bulunamadi": 2
+          },
+          "referans_tahminler": {
+            "UAI": 17
+          }
+        },
+        "UAP": {
+          "toplam_gercek_kutu": 15,
+          "tahminler": {
+            "UAP": 15
+          },
+          "referans_tahminler": {
+            "UAP": 15
+          }
+        },
+        "insan": {
+          "toplam_gercek_kutu": 2718,
+          "tahminler": {
+            "insan": 2163,
+            "bulunamadi": 550,
+            "tasit": 5
+          },
+          "referans_tahminler": {
+            "insan": 2180,
+            "bulunamadi": 534,
+            "tasit": 4
+          }
+        },
+        "tasit": {
+          "toplam_gercek_kutu": 1264,
+          "tahminler": {
+            "tasit": 1151,
+            "bulunamadi": 112,
+            "insan": 1
+          },
+          "referans_tahminler": {
+            "tasit": 1131,
+            "bulunamadi": 131,
+            "insan": 2
+          }
+        }
+      }
     }
   }
 }
