@@ -277,6 +277,12 @@ def teshis_uret(
                     "tur": tur,
                     "arac": cagri.name,
                     "argumanlar": argumanlar,
+                    # Aracin DONDURDUGU deger de saklanir. Cagri adi tek basina
+                    # "ajan ne gordu" sorusunu cevaplamiyordu: araclar
+                    # degistiginde (orn. kirilim araclarina gurultu bandi
+                    # eklendiginde) eski ve yeni cevaplarin hangi kanita
+                    # dayandigi ayirt edilemez hale geldi.
+                    "cevap": sonuc,
                     "hata": sonuc.get("hata") if isinstance(sonuc, dict) else None,
                 }
             )

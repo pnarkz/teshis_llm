@@ -25,12 +25,6 @@
       },
       {
         "tur": 1,
-        "arac": "bbox_sayilarini_getir",
-        "argumanlar": {},
-        "hata": null
-      },
-      {
-        "tur": 1,
         "arac": "boyut_bazli_recall_getir",
         "argumanlar": {
           "kosu_id": "kosu_12"
@@ -51,6 +45,12 @@
         "argumanlar": {
           "kosu_id": "kosu_12"
         },
+        "hata": null
+      },
+      {
+        "tur": 1,
+        "arac": "bbox_sayilarini_getir",
+        "argumanlar": {},
         "hata": null
       }
     ],

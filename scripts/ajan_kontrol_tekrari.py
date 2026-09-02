@@ -71,9 +71,27 @@ def _hata_turu(ciktilar: str) -> str:
     return "BILINMEYEN HATA"
 
 
+def _arsivle(hedef: Path) -> Path | None:
+    """Var olan bir cevabi ezmeden yana tasir.
+
+    Ilk surum uzerine yaziyordu ve bu gercek bir kanit kaybina yol acti:
+    ajanin ilk YANLIS POZITIF cevabi, araclar duzeltilip kosu tekrarlandiginda
+    silindi. Once/sonra karsilastirmasi ancak ikisi de elde oldugunda yapilir.
+    """
+    if not hedef.is_file():
+        return None
+    i = 1
+    while (yedek := hedef.with_name(f"{hedef.stem}_onceki{i}.json")).is_file():
+        i += 1
+    hedef.replace(yedek)
+    return yedek
+
+
 def kosuyu_calistir(kosu: str, tekrar: int) -> bool:
     """Tek bir kontrol kosusunu calistirir. Basarisizsa False doner."""
     hedef = _dosya(kosu, tekrar)
+    if (yedek := _arsivle(hedef)) is not None:
+        print(f"  onceki cevap saklandi -> {yedek.name}")
     sonuc = subprocess.run(
         [sys.executable, "-m", "teshis.ajan.ajan",
          "--kosu", kosu,
@@ -100,13 +118,37 @@ def kosuyu_calistir(kosu: str, tekrar: int) -> bool:
     return True
 
 
+def _bandli_mi(cevap_dosyasi: Path) -> bool | None:
+    """Bu cevap, gurultu bandi donduren araclarla mi uretildi?
+
+    Arac kaydinda aracin DONDURDUGU deger de saklanir; band alanlarinin
+    varligi, cevabin hangi arac surumune dayandigini kesin olarak soyler.
+    Bu olmadan once/sonra karsilastirmasi belirsiz kalir.
+    """
+    kayit = cevap_dosyasi.with_name(cevap_dosyasi.stem + "_arac.json")
+    if kayit.is_file():
+        metin = kayit.read_text(encoding="utf-8")
+        if '"cevap"' in metin:            # arac cevaplari saklanmis: kesin bilgi
+            return "gurultu_bandi" in metin
+
+    # Arac cevaplari saklanmadan once uretilmis kayitlar icin geriye donuk
+    # cikarim: ajan cevabinda GURULTU BANDINA atif yapiyorsa bandli araclari
+    # gormus olmalidir. Kalip ozgul olmali - "boyut bandi" projede bandli
+    # araclardan cok once vardi ve yalnizca "band" aramak onu da yakalardi.
+    icerik = cevap_dosyasi.read_text(encoding="utf-8").lower()
+    if not icerik:
+        return None
+    return any(k in icerik for k in ("band orani", "gurultu band", "gürültü band"))
+
+
 def toplu_sonuc() -> dict:
     """Tekrarlari okuyup uydurma oranini hesaplar."""
     from teshis.ajan.puanlama import teshis_puani
 
     kayitlar = []
     for dosya in sorted(CIKTI.glob("kosu_*_tekrar*.json")):
-        if dosya.stem.endswith("_arac"):
+        # Arac kayitlari ve arsivlenmis eski cevaplar ozete girmez.
+        if dosya.stem.endswith("_arac") or "_onceki" in dosya.stem:
             continue
         icerik = json.loads(dosya.read_text(encoding="utf-8"))
         for cevap in (icerik if isinstance(icerik, list) else [icerik]):
@@ -116,6 +158,7 @@ def toplu_sonuc() -> dict:
                 "kosu": cevap.get("run_id"),
                 "teshis": cevap.get("diagnosis"),
                 "dogru": puan == 1.0,
+                "bandli_arac": _bandli_mi(dosya),
             })
     return kayitlar
 
@@ -156,10 +199,19 @@ def main() -> None:
     uydurma = sum(1 for k in kayitlar if not k["dogru"])
     n = len(kayitlar)
     alt, ust = wilson_araligi(uydurma, n)
-    print(f"\n{'dosya':<28} {'kosu':<9} {'teshis':<34} sonuc")
+    print("")
+    print("{:<28} {:<9} {:<30} {:<9} {}".format(
+        "dosya", "kosu", "teshis", "arac", "sonuc"))
     for k in kayitlar:
-        print(f"{k['dosya']:<28} {str(k['kosu']):<9} {str(k['teshis'])[:33]:<34} "
-              f"{'dogru' if k['dogru'] else 'UYDURDU'}")
+        arac = {True: "bandli", False: "eski", None: "?"}[k["bandli_arac"]]
+        print("{:<28} {:<9} {:<30} {:<9} {}".format(
+            k["dosya"], str(k["kosu"]), str(k["teshis"])[:29], arac,
+            "dogru" if k["dogru"] else "UYDURDU"))
+    if len({k["bandli_arac"] for k in kayitlar}) > 1:
+        print("")
+        print("UYARI: cevaplar FARKLI arac surumleriyle uretilmis; asagidaki")
+        print("oran KARISIK bir olcumdur. Karsilastirma icin hepsi ayni")
+        print("surumle yeniden kosulmalidir.")
     print(f"\nSaf kontrolde uydurma: {uydurma}/{n} = {uydurma/n:.3f}")
     print(f"Wilson %95 araligi   : [{alt:.3f}, {ust:.3f}]")
     print("\nSinir: tekrarlar ayni modelin ayni girdiye verdigi farkli "

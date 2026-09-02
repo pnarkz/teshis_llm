@@ -1699,8 +1699,37 @@ Aracin yeni ciktisi, sorunlu iki vakayi dogru ayiriyor:
 | kosu_08 (D4, gercek) | kaynak_d | -0.0472 | 0.36 | gurultu icinde |
 
 Yani ajan D4'te artik `kaynak_d`'ye degil `kaynak_a`'ya yonlendiriliyor —
-sistematik yanliligin kaynagi kapandi. Bunun ajanin cevaplarini gercekten
-degistirip degistirmedigi **henuz olculmedi**; deneme yeniden kosulmalidir.
+sistematik yanliligin kaynagi kapandi.
+
+### Duzeltme ajanin cevabini gercekten degistirdi
+
+`kosu_12` bandli araclarla yeniden kosuldu. Ayni kosu, ayni veri; yalnizca
+aracin donduru degisti.
+
+| | Teshis | Guven | `kaynak_d`'nin rolu |
+|---|---|---|---|
+| **Once** (ham fark) | `kaynak_d ... belirgin recall kaybi` | yuksek | **teshis** |
+| **Sonra** (bandli) | `bozulma_yok` | yuksek | **sinirlama** |
+
+Ajan bandi acikca kullandi:
+
+> "Cok kucuk nesne bandinda recall 0.7395 olup referans degeri 0.7446'dir;
+> fark olan -0.0051 rasgele **gurultu bandi (0.0094) icindedir (band orani
+> 0.54)**."
+
+Ve `kaynak_d`'yi teshis olmaktan cikarip sinirlamalara tasidi:
+
+> "kaynak_d veri grubunda yalnizca 106 bbox bulunmaktadir; ornek sayisi az
+> oldugundan bu gruptaki degisim tek basina genellenemez."
+
+**Sinir: n=1.** Tek bir yeniden kosu, LLM ornekleme dalgalanmasindan
+ayirt edilemez. Ancak cevabin ICINDE band degerlerine yapilan atif,
+duzeltmenin kullanildigina dair mekanistik kanittir - salt sonuc
+karsilastirmasindan daha guclu.
+
+Kalan uc kontrol henuz bandli araclarla kosulmadi (gunluk kota bitti), bu
+yuzden mevcut 0/4 orani **karisik bir olcumdur**; `ajan_kontrol_tekrari.py
+--ozet` bunu artik acikca uyariyor.
 
 ### Guncel yanlis pozitif orani
 

@@ -1,16 +1,18 @@
 [
   {
-    "diagnosis": "kaynak_d veri grubuna ozgu belirgin recall kaybi / genelleme dususu",
+    "diagnosis": "bozulma_yok",
     "evidence": [
-      "Genel mAP50 0.919965'ten 0.920724'e (+0.000759) ve precision 0.917545'ten 0.921837'ye (+0.004292) yukselirken, genel recall %87.85'ten %83.55'e gerilemistir (fark: -0.043003).",
-      "Kaynak bazli recall analizinde kaynak_a (+0.0009), kaynak_b (-0.0180) ve kaynak_c (-0.0234) gruplarinda degisim kısıtlı kalırken, kaynak_d grubunda recall 0.9906'dan 0.8585'e duşerek -0.1321 oraninda ciddi bir kayip yasamistir."
+      "kosu_12 mAP50 degeri 0.9207238 ile saglikli referans kosu_01 degeri 0.9199649'dan +0.000759 daha yuksektir.",
+      "kosu_12 mAP50_95 degeri 0.6877573 ile saglikli referans kosu_01 degeri 0.6706607'den +0.017097 daha yuksektir.",
+      "Cok kucuk nesne bandinda (0-16 px) recall 0.7395 olup referans degeri 0.7446'dir; fark olan -0.0051 rasgele gurultu bandi (0.0094) icindedir (band orani 0.54)."
     ],
     "confidence": "yuksek",
     "limitations": [
-      "UAI sinifinin bbox sayisi 17 olup 20 ornegin altindadir.",
-      "UAP sinifinin bbox sayisi 15 olup 20 ornegin altindadir."
+      "UAI sinifinda yalnizca 17 bbox bulunmaktadir; ornek sayisi dusuk oldugundan kesin genelleme yapilamaz.",
+      "UAP sinifinda yalnizca 15 bbox bulunmaktadir; ornek sayisi dusuk oldugundan kesin genelleme yapilamaz.",
+      "kaynak_d veri grubunda yalnizca 106 bbox bulunmaktadir; ornek sayisi az oldugundan bu gruptaki degisim tek basina genellenemez."
     ],
-    "next_measurement": "kaynak_d veri grubunun cekim kosullari ve veriseti temsil oranı incelenmeli, bu gruptan ilave egitim verisi eklenerek model performansi tekrar olculmelidir.",
+    "next_measurement": "Modelin genel performans kararliligini teyit etmek amaciyla farkli test setlerinde ek mAP ve recall olcumleri yapilmalidir.",
     "run_id": "kosu_12"
   }
 ]
