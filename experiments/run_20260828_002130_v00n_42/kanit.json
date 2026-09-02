@@ -19,12 +19,13 @@
       "f1": 0.806,
       "ap50": 0.8555,
       "ap50_95": 0.5035,
+      "recall_kirilim": 0.8608,
       "recall_ga": [
-        0.7384,
-        0.7853
+        0.8374,
+        0.8842
       ],
-      "ga_hangi_olcum": "recall",
-      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
     },
     {
       "sinif": "insan",
@@ -34,12 +35,13 @@
       "f1": 0.7829,
       "ap50": 0.8202,
       "ap50_95": 0.4024,
+      "recall_kirilim": 0.8182,
       "recall_ga": [
-        0.6998,
-        0.7337
+        0.7978,
+        0.8356
       ],
-      "ga_hangi_olcum": "recall",
-      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
     },
     {
       "sinif": "UAP",
@@ -49,12 +51,13 @@
       "f1": 0.9587,
       "ap50": 0.9869,
       "ap50_95": 0.763,
+      "recall_kirilim": 1.0,
       "recall_ga": [
-        0.7961,
+        1.0,
         1.0
       ],
-      "ga_hangi_olcum": "recall",
-      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
     },
     {
       "sinif": "UAI",
@@ -64,12 +67,13 @@
       "f1": 0.4159,
       "ap50": 0.5879,
       "ap50_95": 0.4557,
+      "recall_kirilim": 0.2353,
       "recall_ga": [
-        0.1328,
-        0.5313
+        0.0556,
+        0.4706
       ],
-      "ga_hangi_olcum": "recall",
-      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
     }
   ],
   "yapilandirma": {
@@ -87,16 +91,92 @@
     "e_senaryo": null
   },
   "kapsam": {
-    "kare_sayisi": null,
-    "benzersiz_kaynak_sayisi": null
+    "kare_sayisi": 1056,
+    "benzersiz_kaynak_sayisi": 4
   },
   "sozlesme_durumu": {
     "tam_mi": false,
     "eksikler": [
-      "boyut/kaynak kirilimi ve karisiklik matrisi: reports/kirilim/v00n_20260828.json yok. `python -m teshis.degerlendirme.metrikler` ile uretilir.",
       "hata ornekleri: reports/hata_galerisi_v00n/ yok. `python -m teshis.degerlendirme.hata_galerisi` ile uretilir."
     ]
   },
+  "boyut_bandi_recall": {
+    "cok_kucuk_16_alti": {
+      "gercek_kutu": 1167,
+      "yakalanan": 783,
+      "recall": 0.671
+    },
+    "kucuk_16_32": {
+      "gercek_kutu": 2011,
+      "yakalanan": 1778,
+      "recall": 0.8841
+    },
+    "orta_32_64": {
+      "gercek_kutu": 520,
+      "yakalanan": 464,
+      "recall": 0.8923
+    },
+    "buyuk_64_ustu": {
+      "gercek_kutu": 316,
+      "yakalanan": 306,
+      "recall": 0.9684
+    }
+  },
+  "bant_tanimi": {
+    "cok_kucuk_16_alti": "0-16 px",
+    "kucuk_16_32": "16-32 px",
+    "orta_32_64": "32-64 px",
+    "buyuk_64_ustu": "64+ px"
+  },
+  "kaynak_recall": {
+    "aaterm": {
+      "gercek_kutu": 885,
+      "yakalanan": 793,
+      "recall": 0.896
+    },
+    "tf2026": {
+      "gercek_kutu": 106,
+      "yakalanan": 60,
+      "recall": 0.566
+    },
+    "hituav": {
+      "gercek_kutu": 2165,
+      "yakalanan": 1749,
+      "recall": 0.8079
+    },
+    "termal": {
+      "gercek_kutu": 858,
+      "yakalanan": 729,
+      "recall": 0.8497
+    }
+  },
+  "karisiklik_matrisi": {
+    "UAI": {
+      "bulunamadi": 11,
+      "UAP": 2,
+      "UAI": 4
+    },
+    "UAP": {
+      "UAP": 15
+    },
+    "insan": {
+      "insan": 2224,
+      "bulunamadi": 492,
+      "tasit": 2
+    },
+    "tasit": {
+      "bulunamadi": 175,
+      "tasit": 1088,
+      "insan": 1
+    }
+  },
+  "background_fn": {
+    "UAI": 11,
+    "UAP": 0,
+    "insan": 492,
+    "tasit": 175
+  },
+  "toplam_tahmin": 4430,
   "egitim_egrisi": {
     "epoch_sayisi": 25,
     "en_iyi_epoch": {

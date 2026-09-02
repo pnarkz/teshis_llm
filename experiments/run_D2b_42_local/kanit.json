@@ -19,12 +19,13 @@
       "f1": 0.7786,
       "ap50": 0.8343,
       "ap50_95": 0.5266,
+      "recall_kirilim": 0.7666,
       "recall_ga": [
-        0.8008,
-        0.8428
+        0.7333,
+        0.8002
       ],
-      "ga_hangi_olcum": "recall",
-      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
     },
     {
       "sinif": "insan",
@@ -34,12 +35,13 @@
       "f1": 0.7609,
       "ap50": 0.8197,
       "ap50_95": 0.4314,
+      "recall_kirilim": 0.8102,
       "recall_ga": [
-        0.8265,
-        0.854
+        0.7868,
+        0.8316
       ],
-      "ga_hangi_olcum": "recall",
-      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
     },
     {
       "sinif": "UAP",
@@ -49,12 +51,13 @@
       "f1": 0.9247,
       "ap50": 0.995,
       "ap50_95": 0.8758,
+      "recall_kirilim": 0.9333,
       "recall_ga": [
-        0.7961,
+        0.7857,
         1.0
       ],
-      "ga_hangi_olcum": "recall",
-      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
     },
     {
       "sinif": "UAI",
@@ -64,12 +67,13 @@
       "f1": 0.9434,
       "ap50": 0.9789,
       "ap50_95": 0.7861,
+      "recall_kirilim": 0.7059,
       "recall_ga": [
-        0.7302,
-        0.9895
+        0.4706,
+        0.9
       ],
-      "ga_hangi_olcum": "recall",
-      "ga_yontemi": "wilson (kutu birimli) - SARTNAMEYE UYGUN DEGIL; kutulari bagimsiz sayar ve araligi ~1.5 kat dar gosterir. Goruntu birimli aralik icin kirilim olcumu goruntu_kayitlari ile yeniden uretilmelidir."
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
     }
   ],
   "yapilandirma": {
@@ -93,7 +97,6 @@
   "sozlesme_durumu": {
     "tam_mi": false,
     "eksikler": [
-      "goruntu birimli guven araligi: kirilim dosyasi goruntu_kayitlari icermiyor (eski surumle uretilmis). Guven araliklari sartnameye uygun olmayan Wilson yontemiyle hesaplandi.",
       "hata ornekleri: reports/hata_galerisi_D2b/ yok. `python -m teshis.degerlendirme.hata_galerisi` ile uretilir."
     ]
   },

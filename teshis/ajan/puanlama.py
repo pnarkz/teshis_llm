@@ -112,7 +112,10 @@ ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
 TESPIT_EDILEMEYEN: dict[str, str] = {
     "D1": (
         "insan recall -0.0147 (z=-1.22, anlamli degil); hicbir sinifta anlamli "
-        "fark yok. Bkz. README 2026-08-26 (3)."
+        "fark yok. Bkz. README 2026-08-26 (3). "
+        "Olcum: reports/senaryo_D1/d1_metrics.json (Ultralytics val). "
+        "metrikler.py ayni sinifi conf=0.25/IoU=0.5 ile olcer ve farkli bir "
+        "deger verir (orada fark 0.0000); iki olcum karistirilmamalidir."
     ),
     "D3b": (
         "capraz sinif hatasi 2 -> 4 kutu; bozulma sogurulmus. "

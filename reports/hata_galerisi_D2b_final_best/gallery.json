@@ -1,0 +1,402 @@
+[
+  {
+    "image": "images/001_hituav__1_110_60_0_09140.jpg",
+    "source": "hituav__1_110_60_0_09140.jpg",
+    "false_negatives": 7,
+    "false_positives": 11,
+    "mean_iou": 0.7969740080427326,
+    "score": 18.20302599195727
+  },
+  {
+    "image": "images/002_hituav__1_120_50_0_02884.jpg",
+    "source": "hituav__1_120_50_0_02884.jpg",
+    "false_negatives": 9,
+    "false_positives": 7,
+    "mean_iou": 0.6230447088422452,
+    "score": 16.376955291157756
+  },
+  {
+    "image": "images/003_hituav__1_120_40_0_02847.jpg",
+    "source": "hituav__1_120_40_0_02847.jpg",
+    "false_negatives": 9,
+    "false_positives": 4,
+    "mean_iou": 0.6917810207822209,
+    "score": 13.308218979217779
+  },
+  {
+    "image": "images/004_hituav__1_120_30_0_02808.jpg",
+    "source": "hituav__1_120_30_0_02808.jpg",
+    "false_negatives": 5,
+    "false_positives": 8,
+    "mean_iou": 0.8019393218521582,
+    "score": 13.198060678147842
+  },
+  {
+    "image": "images/005_hituav__1_120_30_0_02792.jpg",
+    "source": "hituav__1_120_30_0_02792.jpg",
+    "false_negatives": 4,
+    "false_positives": 7,
+    "mean_iou": 0.7256534233756523,
+    "score": 11.274346576624348
+  },
+  {
+    "image": "images/006_hituav__1_120_40_0_02857.jpg",
+    "source": "hituav__1_120_40_0_02857.jpg",
+    "false_negatives": 5,
+    "false_positives": 5,
+    "mean_iou": 0.6610221202604143,
+    "score": 10.338977879739586
+  },
+  {
+    "image": "images/007_hituav__1_120_80_0_02975.jpg",
+    "source": "hituav__1_120_80_0_02975.jpg",
+    "false_negatives": 4,
+    "false_positives": 6,
+    "mean_iou": 0.6647684846532792,
+    "score": 10.33523151534672
+  },
+  {
+    "image": "images/008_hituav__1_120_50_0_02872.jpg",
+    "source": "hituav__1_120_50_0_02872.jpg",
+    "false_negatives": 6,
+    "false_positives": 4,
+    "mean_iou": 0.6921227059966534,
+    "score": 10.307877294003347
+  },
+  {
+    "image": "images/009_hituav__1_130_30_0_03841.jpg",
+    "source": "hituav__1_130_30_0_03841.jpg",
+    "false_negatives": 7,
+    "false_positives": 3,
+    "mean_iou": 0.7025449171780488,
+    "score": 10.297455082821951
+  },
+  {
+    "image": "images/010_hituav__1_110_60_0_09137.jpg",
+    "source": "hituav__1_110_60_0_09137.jpg",
+    "false_negatives": 5,
+    "false_positives": 5,
+    "mean_iou": 0.786869824986099,
+    "score": 10.213130175013902
+  },
+  {
+    "image": "images/011_hituav__1_120_60_0_02914.jpg",
+    "source": "hituav__1_120_60_0_02914.jpg",
+    "false_negatives": 2,
+    "false_positives": 7,
+    "mean_iou": 0.7444753319161729,
+    "score": 9.255524668083828
+  },
+  {
+    "image": "images/012_hituav__1_120_30_0_02784.jpg",
+    "source": "hituav__1_120_30_0_02784.jpg",
+    "false_negatives": 7,
+    "false_positives": 2,
+    "mean_iou": 0.7533909544861057,
+    "score": 9.246609045513894
+  },
+  {
+    "image": "images/013_termal__thermal_04672_png.rf.68c025ad1d934b49672b4df15fb99c51.jpg",
+    "source": "termal__thermal_04672_png.rf.68c025ad1d934b49672b4df15fb99c51.jpg",
+    "false_negatives": 0,
+    "false_positives": 8,
+    "mean_iou": 0.0,
+    "score": 9.0
+  },
+  {
+    "image": "images/014_hituav__1_120_30_0_09278.jpg",
+    "source": "hituav__1_120_30_0_09278.jpg",
+    "false_negatives": 1,
+    "false_positives": 7,
+    "mean_iou": 0.622654884225592,
+    "score": 8.377345115774409
+  },
+  {
+    "image": "images/015_hituav__1_120_40_0_02851.jpg",
+    "source": "hituav__1_120_40_0_02851.jpg",
+    "false_negatives": 4,
+    "false_positives": 4,
+    "mean_iou": 0.7143794166911744,
+    "score": 8.285620583308825
+  },
+  {
+    "image": "images/016_hituav__1_120_40_0_06014.jpg",
+    "source": "hituav__1_120_40_0_06014.jpg",
+    "false_negatives": 1,
+    "false_positives": 7,
+    "mean_iou": 0.7462678600004549,
+    "score": 8.253732139999546
+  },
+  {
+    "image": "images/017_hituav__1_120_30_0_02799.jpg",
+    "source": "hituav__1_120_30_0_02799.jpg",
+    "false_negatives": 2,
+    "false_positives": 6,
+    "mean_iou": 0.7507938561876754,
+    "score": 8.249206143812325
+  },
+  {
+    "image": "images/018_hituav__1_120_30_0_02821.jpg",
+    "source": "hituav__1_120_30_0_02821.jpg",
+    "false_negatives": 1,
+    "false_positives": 7,
+    "mean_iou": 0.7613730169299346,
+    "score": 8.238626983070066
+  },
+  {
+    "image": "images/019_hituav__1_110_70_0_05883.jpg",
+    "source": "hituav__1_110_70_0_05883.jpg",
+    "false_negatives": 5,
+    "false_positives": 3,
+    "mean_iou": 0.8743852053064353,
+    "score": 8.125614794693565
+  },
+  {
+    "image": "images/020_hituav__1_120_80_0_03000.jpg",
+    "source": "hituav__1_120_80_0_03000.jpg",
+    "false_negatives": 3,
+    "false_positives": 4,
+    "mean_iou": 0.6745724349730836,
+    "score": 7.325427565026916
+  },
+  {
+    "image": "images/021_hituav__1_120_80_0_02981.jpg",
+    "source": "hituav__1_120_80_0_02981.jpg",
+    "false_negatives": 2,
+    "false_positives": 5,
+    "mean_iou": 0.7189330912015972,
+    "score": 7.281066908798403
+  },
+  {
+    "image": "images/022_hituav__1_130_30_0_03832.jpg",
+    "source": "hituav__1_130_30_0_03832.jpg",
+    "false_negatives": 3,
+    "false_positives": 4,
+    "mean_iou": 0.7218091646617031,
+    "score": 7.278190835338297
+  },
+  {
+    "image": "images/023_hituav__1_120_90_0_03031.jpg",
+    "source": "hituav__1_120_90_0_03031.jpg",
+    "false_negatives": 4,
+    "false_positives": 3,
+    "mean_iou": 0.7361912316174739,
+    "score": 7.2638087683825265
+  },
+  {
+    "image": "images/024_hituav__1_120_40_0_06008.jpg",
+    "source": "hituav__1_120_40_0_06008.jpg",
+    "false_negatives": 3,
+    "false_positives": 4,
+    "mean_iou": 0.7560265486945654,
+    "score": 7.243973451305434
+  },
+  {
+    "image": "images/025_hituav__1_120_60_0_06067.jpg",
+    "source": "hituav__1_120_60_0_06067.jpg",
+    "false_negatives": 4,
+    "false_positives": 3,
+    "mean_iou": 0.8078535516811247,
+    "score": 7.1921464483188755
+  },
+  {
+    "image": "images/026_termal__thermal_04699_png.rf.b1598e9f5835cc03736f47380a80e0c3.jpg",
+    "source": "termal__thermal_04699_png.rf.b1598e9f5835cc03736f47380a80e0c3.jpg",
+    "false_negatives": 1,
+    "false_positives": 5,
+    "mean_iou": 0.0,
+    "score": 7.0
+  },
+  {
+    "image": "images/027_termal__thermal_04693_png.rf.42b577c9ee2b605df836fec151f2ad8a.jpg",
+    "source": "termal__thermal_04693_png.rf.42b577c9ee2b605df836fec151f2ad8a.jpg",
+    "false_negatives": 2,
+    "false_positives": 4,
+    "mean_iou": 0.6156346107020367,
+    "score": 6.3843653892979635
+  },
+  {
+    "image": "images/028_hituav__1_130_30_0_07136.jpg",
+    "source": "hituav__1_130_30_0_07136.jpg",
+    "false_negatives": 3,
+    "false_positives": 3,
+    "mean_iou": 0.6288732018080218,
+    "score": 6.371126798191979
+  },
+  {
+    "image": "images/029_hituav__1_120_90_0_03018.jpg",
+    "source": "hituav__1_120_90_0_03018.jpg",
+    "false_negatives": 4,
+    "false_positives": 2,
+    "mean_iou": 0.7176761798195742,
+    "score": 6.282323820180426
+  },
+  {
+    "image": "images/030_hituav__1_120_60_0_02925.jpg",
+    "source": "hituav__1_120_60_0_02925.jpg",
+    "false_negatives": 1,
+    "false_positives": 5,
+    "mean_iou": 0.7479482814938339,
+    "score": 6.252051718506166
+  },
+  {
+    "image": "images/031_hituav__1_120_60_0_02918.jpg",
+    "source": "hituav__1_120_60_0_02918.jpg",
+    "false_negatives": 2,
+    "false_positives": 4,
+    "mean_iou": 0.7645204281308595,
+    "score": 6.23547957186914
+  },
+  {
+    "image": "images/032_hituav__1_120_60_0_06069.jpg",
+    "source": "hituav__1_120_60_0_06069.jpg",
+    "false_negatives": 4,
+    "false_positives": 2,
+    "mean_iou": 0.7694328287113379,
+    "score": 6.230567171288662
+  },
+  {
+    "image": "images/033_hituav__1_110_90_0_09246.jpg",
+    "source": "hituav__1_110_90_0_09246.jpg",
+    "false_negatives": 5,
+    "false_positives": 1,
+    "mean_iou": 0.8086509928024177,
+    "score": 6.191349007197582
+  },
+  {
+    "image": "images/034_hituav__1_110_90_0_09250.jpg",
+    "source": "hituav__1_110_90_0_09250.jpg",
+    "false_negatives": 4,
+    "false_positives": 2,
+    "mean_iou": 0.8110916359184196,
+    "score": 6.1889083640815805
+  },
+  {
+    "image": "images/035_hituav__1_110_70_0_05864.jpg",
+    "source": "hituav__1_110_70_0_05864.jpg",
+    "false_negatives": 2,
+    "false_positives": 4,
+    "mean_iou": 0.8594558573244061,
+    "score": 6.140544142675594
+  },
+  {
+    "image": "images/036_hituav__1_120_60_0_02927.jpg",
+    "source": "hituav__1_120_60_0_02927.jpg",
+    "false_negatives": 3,
+    "false_positives": 2,
+    "mean_iou": 0.0,
+    "score": 6.0
+  },
+  {
+    "image": "images/037_termal__thermal_04595_png.rf.3446c079f8177ba97c0778689c250f04.jpg",
+    "source": "termal__thermal_04595_png.rf.3446c079f8177ba97c0778689c250f04.jpg",
+    "false_negatives": 3,
+    "false_positives": 2,
+    "mean_iou": 0.0,
+    "score": 6.0
+  },
+  {
+    "image": "images/038_termal__thermal_04599_png.rf.1253ede0220403765fedb1e1a26f70b0.jpg",
+    "source": "termal__thermal_04599_png.rf.1253ede0220403765fedb1e1a26f70b0.jpg",
+    "false_negatives": 3,
+    "false_positives": 2,
+    "mean_iou": 0.0,
+    "score": 6.0
+  },
+  {
+    "image": "images/039_termal__thermal_04674_png.rf.690da10928a40800abc9357bbfc0e96f.jpg",
+    "source": "termal__thermal_04674_png.rf.690da10928a40800abc9357bbfc0e96f.jpg",
+    "false_negatives": 0,
+    "false_positives": 5,
+    "mean_iou": 0.0,
+    "score": 6.0
+  },
+  {
+    "image": "images/040_termal__thermal_04691_png.rf.7a27c4ed33374f527d34884c725f2b1c.jpg",
+    "source": "termal__thermal_04691_png.rf.7a27c4ed33374f527d34884c725f2b1c.jpg",
+    "false_negatives": 2,
+    "false_positives": 3,
+    "mean_iou": 0.5788305889531705,
+    "score": 5.421169411046829
+  },
+  {
+    "image": "images/041_termal__thermal_04692_png.rf.877d38b4c19908a3775c7822f94bd988.jpg",
+    "source": "termal__thermal_04692_png.rf.877d38b4c19908a3775c7822f94bd988.jpg",
+    "false_negatives": 3,
+    "false_positives": 2,
+    "mean_iou": 0.5821126337067275,
+    "score": 5.4178873662932725
+  },
+  {
+    "image": "images/042_termal__thermal_04690_png.rf.cc50a32d32c2d54f0aa9f9cc3142df23.jpg",
+    "source": "termal__thermal_04690_png.rf.cc50a32d32c2d54f0aa9f9cc3142df23.jpg",
+    "false_negatives": 2,
+    "false_positives": 3,
+    "mean_iou": 0.6017074442068455,
+    "score": 5.398292555793154
+  },
+  {
+    "image": "images/043_hituav__1_120_80_0_03004.jpg",
+    "source": "hituav__1_120_80_0_03004.jpg",
+    "false_negatives": 3,
+    "false_positives": 2,
+    "mean_iou": 0.6501026829518844,
+    "score": 5.349897317048115
+  },
+  {
+    "image": "images/044_aaterm__frameoriginal_0056_jpg.rf.1e51915f22ade97fa35cd5650b5c2e47.jpg",
+    "source": "aaterm__frameoriginal_0056_jpg.rf.1e51915f22ade97fa35cd5650b5c2e47.jpg",
+    "false_negatives": 1,
+    "false_positives": 4,
+    "mean_iou": 0.6614294442820877,
+    "score": 5.338570555717912
+  },
+  {
+    "image": "images/045_termal__thermal_04695_png.rf.fb78a98f8ff679ca4e1e5a6baac40dc1.jpg",
+    "source": "termal__thermal_04695_png.rf.fb78a98f8ff679ca4e1e5a6baac40dc1.jpg",
+    "false_negatives": 2,
+    "false_positives": 3,
+    "mean_iou": 0.6879721906944747,
+    "score": 5.312027809305525
+  },
+  {
+    "image": "images/046_hituav__1_120_60_0_02909.jpg",
+    "source": "hituav__1_120_60_0_02909.jpg",
+    "false_negatives": 3,
+    "false_positives": 2,
+    "mean_iou": 0.7117316648947827,
+    "score": 5.288268335105217
+  },
+  {
+    "image": "images/047_hituav__1_120_70_0_02967.jpg",
+    "source": "hituav__1_120_70_0_02967.jpg",
+    "false_negatives": 2,
+    "false_positives": 3,
+    "mean_iou": 0.7243060319854242,
+    "score": 5.275693968014576
+  },
+  {
+    "image": "images/048_hituav__1_120_60_0_09372.jpg",
+    "source": "hituav__1_120_60_0_09372.jpg",
+    "false_negatives": 4,
+    "false_positives": 1,
+    "mean_iou": 0.7268865194798131,
+    "score": 5.273113480520187
+  },
+  {
+    "image": "images/049_hituav__1_130_30_0_03807.jpg",
+    "source": "hituav__1_130_30_0_03807.jpg",
+    "false_negatives": 3,
+    "false_positives": 2,
+    "mean_iou": 0.7302392664229369,
+    "score": 5.269760733577063
+  },
+  {
+    "image": "images/050_aaterm__frameoriginal_0313_jpg.rf.894cd5b898a7eb2520666c080cb931fd.jpg",
+    "source": "aaterm__frameoriginal_0313_jpg.rf.894cd5b898a7eb2520666c080cb931fd.jpg",
+    "false_negatives": 3,
+    "false_positives": 2,
+    "mean_iou": 0.7326622557876286,
+    "score": 5.267337744212371
+  }
+]
