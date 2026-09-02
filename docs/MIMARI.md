@@ -63,6 +63,7 @@ termal_teshis/
       hata_galerisi.py          Siralanmis hata ornekleri uretir
       kanit.py                  Sartname bolum 9 kanit sozlesmesi (kanit.json)
       kayit_defteri.py          results.csv'ye satir eklemenin TEK yolu
+      gurultu.py                Alt grup gurultu bandi (tek kaynak)
       raporlar.py               Senaryo adi -> rapor klasoru (tek kaynak)
     ajan/
       araclar.py                Function-calling araclari (anonim metrik okuma)

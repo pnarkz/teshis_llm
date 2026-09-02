@@ -89,7 +89,8 @@ farkli baslangic modelinden.
 |---|---|---|
 | Egitim tarafinda tekrar | gurultu tabani artik n=3 | **kapatildi** (seed 7, 13, 21) |
 | LLM tarafinda tekrar yok | ajan skoruna guven araligi verilemiyor | acik |
-| Ajan araclari alt grup bandini gostermiyor | fark degerini ham veriyor; ajan tek referansa karsi okuyor ve `tf2026` gibi oynak gruplari sistematik olarak sucluyor | **acik, oncelikli** |
+| Ajan araclari alt grup bandini gostermiyor | — | **kapatildi** (`gurultu.py`) |
+| Band eklendikten sonra deneme yeniden kosulmadi | ajanin cevaplarinin degisip degismedigi bilinmiyor | acik |
 | Yayimlanmis GA'larin cogu Wilson | araliklar ~1.5 kat dar | uc kontrol kosusunda dogru yontem var; D/E serisi hala Wilson |
 | Puanlama rubriginin 2/3 bileseni doymus | toplam skor ayirt etmiyor | acik |
 | Kanit sozlesmesi 0/18 tam | 17 kosuda hata galerisi yok | acik |
@@ -1664,8 +1665,42 @@ ve ajan onu **tek bir referansa** karsi okuyor. Sistematik bir yanlilik,
 ajanin akil yurutmesinden degil, kendisine verilen karsilastirma tabanindan
 geliyor.
 
-**Duzeltme yonu belli:** ajanin araclari fark degerini degil, **farkin alt
-grup bandina oranini** vermelidir. Bu yapilmadi; acik is olarak kaydedildi.
+**Duzeltme yapildi.** Ajanin kirilim araclari artik her grup icin uc alan
+daha donduruyor:
+
+| Alan | Icerik |
+|---|---|
+| `gurultu_bandi` | o grubun bozulmasiz kosular arasindaki yayilimi |
+| `band_orani` | \|fark\| / band |
+| `band_yorumu` | orani nasil okumasi gerektigi |
+
+Tek kaynak: `teshis/degerlendirme/gurultu.py`.
+
+**Iki tasarim karari kayda deger.**
+
+*Leave-one-out.* Degerlendirilen kosu bozulmasiz kosulardan biriyse kendi
+bandina KATILMAZ. Katilsaydi farki her zaman bandin tam sinirinda (oran
+1.00) gorunur ve olcut anlamini yitirirdi.
+
+*Az gozlem uyarisi.* Leave-one-out uygulaninca beklenmedik bir sey oldu:
+`tf2026` bandi 0.1321'den 0.0661'e dustu ve kosu_12'nin orani 2.0'a cikti.
+Sebep, max-min tahmincisinin n=3-4'te kararsiz olmasi - uc gozlem
+cikarilinca band cokuyor ve kalan gozlem "asiri" gorunuyor. Bu belirsizlik
+**gizlenmedi, yoruma yazildi**: band bes kosudan az gozleme dayaniyorsa ve
+oran 5'in altindaysa, ajana "bu grubu tek basina teshise dayanak yapma"
+deniyor.
+
+Aracin yeni ciktisi, sorunlu iki vakayi dogru ayiriyor:
+
+| Kosu | Grup | Fark | Oran | Yorum |
+|---|---|---:|---:|---|
+| kosu_12 (bozulma yok) | kaynak_d | -0.1321 | 2.0 | az gozlem uyarisi |
+| kosu_08 (D4, gercek) | kaynak_a | -0.2448 | **18.83** | bandin belirgin uzerinde |
+| kosu_08 (D4, gercek) | kaynak_d | -0.0472 | 0.36 | gurultu icinde |
+
+Yani ajan D4'te artik `kaynak_d`'ye degil `kaynak_a`'ya yonlendiriliyor —
+sistematik yanliligin kaynagi kapandi. Bunun ajanin cevaplarini gercekten
+degistirip degistirmedigi **henuz olculmedi**; deneme yeniden kosulmalidir.
 
 ### Guncel yanlis pozitif orani
 

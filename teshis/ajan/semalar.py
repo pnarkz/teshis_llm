@@ -125,7 +125,7 @@ ARAC_BILDIRIMLERI: list[dict[str, Any]] = [
         ),
         "parameters": {
             "type": "OBJECT",
-            "properties": {"kosu_id": {"type": "STRING", "description": "Ornegin kosu_03."}},
+            "properties": {"kosu_id": {"type": "STRING", "description": "Ornegin kosu_03. Her grup icin ayrica 'gurultu_bandi', 'band_orani' ve 'band_yorumu' doner: band_orani 1'in altindaysa fark saf rastgelelikten ayirt edilemez ve bozulma kaniti sayilmaz."}},
             "required": ["kosu_id"],
         },
     },
@@ -139,7 +139,7 @@ ARAC_BILDIRIMLERI: list[dict[str, Any]] = [
         ),
         "parameters": {
             "type": "OBJECT",
-            "properties": {"kosu_id": {"type": "STRING", "description": "Ornegin kosu_03."}},
+            "properties": {"kosu_id": {"type": "STRING", "description": "Ornegin kosu_03. Her grup icin ayrica 'gurultu_bandi', 'band_orani' ve 'band_yorumu' doner: band_orani 1'in altindaysa fark saf rastgelelikten ayirt edilemez ve bozulma kaniti sayilmaz."}},
             "required": ["kosu_id"],
         },
     },

@@ -21,6 +21,8 @@ from typing import Any
 
 import pandas as pd
 
+from teshis.degerlendirme import gurultu
+
 ROOT = Path(__file__).resolve().parents[2]
 SINIFLAR = ("tasit", "insan", "UAP", "UAI")
 
@@ -263,6 +265,26 @@ def _referans_kirilim() -> dict[str, Any]:
     return json.loads(yol.read_text(encoding="utf-8"))
 
 
+def _band_alanlari(
+    alan: str, grup: str, fark: float | None, kosu_id: str | None = None
+) -> dict[str, Any]:
+    """Bir alt grup farkina gurultu bandi bilgisini ekler.
+
+    Ajanin ilk yanlis pozitifi tam olarak bu bilgi olmadigi icin olustu: ham
+    fark degeri (-0.1321) buyuk gorunuyordu, oysa o grubun saglikli kosular
+    arasindaki yayilimi zaten 0.1321'di. Ajan artik farki bandiyla birlikte
+    goruyor.
+    """
+    # Incelenen kosu saglikli kosulardan biriyse kendi bandini tanimlamamali.
+    haric = anonim_kosu_haritasi().get(kosu_id) if kosu_id else None
+    d = gurultu.fark_degerlendir(alan, grup, fark, haric_run_id=haric)
+    return {
+        "gurultu_bandi": d["band"],
+        "band_orani": d["band_orani"],
+        "band_yorumu": d["yorum"],
+    }
+
+
 def boyut_bazli_recall_getir(kosu_id: str) -> dict[str, Any]:
     """Nesne boyutu bandi basina recall'i, saglikli referansla birlikte dondurur.
 
@@ -272,17 +294,23 @@ def boyut_bazli_recall_getir(kosu_id: str) -> dict[str, Any]:
     sonuc: dict[str, Any] = {}
     for bant, deger in kosu["boyut_bandi_recall"].items():
         taban = referans["boyut_bandi_recall"].get(bant, {})
+        fark = (
+            round(deger["recall"] - taban["recall"], 4)
+            if deger["recall"] is not None and taban.get("recall") is not None
+            else None
+        )
         sonuc[bant] = {
             "bbox_n": deger["gercek_kutu"],
             "recall": deger["recall"],
             "referans_recall": taban.get("recall"),
-            "fark": (
-                round(deger["recall"] - taban["recall"], 4)
-                if deger["recall"] is not None and taban.get("recall") is not None
-                else None
-            ),
+            "fark": fark,
+            **_band_alanlari("boyut_bandi_recall", bant, fark, kosu_id),
         }
-    return {"bant_tanimi_px": kosu.get("bant_tanimi", {}), "bantlar": sonuc}
+    return {
+        "bant_tanimi_px": kosu.get("bant_tanimi", {}),
+        "bantlar": sonuc,
+        "gurultu_notu": gurultu.BAND_ACIKLAMASI,
+    }
 
 
 def kaynak_bazli_recall_getir(kosu_id: str) -> dict[str, Any]:
@@ -302,15 +330,17 @@ def kaynak_bazli_recall_getir(kosu_id: str) -> dict[str, Any]:
         deger = kosu["kaynak_recall"].get(gercek_ad)
         if deger is None:
             continue
+        fark = (
+            round(deger["recall"] - taban["recall"], 4)
+            if deger["recall"] is not None and taban["recall"] is not None
+            else None
+        )
         sonuc[takma[gercek_ad]] = {
             "bbox_n": deger["gercek_kutu"],
             "recall": deger["recall"],
             "referans_recall": taban["recall"],
-            "fark": (
-                round(deger["recall"] - taban["recall"], 4)
-                if deger["recall"] is not None and taban["recall"] is not None
-                else None
-            ),
+            "fark": fark,
+            **_band_alanlari("kaynak_recall", gercek_ad, fark, kosu_id),
         }
     return {
         "aciklama": "Kaynak gruplari anonimlestirilmistir; sira bbox sayisina gore sabittir.",
