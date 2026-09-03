@@ -148,3 +148,23 @@ Ozet (kosmadan): `python scripts/ajan_kontrol_tekrari.py --ozet`
 
 `GEMINI_API_KEY` ortam degiskeni tanimli olmalidir; anahtar hicbir dosyaya
 yazilmaz, yalnizca `os.environ` uzerinden okunur.
+
+## Sunum konsolu
+
+```bash
+python -m streamlit run demo/app.py
+```
+
+Konsol alti bolumden olusur ve **sira dayatmaz**; gelen soruya gore istenen
+bolume atlanir. Yalnizca mevcut olcum ciktilarini okur, egitim veya test
+calistirmaz.
+
+Tek istisna **Ajan** bolumundeki "canli calistir" dugmesidir. Varsayilan
+"kayitli kosu" modudur: API harcamaz ve her zaman calisir. Canli mod
+ucretsiz katman sinirlarina tabidir (20 istek/gun, 5 istek/dk) ve kota veya
+gecici sunucu hatasi verebilir; bu yuzden sunumun guvenli yolu kayitli
+moddur.
+
+Tema `.streamlit/config.toml` icinde **acik** olarak sabitlenmistir; gorunumu
+izleyicinin isletim sistemi temasina birakmak sunumda risklidir (koyu temada
+metin renkleri catisiyor ve icerik neredeyse gorunmez oluyordu).

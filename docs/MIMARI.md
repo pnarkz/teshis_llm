@@ -101,6 +101,16 @@ termal_teshis/
   reports/                      Degerlendirme ciktilari (asagida)
   val_diagnostic/               KILITLI tanı seti; degistirilmez
   demo/                         Streamlit sunum konsolu
+    app.py                      Yalnizca yonlendirme ve stil (~80 satir)
+    stil.py                     Ortak gorsel dil; renk anlamlari sabit
+    data_loader.py              Rapor okuma + ajan katmani
+    bolumler/                   Her bolum kendi modulunde
+      genel_bakis.py            Proje, durum, uc ana bulgu
+      tasarim.py                Kontrollu deney kurgusu + NEYI SOYLEYEMIYORUZ
+      senaryolar.py             Kosu basina deney ozeti ve kanit
+      karsilastirma.py          Capraz tablo + gurultu tabani
+      hata_analizi.py           Siralanmis hata ornekleri
+      ajan.py                   Kor teshis: kayitli / canli
   tests/                        Birim ve sozlesme testleri
 ```
 

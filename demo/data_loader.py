@@ -181,8 +181,91 @@ def sparkline(values: list[float], blocks: str = "▁▂▃▄▅▆▇█") -> 
 
 
 def llm_response() -> list | dict:
+    """TEK ATISLIK denemenin cevaplari (tum kanit onceden prompt'a konur)."""
     return read_json(ROOT / "reports/ajan_denemesi/gemini_response.json")
+
+
+def ajan_cevaplari() -> list:
+    """FONKSIYON CAGIRMA denemesinin cevaplari (ajan kaniti kendi secer).
+
+    Iki deneme ayri dosyalarda durur ve karistirilmamalidir; demo ajan
+    sayfasi fonksiyon cagirma denemesini gosterir, karsilastirma sayfasi
+    ikisini yan yana koyar.
+    """
+    d = read_json(ROOT / "reports/ajan_denemesi/ajan_response.json")
+    return d if isinstance(d, list) else []
 
 
 def llm_score() -> dict:
     return read_json(ROOT / "reports/ajan_denemesi/llm_score.json")
+
+
+# --- Ajan katmani -----------------------------------------------------------
+#
+# Ana denemenin arac kaydinda yalnizca cagri ADLARI var; arac cevaplarini
+# saklama ozelligi sonradan eklendi. Demo bu bosluğu API harcamadan kapatir:
+# araclar yerel ve deterministiktir, ayni kosu icin ayni cevabi verir. Ekranda
+# "yerel olarak yeniden calistirildi" diye etiketlenir.
+
+def ajan_kosu_haritasi() -> dict[str, str]:
+    """kosu_NN -> gercek senaryo adi. YALNIZCA sunucu gorunumu icin."""
+    import csv
+
+    from teshis.ajan import araclar
+
+    with open(araclar.RESULTS_CSV, encoding="utf-8") as f:
+        senaryo = {s["run_id"]: s["scenario"] for s in csv.DictReader(f)}
+    harita = {"kosu_01": araclar.REFERANS_SENARYO}
+    harita.update({k: senaryo.get(v, v) for k, v in araclar.anonim_kosu_haritasi().items()})
+    return harita
+
+
+def ajan_kaydi() -> dict:
+    """Tamamlanmis denemenin cevaplari, arac kaydi ve puanlari."""
+    cevaplar = ajan_cevaplari()
+    kayit = read_json(ROOT / "reports/ajan_denemesi/ajan_arac_kaydi.json")
+    puan = llm_score()
+    return {
+        "cevaplar": {c.get("run_id"): c for c in cevaplar},
+        "arac_kaydi": kayit,
+        "puanlar": {r["run_id"]: r for r in puan.get("runs", [])},
+        "ozet": {k: v for k, v in puan.items() if k != "runs"},
+    }
+
+
+def ajan_araclarini_calistir(kosu_id: str) -> dict:
+    """Ajanin gordugu kaniti yerel olarak yeniden uretir (API harcamaz)."""
+    from teshis.ajan import araclar
+
+    cagrilabilir = {
+        "baseline_metriklerini_getir": lambda: araclar.baseline_metriklerini_getir(),
+        "kosu_metriklerini_getir": lambda: araclar.kosu_metriklerini_getir(kosu_id),
+        "baseline_farkini_getir": lambda: araclar.baseline_farkini_getir(kosu_id),
+        "bbox_sayilarini_getir": lambda: araclar.bbox_sayilarini_getir(),
+        "boyut_bazli_recall_getir": lambda: araclar.boyut_bazli_recall_getir(kosu_id),
+        "kaynak_bazli_recall_getir": lambda: araclar.kaynak_bazli_recall_getir(kosu_id),
+        "sinif_karisikligini_getir": lambda: araclar.sinif_karisikligini_getir(kosu_id),
+    }
+    sonuc = {}
+    for ad, fn in cagrilabilir.items():
+        try:
+            sonuc[ad] = fn()
+        except Exception as hata:  # noqa: BLE001 - biri duserse digerleri gorunsun
+            sonuc[ad] = {"hata": f"{type(hata).__name__}: {hata}"}
+    return sonuc
+
+
+def ajana_gizlenenler() -> dict[str, str]:
+    """Korlestirme paneli: neyin ajana gitmedigi, gerekcesiyle."""
+    from teshis.ajan import araclar
+
+    return {
+        "Senaryo adi": "Gonderilmiyor - kosular kosu_NN olarak sunulur",
+        "Veri surumu / manifest": "Gonderilmiyor",
+        "Bozulma parametresi": "Gonderilmiyor",
+        "Kaynak grubu adlari": "Takma adla (kaynak_a, kaynak_b ...)",
+        "Dosya yollari": "Gonderilmiyor",
+        "Cevap anahtari": "Gonderilmiyor - puanlama cevap uretildikten SONRA yerelde yapilir",
+        "Anonim metrikler": "Gonderiliyor",
+        "Kirilim araclari": f"Kullanilabilir ({len(araclar.ARAC_ADLARI) if hasattr(araclar, 'ARAC_ADLARI') else 7} arac)",
+    }

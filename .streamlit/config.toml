@@ -1,0 +1,16 @@
+# Konsol sunumda kullanilacak; gorunumu izleyicinin isletim sistemi temasina
+# birakmak riskli. Acik tema SABITLENIR - koyu temada metin renkleri CSS ile
+# catisiyor ve icerik neredeyse gorunmez hale geliyordu.
+[theme]
+base = "light"
+primaryColor = "#1f4e79"
+backgroundColor = "#fbfaf8"
+secondaryBackgroundColor = "#f4f2ee"
+textColor = "#2b2b2b"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
