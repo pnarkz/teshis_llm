@@ -1,0 +1,80 @@
+# Her senaryonun NE OLCTUGU - tek cumleyle, arastirma niyeti.
+#
+# Bu, senaryo ozetinin turetilemeyen tek bilesenidir. "Ne degistirildi",
+# "ne sabit kaldi", "beklenen etki", "ne gozlendi" ve "kanit gucu" alanlarinin
+# hepsi konfig dosyalarindan ve olcumlerden hesaplanir
+# (teshis/degerlendirme/senaryo_ozeti.py). Arastirma niyeti ise hicbir veri
+# dosyasinda yazmaz; buraya yazilir.
+#
+# Kural: duz, iddiasiz, arastirma dili. Sonucu degil SORUYU anlatir.
+
+D1: >
+  Bir sinifin egitimdeki temsil payi dusurulunce, kaybin yalnizca o sinifta
+  mi yoksa genel metriklerde de mi gorunecegini olcer.
+
+D2a: >
+  Etiket kutulari kaydirildiginda (lokalizasyon gurultusu), bozulmanin
+  precision'da mi recall'da mi yoksa ikisinde birden mi gorunecegini olcer.
+
+D2b: >
+  Egitim etiketlerinin bir bolumu silindiginde modelin ne yaptigini olcer:
+  etiketsiz kalan gercek nesneleri arka plan olarak ogrenip ogrenmedigini.
+
+D3: >
+  Birbirine benzeyen iki az ornekli sinif (UAP/UAI) karistirildiginda,
+  karisikligin sinif bazli metriklerde gorunur olup olmadigini olcer.
+
+D3b: >
+  Ayni sinif karisikligi bol ornekli siniflarda (tasit/insan) uygulandiginda
+  modelin bozulmayi sogurup soguramadigini olcer.
+
+D4: >
+  Egitimden kucuk nesne sinyali silindiginde, kaybin toplam metriklerde
+  gorunur olup olmadigini olcer.
+
+D5: >
+  Egitim verisinin kaynak dagilimi kaydirildiginda, bozulmanin hangi kaynak
+  grubunda ve hangi checkpoint'te gorunecegini olcer.
+
+D6a: >
+  Train ve validation kumeleri arasinda sizinti oldugunda olcumun ne kadar
+  iyimser hale geldigini olcer.
+
+D6b: >
+  Bir avuc kare asiri temsil edildiginde, temsil payi ile sinif performansi
+  arasinda bir iliski olusup olusmadigini olcer.
+
+E1: >
+  Az veriyle cok epoch ve augmentasyonsuz egitim yapildiginda olusan asiri
+  uyumun, standart raporlamada (en iyi checkpoint) gorunur olup olmadigini
+  olcer.
+
+E2: >
+  Epoch sayisi cok dusuruldugunde yetersiz egitim olusup olusmadigini olcer.
+
+E3: >
+  Ogrenme orani cok yuksek secildiginde egitimin kararsizlasip
+  kararsizlasmadigini ve bunun iki farkli seed arasinda ne kadar oynadigini
+  olcer.
+
+E4: >
+  Model egitildiginden farkli bir cozunurlukte calistirildiginda kaybin
+  precision'da mi recall'da mi olustugunu olcer.
+
+# Kontrol kosullari - bozulma icermez.
+C2: >
+  Hicbir sey bozulmadan yalnizca rastgelelik tohumu degistirildiginde
+  metriklerin ne kadar oynadigini olcer. Butun "etki" iddialarinin altinda
+  duran gurultu tabanini verir.
+
+v00_saglikli: >
+  Senaryolarla birebir ayni protokolde, temiz veriyle egitilmis saglikli
+  referans. Butun karsilastirmalarin tabani budur.
+
+v00n: >
+  Farkli bir taban modelin (yolo26n) temiz veriyle egitilmis hali; kendi
+  ciftinin referansi.
+
+D1n: >
+  D1 bozulmasinin farkli bir taban model (yolo26n) uzerindeki etkisi;
+  v00n ile karsilastirilir.
