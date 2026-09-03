@@ -97,3 +97,49 @@ def test_bolumler_ayri_dosyalarda():
     assert len((ROOT / "demo/app.py").read_text(encoding="utf-8").splitlines()) < 120, (
         "app.py yeniden buyumus; icerik bolum modullerinde durmali"
     )
+
+
+def test_karsilastirma_tablolari_turetiliyor():
+    """Karsilastirma sayfasindaki tablolar elle yazilmis sayilar tasimamali.
+
+    Elle yazilan tablolar bu projede tekrar tekrar bayatladi. Erken durdurma
+    ve checkpoint cifti tablolari artik defterden ve kosu dizinlerinden
+    turetilir; yeni bir kontrol kosusu veya last_pt satiri eklendiginde
+    kendiliginden buyurler.
+    """
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from bolumler.karsilastirma import _checkpoint_ciftleri, _erken_durdurma
+    from data_loader import load_results
+
+    sonuclar = load_results()
+
+    erken = _erken_durdurma(sonuclar)
+    assert len(erken) >= 3, "erken durdurma tablosu bos veya eksik"
+    assert set(erken["seed"]) >= {7, 42}, erken["seed"].tolist()
+
+    cift = _checkpoint_ciftleri(sonuclar)
+    assert len(cift) >= 6, "checkpoint cifti tablosu eksik"
+    adlar = set(cift["kosu"])
+    assert "v00_saglikli best.pt" in adlar and "v00_saglikli last.pt" in adlar, (
+        "Saglikli referansin checkpoint cifti tabloda yok; last.pt dususunun "
+        "tabani gorunmezse her dusus bozulma sanilir"
+    )
+
+
+def test_checkpoint_notundaki_sayilar_tablodan_geliyor():
+    """Tablonun altindaki yorum, tablonun kendi degerleriyle uyusmali."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from bolumler.karsilastirma import _checkpoint_ciftleri
+    from data_loader import load_results
+
+    df = _checkpoint_ciftleri(load_results()).set_index("kosu")
+    kaynak = (ROOT / "demo/bolumler/karsilastirma.py").read_text(encoding="utf-8")
+    for kosu in ("v00_saglikli last.pt", "D5 last.pt", "E1 last.pt"):
+        deger = df.loc[kosu, "Δ v00"]
+        assert f"{deger:.4f}" in kaynak, (
+            f"{kosu} icin yorumdaki sayi ({deger:.4f}) tabloyla uyusmuyor"
+        )

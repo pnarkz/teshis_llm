@@ -1765,3 +1765,34 @@ gibi kontrol tarafinda da gecerli: **az gozlem iyimser gosterir.**
 - reports/ajan_denemesi/kontrol_tekrarlari/
 - reports/kontrol_C2_seed7/c2_seed_gurultusu.json (`alt_grup_bandi`)
 - scripts/kontrol_C2_seed_gurultusu.py
+
+---
+
+## Son Checkpoint Dususunun de Bir Tabani Var
+
+Konsol tablolari elle yazilan sayilardan turetilen sayilara cevrilirken
+gozden kacmis bir sey ortaya cikti: **saglikli referansin kendisi de**
+`best.pt` -> `last.pt` gecisinde dusuyor.
+
+| Kosu | best.pt | last.pt | Fark |
+|---|---:|---:|---:|
+| **v00_saglikli** (bozulma yok) | 0.9200 | 0.8920 | **-0.0280** |
+| D4 | 0.8975 | 0.8871 | -0.0329 |
+| D6b | 0.9233 | 0.8869 | -0.0330 |
+| E1 | 0.9190 | 0.8318 | -0.0881 |
+| D5 | 0.9092 | 0.3352 | **-0.5848** |
+
+Yani her `last.pt` dususu bozulma isareti degildir. D4 (-0.0329) ve D6b
+(-0.0330) saglikli referansin kendi dususune (-0.0280) **cok yakin**;
+bunlari "son checkpoint bozulmayi ortaya cikardi" diye okumak yanlis olur.
+
+Ayrisanlar E1 (-0.0881, uc kat) ve ozellikle D5 (-0.5848, yirmi kat).
+
+Bu, projenin tekrar eden dersinin bir ornegi daha: **bir farki
+yorumlamadan once o farkin bozulmasiz kosuda ne kadar oldugunu bilmek
+gerekiyor.** Ayni ders once genel metriklerde (C2 kontrolu), sonra alt
+gruplarda (ajanin yanlis pozitifi), simdi de checkpoint seciminde cikti.
+
+**Sinir:** bu taban tek bir saglikli kosudan (v00) geliyor. Kontrol
+kosularinin `last.pt` olcumleri henuz uretilmedi; uretildiginde bu satir da
+bir banda kavusur.

@@ -35,6 +35,75 @@ def _tablo(sonuclar: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(satirlar)
 
 
+def _erken_durdurma(sonuclar: pd.DataFrame) -> pd.DataFrame:
+    """Bozulmasiz kosularin durdugu ve en iyi checkpoint'i verdigi epoch.
+
+    Elle yazilmis bir tablo yerine kosu dizinlerinden okunur; yeni bir
+    kontrol kosusu eklendiginde tablo kendiliginden buyur.
+    """
+    import csv as _csv
+
+    from data_loader import run_dir_for
+
+    satirlar = []
+    for _, r in sonuclar.iterrows():
+        ad = str(r["scenario"])
+        bozulmasiz = ad == "v00_saglikli" or (ad.startswith("C") and ad[1:2].isdigit())
+        if not bozulmasiz or not str(r.get("weights_path", "")).endswith("best.pt"):
+            continue
+        dizin = run_dir_for(r)
+        yol = (dizin / "results.csv") if dizin else None
+        if not yol or not yol.is_file():
+            continue
+        with yol.open(encoding="utf-8") as f:
+            kayit = [{k.strip(): v for k, v in s.items()} for s in _csv.DictReader(f)]
+        ciftler = [
+            (int(float(s["epoch"])), float(s["metrics/mAP50(B)"]))
+            for s in kayit if s.get("metrics/mAP50(B)")
+        ]
+        if not ciftler:
+            continue
+        en_iyi = max(ciftler, key=lambda c: c[1])
+        satirlar.append({
+            "kosu": ad,
+            "seed": int(r["seed"]),
+            "durdugu epoch": len(kayit),
+            "en iyi epoch": en_iyi[0],
+            "en iyi mAP50 (egitim val)": round(en_iyi[1], 4),
+        })
+    return pd.DataFrame(sorted(satirlar, key=lambda s: s["seed"]))
+
+
+def _checkpoint_ciftleri(sonuclar: pd.DataFrame) -> pd.DataFrame:
+    """Ayni kosunun best.pt / last.pt satirlarini yan yana koyar.
+
+    Defterde her ikisi de ayri satir olarak durur; ciftleri elle listelemek
+    yerine ad esleştirmesiyle bulunur.
+    """
+    from teshis.degerlendirme.senaryo_ozeti import ne_gozlendi
+
+    adlar = set(sonuclar["scenario"])
+    satirlar = []
+    for ad in sorted(adlar):
+        if not ad.endswith(" last_pt"):
+            continue
+        taban = ad[: -len(" last_pt")]
+        if taban not in adlar:
+            continue
+        for etiket, senaryo in ((f"{taban} best.pt", taban), (f"{taban} last.pt", ad)):
+            g = ne_gozlendi(senaryo)
+            if not g:
+                continue
+            m = g["metrikler"]["mAP50"]
+            satirlar.append({
+                "kosu": etiket,
+                "mAP50": m["deger"],
+                "Δ v00": m["fark"],
+                "esigi asiyor": "evet" if m["asiyor"] else "hayir",
+            })
+    return pd.DataFrame(satirlar)
+
+
 def goster() -> None:
     sonuclar = load_results()
     st.title("Karsilastirma ve Gurultu")
@@ -89,15 +158,7 @@ def goster() -> None:
     )
 
     st.markdown("### Erken durdurma noktasi da seed'e bagli")
-    st.dataframe(
-        pd.DataFrame([
-            {"kosu": "v00", "seed": 42, "durdugu epoch": 11, "en iyi epoch": 1},
-            {"kosu": "C2", "seed": 7, "durdugu epoch": 19, "en iyi epoch": 9},
-            {"kosu": "C2 seed13", "seed": 13, "durdugu epoch": 30, "en iyi epoch": 11},
-            {"kosu": "C2 seed21", "seed": 21, "durdugu epoch": 30, "en iyi epoch": 16},
-        ]),
-        hide_index=True, width="stretch",
-    )
+    st.dataframe(_erken_durdurma(sonuclar), hide_index=True, width="stretch")
     stil.yorum(
         "Ayni veri, ayni protokol: egitim suresi 11 ile 30 epoch arasinda "
         "degisiyor. Gurultu yalnizca son metrikte degil surecin kendisinde de var."
@@ -105,21 +166,16 @@ def goster() -> None:
 
     st.markdown("---")
     st.markdown("## Checkpoint secimi bir kor nokta")
-    st.dataframe(
-        pd.DataFrame([
-            {"kosu": "E1 best.pt", "mAP50": 0.9190, "Δ v00": -0.0010,
-             "okuma": "saglikli gorunuyor"},
-            {"kosu": "E1 last.pt", "mAP50": 0.8318, "Δ v00": -0.0881,
-             "okuma": "asiri uyum goruluyor"},
-            {"kosu": "D5 best.pt", "mAP50": 0.9092, "Δ v00": -0.0107,
-             "okuma": "sinirli kayip"},
-            {"kosu": "D5 last.pt", "mAP50": 0.3352, "Δ v00": -0.5848,
-             "okuma": "felaket"},
-        ]),
-        hide_index=True, width="stretch",
-    )
+    st.dataframe(_checkpoint_ciftleri(sonuclar), hide_index=True, width="stretch")
     stil.yorum(
         "Ayni kosunun iki checkpoint'i arasindaki fark, 'bu kosu saglikli mi' "
         "sorusunun cevabini degistiriyor. Bu yuzden defterde her ikisi de "
         "ayri satir olarak tutuluyor."
+    )
+    stil.kutu(
+        "<b>Dikkat - son checkpoint dususunun de bir tabani var.</b> "
+        "Saglikli referansin kendisi best.pt'den last.pt'ye gecerken "
+        "<b>-0.0280</b> dusuyor. Yani her last.pt dususu bozulma isareti "
+        "degildir; D4 (-0.0329) ve D6b (-0.0330) bu tabana cok yakin. "
+        "Ayrisanlar E1 (-0.0881) ve ozellikle D5 (-0.5848)."
     )

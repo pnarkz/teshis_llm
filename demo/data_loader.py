@@ -153,18 +153,28 @@ def label_distribution_image(row: pd.Series) -> Path | None:
 
 
 def error_galleries() -> dict[str, dict]:
-    """reports/hata_galerisi_<KOD> klasorlerini senaryo koduna gore dondurur."""
+    """Hata galerilerini SENARYO ADINA gore dondurur.
+
+    Klasor adindaki alt cizgiyi sokup senaryo adi saymak yanlisti: "C2 seed13"
+    senaryosunun klasoru `hata_galerisi_C2_seed13` oldugu icin galeri
+    `C2_seed13` anahtariyla dururdu ve defterdeki adla eslesmezdi. Sonuc,
+    demonun galeri seciciside klasor adlarinin gorunmesiydi.
+
+    Dogru yon tersidir: defterdeki her senaryo icin klasor adi TEK KAYNAKTAN
+    (raporlar.galeri_adi) uretilir ve galeri o senaryo adiyla anahtarlanir.
+    """
+    from teshis.degerlendirme.raporlar import galeri_adi
+
     galleries: dict[str, dict] = {}
-    reports = ROOT / "reports"
-    if not reports.is_dir():
-        return galleries
-    for folder in sorted(reports.glob("hata_galerisi_*")):
+    for scenario in load_results()["scenario"]:
+        folder = ROOT / "reports" / galeri_adi(str(scenario))
         manifest = folder / "gallery.json"
         if not manifest.is_file():
             continue
-        entries = json.loads(manifest.read_text(encoding="utf-8"))
-        scenario = folder.name.replace("hata_galerisi_", "")
-        galleries[scenario] = {"folder": folder, "entries": entries}
+        galleries[str(scenario)] = {
+            "folder": folder,
+            "entries": json.loads(manifest.read_text(encoding="utf-8")),
+        }
     return galleries
 
 

@@ -85,7 +85,7 @@ def goster() -> None:
                 width="stretch",
             )
 
-    gorseller = images_for(senaryo.replace("_", " ")) or images_for(senaryo)
+    gorseller = images_for(senaryo)
     matris = [g for g in gorseller if "confusion" in g.name.lower()]
     if matris:
         st.markdown("### Confusion matrix")
