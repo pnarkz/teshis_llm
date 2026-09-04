@@ -54,6 +54,10 @@ senaryolar:
     ad: egitim_kararsizligi
     tur: egitim
     config: egitim/e3_egitim_kararsizligi.yaml
+  - kod: E3b
+    ad: egitim_kararsizligi_olculebilir
+    tur: egitim
+    config: egitim/e3b_egitim_kararsizligi_olculebilir.yaml
   - kod: E4
     ad: egitim_cikarsam_cozunurluk_uyumsuzlugu
     tur: egitim

@@ -20,6 +20,9 @@ YOKSAY = re.compile(
     r"^(dataset|termal_teshis|runs|\.\.\.|C:|/kaggle|https?:)"
     r"|\.(jpg|png|pt|onnx)$"          # ornek gorseller/agirliklar (gitignore'da)
     r"|^(experiments|veri_surumleri)/"  # uretilen kosu ciktilari (gitignore'da)
+    # Ultralytics results.csv sutun adlari yol gibi gorunur ama dosya degil:
+    # `train/box_loss`, `val/cls_loss`, `metrics/mAP50(B)`, `lr/pg0`.
+    r"|^(train|val|metrics|lr)/"
 )
 
 # Kod bloklari ve satir ici kod icindeki yol adaylari.

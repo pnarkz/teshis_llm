@@ -1,0 +1,11 @@
+kod: E3b
+ad: egitim_kararsizligi_olculebilir
+kaynak_surum: v00_saglikli
+parametreler:
+  lr0: 0.0125
+  ogrenme_orani_kati: 10
+seed: 42
+beklenen_kanit: >
+  loss gurultulu ama model ogrenmeye devam ediyor; iki seed arasinda belirgin
+  oynaklik. E3'te lr 100 kat yuksekti ve tam iraksama uretti; bu senaryo
+  kararsizligin OLCULEBILIR bandini arar.

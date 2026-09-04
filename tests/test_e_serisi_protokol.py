@@ -13,12 +13,29 @@ Asagidaki testler sapmalarin tek bir yerde - senaryolar/egitim_protokolu.yaml
 icinde - beyan edilmis kalmasini zorunlu kilar.
 """
 
+import sys
+
 import pytest
 import yaml
 
 from teshis.egitim import protokol
 
-E_KODLARI = ["E1", "E2", "E3", "E4"]
+def _e_kodlari() -> list[str]:
+    """Konfig dosyalarinin KENDI `kod` alanindan okur.
+
+    Dosya adindan turetmek yanlisti: `e3b_...yaml` -> "E3B" cikiyordu ama
+    protokoldeki anahtar "E3b". Kod, dosya adinda degil dosyanin icinde
+    yazilidir; tek dogru kaynak odur.
+    """
+    kodlar = []
+    for yol in sorted((protokol.PROTOKOL_YOLU.parent / "egitim").glob("*.yaml")):
+        icerik = yaml.safe_load(yol.read_text(encoding="utf-8")) or {}
+        if icerik.get("kod"):
+            kodlar.append(icerik["kod"])
+    return kodlar
+
+
+E_KODLARI = _e_kodlari()
 
 
 @pytest.fixture(scope="module")
@@ -29,13 +46,10 @@ def ham():
 def test_katalogdaki_her_e_senaryosu_protokolde_tanimli(ham):
     """senaryolar/egitim/ altindaki her E senaryosunun sapma beyani olmali.
 
-    Konfig dosya adlari kucuk harfle baslar (e1_overfitting.yaml); senaryo
-    kodlari buyuk harftir (E1). Kural senaryolar/veri/ altinda da aynidir.
+    Kodlar dosya adindan degil, konfigin kendi `kod` alanindan okunur:
+    `e3b_...yaml` dosya adindan "E3B" cikiyordu ama dogru kod "E3b".
     """
-    konfigler = sorted(
-        p.stem.split("_")[0].upper()
-        for p in (protokol.PROTOKOL_YOLU.parent / "egitim").glob("*.yaml")
-    )
+    konfigler = _e_kodlari()
     tanimli = set(ham["e_serisi"])
     eksik = [k for k in konfigler if k not in tanimli]
     assert not eksik, f"Bu E senaryolarinin sapma beyani yok: {eksik}"
@@ -196,3 +210,42 @@ def test_lr0_baglayici_degilse_protokol_bunu_belgeler():
         "optimizer=auto iken lr0'in uygulanmadigi protokol dosyasinda "
         "aciklanmali; aksi halde okuyan kisi lr0'in gecerli oldugunu sanir."
     )
+
+
+def test_cli_secenekleri_protokolden_turetiliyor():
+    """--e-senaryo secenekleri YAML'daki e_serisi ile birebir olmali.
+
+    GERCEK HATA: secenekler kos.py icinde ["E1","E2","E3"] diye elle
+    yaziliydi. E3b protokole eklendiginde CLI onu reddetti
+    ("invalid choice: 'E3b'") ve iki kosu daha baslamadan dustu.
+    """
+    import argparse
+    from unittest import mock
+
+    from teshis.egitim import kos
+
+    yakalanan = {}
+    gercek_ekle = argparse.ArgumentParser.add_argument
+
+    def izle(self, *args, **kwargs):
+        if args and args[0] == "--e-senaryo":
+            yakalanan["choices"] = kwargs.get("choices")
+        return gercek_ekle(self, *args, **kwargs)
+
+    with mock.patch.object(argparse.ArgumentParser, "add_argument", izle), \
+         mock.patch.object(sys, "argv", ["kos", "--help"]), \
+         pytest.raises(SystemExit):
+        kos.main()
+
+    assert yakalanan.get("choices"), "--e-senaryo secenekleri okunamadi"
+    beklenen = set(protokol.yukle().get("e_serisi", {}))
+    assert set(yakalanan["choices"]) == beklenen, (
+        f"CLI secenekleri {sorted(yakalanan['choices'])}, protokol {sorted(beklenen)}"
+    )
+
+
+def test_kos_scripti_elle_senaryo_listesi_tutmuyor():
+    from pathlib import Path
+
+    kaynak = (Path(protokol.__file__).parent / "kos.py").read_text(encoding="utf-8")
+    assert '["E1", "E2", "E3"]' not in kaynak

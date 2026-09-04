@@ -151,11 +151,18 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="0", help="GPU id, or cpu")
     parser.add_argument("--workers", type=int, default=0, help="Windows yerel kosuda 0 daha kararlidir")
+    # Secenekler PROTOKOLDEN turetilir; elle liste tutmak YAML ile ayrisir.
+    # E3b eklendiginde tam bunun oldugu gorildu: senaryo protokolde tanimliydi
+    # ama CLI "invalid choice: 'E3b'" diyerek kosuyu reddetti.
+    from .protokol import yukle
+
+    e_kodlari = sorted(yukle().get("e_serisi", {}))
     parser.add_argument(
         "--e-senaryo",
-        choices=["E1", "E2", "E3"],
+        choices=e_kodlari,
         help="E serisi egitim arizasi: ortak protokole YAML'da beyan edilmis "
-             "sapmalari uygular. E4 egitim gerektirmez (cikarim tarafi).",
+             "sapmalari uygular. Egitim gerektirmeyen senaryolar (orn. E4) "
+             "burada secilse de bir sey degistirmez.",
     )
     parser.add_argument(
         "--devam", type=Path, default=None,

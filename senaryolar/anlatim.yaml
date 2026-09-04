@@ -57,6 +57,12 @@ E3: >
   kararsizlasmadigini ve bunun iki farkli seed arasinda ne kadar oynadigini
   olcer.
 
+E3b: >
+  Ogrenme orani 10 kat yuksek secildiginde egitimin kararsizlasip
+  kararsizlasmadigini olcer. E3'te 100 kat tam iraksama urettigi ve hicbir
+  sey ogrenilmedigi icin kararsizlik gozlenemedi; bu senaryo olculebilir
+  bandi arar.
+
 E4: >
   Model egitildiginden farkli bir cozunurlukte calistirildiginda kaybin
   precision'da mi recall'da mi olustugunu olcer.

@@ -1035,6 +1035,62 @@ bu senaryo hakkinda yanlis bir izlenim birakirdi.
 - experiments/run_20260831_211150_E1_42/results.csv (egitim egrisi)
 - veri_surumleri/v10_e1_overfitting_alt_kume/manifest.json
 
+### E3 Sonucu — HIPOTEZ DESTEKLENMEDI: 100 kat lr kararsizlik degil TAM IRAKSAMA uretti
+
+E3'un konfigdeki beklenen kaniti: *"loss gurultulu, iki farkli seed arasinda
+belirgin oynaklik."* Olculen bunun otesinde bir sey.
+
+`AdamW(lr=0.1)` ile egitim **epoch 1'de coktu ve bir daha toparlanmadi**:
+
+| | 30 epoch boyunca |
+|---|---|
+| `train/box_loss`, `train/cls_loss`, `val/*` | **30/30 epoch `nan`** |
+| `mAP50`, `mAP50-95`, precision, recall | **30/30 epoch 0.0** |
+| Ogrenme orani (kosinus takvimi) | 0.1 -> 0.00127 |
+
+Kosinus takvimi ogrenme oranini sona dogru 0.00127'ye kadar dusurdu ama
+**toparlanma olmadi**: agirliklar bir kez `nan` olunca geri donus yoktur.
+Yani gozlenen sey kararsizlik degil, ilk adimda gerceklesen sayisal tasmadir.
+
+#### Ikinci seed neden kosulmadi
+
+Konfig iki seed ongoruyordu (42 ve 43). Seed 42 tamamlandiktan sonra seed 43
+**durduruldu**. Gerekce: `nan` sayisal tasmadan kaynaklanir ve seed'e bagli
+degildir; ilk optimizasyon adimindaki gradyan buyuklugu ogrenme orani
+tarafindan belirlenir. Seed 43'un 10 saat kosup ayni `nan` tablosunu
+uretmesi neredeyse kesindi ve sunuma bir hafta kala bu sureyi harcamak
+savunulamazdi.
+
+Bu bir eksiklik olarak kayda geciyor: **E3'un seed'ler arasi tekrarlanabilirligi
+dogrulanmadi.** Iddia yalnizca tek kosuya dayaniyor.
+
+#### E3b: kararsizligin olculebilir bandi
+
+E3'un asil sorusu ("egitim kararsizlasir mi ve seed'ler arasinda ne kadar
+oynar") cevapsiz kaldi, cunku hicbir sey ogrenilmedigi yerde kararsizlik
+gozlenemez. Bunun icin **E3b** eklendi: ogrenme orani 100 kat degil **10 kat**
+yuksek (lr=0.0125). Beklenen imza, modelin ogrenmeye devam etmesi ama
+kararsiz olmasidir.
+
+E3b de protokolde beyan edilmis sapmalarla kosar
+(`optimizer: AdamW, lr0: 0.0125, warmup_epochs: 0`) ve iki seed kullanir.
+
+#### Yakalanan hata: CLI senaryo listesi elle tutuluyordu
+
+E3b tanimlandiktan sonra ilk kosu denemesi **baslamadan dustu**:
+
+```text
+kos.py: error: argument --e-senaryo: invalid choice: 'E3b'
+        (choose from 'E1', 'E2', 'E3')
+```
+
+Senaryo listesi `kos.py` icinde elle yazilmisti ve protokol YAML'i ile
+ayrismisti. Secenekler artik protokolden turetiliyor; iki test bunu koruyor.
+Bu, bu projede tekrar eden bir sinifin bir ornegi daha: **iki yerde yazilan
+her kural er gec ayrilir.**
+
+- experiments/run_20260903_220254_E3s42_42/results.csv (nan tablosu)
+
 ### E2 Sonucu — HIPOTEZ DESTEKLENMEDI: yakinsamis modelde epoch kesmek underfitting uretmez
 
 E2'nin konfigdeki beklenen kaniti: *"train ve val birlikte dusuk, loss hala

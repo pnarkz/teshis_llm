@@ -119,6 +119,13 @@ e_serisi:
     aciklama: >
       Egitim kararsizligi. Ogrenme orani 100 kat yuksek. Beklenen: loss
       gurultulu, iki farkli seed arasinda belirgin oynaklik.
+      OLCULEN (2026-09-04): beklenen kanit GERCEKLESMEDI. lr=0.1 kararsizlik
+      degil TAM IRAKSAMA uretti - epoch 1'den itibaren butun kayiplar nan,
+      butun metrikler 0 ve 30 epoch boyunca toparlanma yok. Kosinus takvimi
+      lr'yi 0.00127'ye kadar dusurdu ama agirliklar bir kez nan olunca geri
+      donus yok. Ikinci seed kosulmadi: nan sayisal tasmadan kaynaklanir ve
+      seed'e bagli degildir; 10 saatlik kosu bilgi getirmezdi.
+      Aranan imza (gurultulu ama ogrenen egitim) icin E3b eklendi.
     sapmalar:
       # optimizer acikca yazilmali: 'auto' iken Ultralytics lr0'i yok sayar
       # ve E3 sessizce saglikli bir kosuya donusurdu. AdamW secildi cunku
@@ -130,6 +137,21 @@ e_serisi:
     kosu_ayarlari:
       epochs: 30
       ikinci_seed: 43     # oynakligi olcmek icin ikinci kosu zorunlu
+
+  E3b:
+    aciklama: >
+      Egitim kararsizligi - OLCULEBILIR bant. E3'te lr=0.1 tam iraksama
+      urettigi ve hicbir sey ogrenilmedigi icin "kararsizlik" gozlenemedi.
+      E3b ogrenme oranini 10 kat yuksek tutar (0.0125 civari): model
+      ogrenmeye devam eder ama kararsiz olmasi beklenir. Aranan imza budur -
+      gurultulu loss ve iki seed arasinda oynaklik.
+    sapmalar:
+      optimizer: AdamW
+      lr0: 0.0125
+      warmup_epochs: 0
+    kosu_ayarlari:
+      epochs: 30
+      ikinci_seed: 43
 
   E4:
     aciklama: >
