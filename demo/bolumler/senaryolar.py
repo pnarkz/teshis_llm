@@ -79,13 +79,13 @@ def goster() -> None:
     senaryo = st.selectbox("Kosu", adlar, index=adlar.index("D4") if "D4" in adlar else 0)
     o = ozet(senaryo)
 
-    st.markdown("## Deney ozeti")
+    st.markdown("## Deney özeti")
     if o["ne_olcuyor"]:
         stil.kutu(o["ne_olcuyor"].strip())
 
     a, b = st.columns(2)
     with a:
-        stil.ust_baslik("ne degistirildi")
+        stil.ust_baslik("ne değiştirildi")
         d = o["ne_degisti"]
         satir = f"<b>Tur:</b> {d.get('tur') or '-'}<br>"
         if d.get("parametreler"):
@@ -95,14 +95,14 @@ def goster() -> None:
             satir += f"<b>Veri surumu:</b> <code>{d['veri_surumu']}</code>"
         stil.kutu(satir)
     with b:
-        stil.ust_baslik("ne sabit kaldi")
+        stil.ust_baslik("ne sabit kaldı")
         stil.kutu("<br>".join(o["ne_sabit_kaldi"]))
 
     if o["beklenen_etki"]:
         stil.ust_baslik("beklenen etki")
         stil.kutu(str(o["beklenen_etki"]))
 
-    st.markdown("## Ne gozlendi")
+    st.markdown("## Ne gözlendi")
     gozlem = o["ne_gozlendi"]
     if gozlem:
         st.dataframe(_metrik_tablosu(gozlem), hide_index=True, width="stretch")
@@ -118,7 +118,7 @@ def goster() -> None:
     kosu_id = _kosu_id(senaryo)
     kaynak_df, boyut_df = _kirilim_tablosu(senaryo, kosu_id)
     if kaynak_df is not None:
-        st.markdown("## Kirilim")
+        st.markdown("## Kırılım")
         c, d2 = st.columns(2)
         with c:
             stil.ust_baslik("kaynak grubu")
@@ -134,7 +134,7 @@ def goster() -> None:
 
     egri = training_curve(sonuclar[sonuclar["scenario"] == senaryo].iloc[0])
     if egri is not None and not egri.empty:
-        st.markdown("## Egitim egrisi")
+        st.markdown("## Eğitim eğrisi")
         sutunlar = [s for s in ("train/cls_loss", "val/cls_loss",
                                 "metrics/mAP50(B)") if s in egri.columns]
         if sutunlar:
@@ -146,22 +146,22 @@ def goster() -> None:
 
     gorseller = images_for(senaryo)
     if gorseller:
-        st.markdown("## Confusion matrix ve egriler")
+        st.markdown("## Confusion matrix ve eğriler")
         secili = [g for g in gorseller if "confusion" in g.name.lower()][:1] or gorseller[:1]
         for g in secili:
             st.image(str(g), width="stretch")
-        with st.expander("Diger grafikler"):
+        with st.expander("Diğer grafikler"):
             for g in gorseller:
                 st.image(str(g), caption=g.name, width="stretch")
 
     ornekler = examples_for(senaryo)
     if ornekler:
-        st.markdown("## Ornek tahminler")
+        st.markdown("## Örnek tahminler")
         st.image([str(p) for p in ornekler[:3]], width="stretch")
 
-    st.markdown("## Sinirlamalar")
+    st.markdown("## Sınırlamalar")
     for s in o["sinirlamalar"]:
         st.markdown(f"- {s}")
 
-    with st.expander("Ham metrik dosyasi"):
+    with st.expander("Ham metrik dosyası"):
         st.json(evidence_for(senaryo))

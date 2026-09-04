@@ -91,3 +91,92 @@ def guc_rozeti(seviye: str) -> str:
         seviye, "notr"
     )
     return rozet(seviye, tur)
+
+
+# --- Grafik yardimcilari ----------------------------------------------------
+
+# Etki haritasinda renk olcegi bu degerde KIRPILIR. Kirpmadan cizildiginde
+# birkac uc deger (orn. D5 last_pt'nin band orani ~97) butun olcegi eziyor ve
+# geri kalan hucreler ayni acik tonda gorunuyordu. Kirpma yalnizca RENGI
+# etkiler; gercek oran her zaman tooltip'te ve tablolarda tam degeriyle durur.
+HARITA_RENK_TAVANI = 10.0
+
+
+def etki_haritasi(veri, x: str, y: str, deger: str, baslik: str = ""):
+    """Senaryo x metrik etki haritasi.
+
+    Renk, farkin YONUNU degil BUYUKLUGUNU tasir: gurultu bandina orani.
+    Ham farki renklendirmek yaniltici olurdu - kucuk bir grupta buyuk gorunen
+    fark, o grubun dogal yayilimi icinde olabilir.
+    """
+    import altair as alt
+
+    veri = veri.copy()
+    veri["renk"] = veri[deger].clip(upper=HARITA_RENK_TAVANI)
+    return (
+        alt.Chart(veri)
+        .mark_rect(stroke="#ffffff", strokeWidth=1)
+        .encode(
+            x=alt.X(f"{x}:N", title=None, axis=alt.Axis(labelAngle=0)),
+            y=alt.Y(f"{y}:N", title=None, sort=None),
+            color=alt.Color(
+                "renk:Q",
+                title=f"band oranı (≥{HARITA_RENK_TAVANI:.0f} aynı ton)",
+                scale=alt.Scale(scheme="oranges", domain=[0, HARITA_RENK_TAVANI]),
+            ),
+            tooltip=[c for c in veri.columns if c != "renk"],
+        )
+        .properties(height=max(240, 24 * veri[y].nunique()), title=baslik)
+    )
+
+
+def gurultu_bandi_grafigi(veri, senaryo: str = "senaryo", fark: str = "fark",
+                          band: str = "band"):
+    """Her senaryonun farkini, gurultu bandi kusagiyla birlikte cizer.
+
+    Bandin icinde kalan noktalar gorsel olarak ayrisir; okuyucu "bu fark
+    buyuk mu" sorusunu tabloya bakmadan cevaplar.
+    """
+    import altair as alt
+
+    kusak = (
+        alt.Chart(veri)
+        .mark_area(opacity=0.22, color=NOTR)
+        .encode(
+            y=alt.Y(f"{senaryo}:N", title=None, sort=None),
+            x=alt.X("band_alt:Q", title="referansa fark"),
+            x2="band_ust:Q",
+        )
+    )
+    noktalar = (
+        alt.Chart(veri)
+        .mark_point(size=90, filled=True)
+        .encode(
+            y=alt.Y(f"{senaryo}:N", title=None, sort=None),
+            x=alt.X(f"{fark}:Q"),
+            color=alt.Color(
+                "asiyor:N",
+                title=None,
+                scale=alt.Scale(domain=["evet", "hayir"], range=[VURGU, UYARI]),
+            ),
+            tooltip=list(veri.columns),
+        )
+    )
+    sifir = alt.Chart(veri).mark_rule(color="#bbb").encode(x=alt.datum(0))
+    return (kusak + sifir + noktalar).properties(
+        height=max(240, 24 * veri[senaryo].nunique())
+    )
+
+
+def guven_rozeti(deger: str) -> str:
+    """Ajanin OZ-BILDIRDIGI guven duzeyi.
+
+    Bilerek rozet, gauge degil: "yuksek" kalibre edilmis bir olasilik degil,
+    modelin kendi beyanidir. Yarim daire bir gauge, olculmus bir guven
+    yuzdesi izlenimi yaratirdi.
+    """
+    tur = {"yüksek": "olumlu", "yuksek": "olumlu",
+           "orta": "notr", "düşük": "uyari", "dusuk": "uyari"}.get(
+        str(deger).lower(), "notr"
+    )
+    return rozet(f"öz-bildirim: {deger}", tur)

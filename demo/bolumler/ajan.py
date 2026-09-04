@@ -30,12 +30,22 @@ from data_loader import (
 )
 
 
-def _korluk_paneli(kosu_id: str, senaryo: str) -> None:
-    stil.ust_baslik("kor teshis")
+def _korluk_paneli(kosu_id: str, senaryo: str, acik: bool) -> None:
+    """Kor teshis paneli.
+
+    Gercek senaryo BASLANGICTA GIZLIDIR - sunucu da ajanla ayni bilgiyle
+    baslar. "Gercegi goster" ile acilir. Bu, kor tasarimi anlatmakla
+    kalmayip izleyiciye YASATIR: once kanita bakilir, sonra cevap acilir.
+    """
+    stil.ust_baslik("kör teşhis")
+    gercek = (
+        f"<b>Gerçek senaryo:</b> {senaryo}" if acik
+        else "<b>Gerçek senaryo:</b> <i>gizli — aşağıdan açabilirsiniz</i>"
+    )
     st.markdown(
-        f"<div class='kutu'><b>Sunucu gorunumu:</b> {senaryo}<br>"
-        f"<b>Ajana gonderilen kimlik:</b> <code>{kosu_id}</code><br>"
-        f"<b>Senaryo adi ajandan gizlendi:</b> EVET</div>",
+        f"<div class='kutu'>{gercek}<br>"
+        f"<b>Ajana gönderilen kimlik:</b> <code>{kosu_id}</code><br>"
+        f"<b>Senaryo adı ajandan gizlendi:</b> EVET</div>",
         unsafe_allow_html=True,
     )
     with st.expander("Ajana ne gidiyor, ne gitmiyor"):
@@ -45,38 +55,59 @@ def _korluk_paneli(kosu_id: str, senaryo: str) -> None:
         )
 
 
-def _arac_kayit_tablosu(cagrilar: list[dict]) -> pd.DataFrame:
+ARAC_ACIKLAMA = {
+    "baseline_metriklerini_getir": "sağlıklı referansın metrikleri",
+    "kosu_metriklerini_getir": "bu koşunun metrikleri",
+    "baseline_farkini_getir": "referansa göre farklar",
+    "bbox_sayilarini_getir": "sınıf başına örnek sayısı",
+    "boyut_bazli_recall_getir": "nesne boyutu kırılımı",
+    "kaynak_bazli_recall_getir": "kaynak grubu kırılımı",
+    "sinif_karisikligini_getir": "sınıf karışıklığı matrisi",
+}
+
+
+def _arac_zaman_cizelgesi(cagrilar: list[dict]) -> pd.DataFrame:
+    """Ajanın kanıt toplama sırası.
+
+    Sıra bilgi taşır: ajan önce genel metriklere bakıp sonra hangi kırılımı
+    sorguladığı, akıl yürütmesinin izidir. Tablo yerine sıralı bir çizelge
+    bunu okunur kılar.
+    """
     return pd.DataFrame([
         {
+            "sıra": i + 1,
             "tur": c.get("tur"),
-            "arac": c.get("arac"),
-            "arguman": json.dumps(c.get("argumanlar", {}), ensure_ascii=False),
+            "araç": c.get("arac"),
+            "ne sorduğu": ARAC_ACIKLAMA.get(c.get("arac"), "-"),
             "hata": c.get("hata") or "-",
         }
-        for c in cagrilar
+        for i, c in enumerate(cagrilar)
     ])
 
 
 def _teshis_goster(cevap: dict) -> None:
-    st.markdown("### Teshis")
+    st.markdown("### Teşhis")
     stil.kutu(f"<b>{cevap.get('diagnosis', '-')}</b>")
-    a, b = st.columns([1, 3])
-    a.metric("Guven", cevap.get("confidence", "-"))
-    with b:
-        stil.ust_baslik("kanit")
-        for k in cevap.get("evidence", []) or []:
-            st.markdown(f"- {k}")
+    st.markdown(stil.guven_rozeti(cevap.get("confidence", "-")),
+                unsafe_allow_html=True)
+    stil.yorum(
+        "Bu değer ajanın kendi beyanıdır; kalibre edilmiş bir olasılık "
+        "değildir. Doğrulukla ilişkisi ölçülmedi."
+    )
+    stil.ust_baslik("kanıt")
+    for k in cevap.get("evidence", []) or []:
+        st.markdown(f"- {k}")
     if cevap.get("limitations"):
-        stil.ust_baslik("sinirlamalar")
+        stil.ust_baslik("sınırlamalar")
         for k in cevap["limitations"]:
             st.markdown(f"- {k}")
     if cevap.get("next_measurement"):
-        stil.ust_baslik("onerilen sonraki olcum")
+        stil.ust_baslik("önerilen sonraki ölçüm")
         st.markdown(cevap["next_measurement"])
 
 
 def _puan_goster(puan: dict) -> None:
-    st.markdown("### Cevap anahtariyla karsilastirma")
+    st.markdown("### Cevap anahtarıyla karşılaştırma")
     st.markdown(
         "Cevap anahtari ajana **gonderilmedi**; puanlama cevap uretildikten "
         "sonra yerelde yapildi."
@@ -141,6 +172,15 @@ def _canli_calistir(kosu_id: str) -> dict | None:
     return {"cevap": cevap, "kayit": kayit, "sure": sure}
 
 
+def _senaryo_ozeti(senaryo: str) -> dict:
+    from teshis.degerlendirme.senaryo_ozeti import ozet
+
+    try:
+        return ozet(senaryo)
+    except Exception:  # noqa: BLE001 - ozet uretilemezse akis durmasin
+        return {}
+
+
 def goster() -> None:
     st.title("Ajan")
     st.markdown(
@@ -153,39 +193,43 @@ def goster() -> None:
     harita = ajan_kosu_haritasi()
     kosular = sorted(kayit["cevaplar"]) or sorted(harita)
     varsayilan = kosular.index("kosu_08") if "kosu_08" in kosular else 0
-    kosu_id = st.selectbox(
-        "Kosu", kosular, index=varsayilan,
-        format_func=lambda k: f"{k}  —  {harita.get(k, '?')}",
-    )
+    # Secicide GERCEK AD GOSTERILMEZ: sunum sirasinda izleyici de sunucu da
+    # ajanla ayni bilgiyle baslar. Ad, "gercegi goster" ile acilir.
+    kosu_id = st.selectbox("Koşu", kosular, index=varsayilan)
     senaryo = harita.get(kosu_id, "?")
 
+    anahtar = f"acik_{kosu_id}"
+    if anahtar not in st.session_state:
+        st.session_state[anahtar] = False
+    acik = st.session_state[anahtar]
+
     mod = st.radio(
-        "Kaynak", ["Kayitli kosu", "Canli calistir"], horizontal=True,
+        "Kaynak", ["Kayıtlı koşu", "Canlı çalıştır"], horizontal=True,
         help=("Kayitli kosu API harcamaz ve her zaman calisir. Canli mod "
               "ucretsiz katman sinirlarina tabidir (20 istek/gun, 5 istek/dk)."),
     )
 
     st.markdown("---")
-    _korluk_paneli(kosu_id, senaryo)
+    _korluk_paneli(kosu_id, senaryo, acik)
 
-    st.markdown("### Ajana verilen kanit")
+    st.markdown("### Ajana verilen kanıt")
     st.markdown(
-        "Araclar deterministiktir; asagidaki cikti yerelde yeniden uretildi ve "
-        "API harcamadi. Ajanin gordugu kanit tam olarak budur."
+        "Araçlar deterministiktir; aşağıdaki çıktı yerelde yeniden üretildi ve "
+        "API harcamadı. Ajanın gördüğü kanıt tam olarak budur."
     )
     kanit = ajan_araclarini_calistir(kosu_id)
-    with st.expander("Arac ciktilari", expanded=False):
+    with st.expander("Araç çıktıları", expanded=False):
         for ad, deger in kanit.items():
             st.markdown(f"**{ad}**")
             st.json(deger, expanded=False)
 
     st.markdown("---")
-    if mod == "Canli calistir":
-        if st.button("Ajani calistir", type="primary"):
+    if mod == "Canlı çalıştır":
+        if st.button("Ajanı çalıştır", type="primary"):
             sonuc = _canli_calistir(kosu_id)
             if sonuc:
-                st.markdown("### Arac cagrilari")
-                st.dataframe(_arac_kayit_tablosu(sonuc["kayit"]),
+                st.markdown("### Araç çağrıları")
+                st.dataframe(_arac_zaman_cizelgesi(sonuc["kayit"]),
                              hide_index=True, width="stretch")
                 _teshis_goster(sonuc["cevap"])
                 with st.expander("Ham cevap (JSON)"):
@@ -204,8 +248,8 @@ def goster() -> None:
 
     cagrilar = (kayit["arac_kaydi"].get(kosu_id) or {}).get("arac_cagrilari", [])
     if cagrilar:
-        st.markdown("### Arac cagrilari")
-        st.dataframe(_arac_kayit_tablosu(cagrilar), hide_index=True,
+        st.markdown("### Araç çağrıları")
+        st.dataframe(_arac_zaman_cizelgesi(cagrilar), hide_index=True,
                      width="stretch")
         stil.yorum(
             f"Ajan bu kosuda {len(cagrilar)} arac cagirdi. Hangi kaniti "
@@ -213,21 +257,53 @@ def goster() -> None:
         )
 
     _teshis_goster(cevap)
-    puan = kayit["puanlar"].get(kosu_id)
-    if puan:
-        _puan_goster(puan)
+
+    st.markdown("---")
+    if not acik:
+        stil.kutu(
+            "Ajanın teşhisi yukarıda. <b>Gerçek senaryo hâlâ gizli.</b> "
+            "Kanıta bakıp kendi kararınızı verdikten sonra açın."
+        )
+        if st.button("Gerçeği göster", type="primary"):
+            st.session_state[anahtar] = True
+            st.rerun()
+    else:
+        ozet = _senaryo_ozeti(senaryo)
+        st.markdown("### Gerçek senaryo")
+        stil.kutu(
+            f"<b>{senaryo}</b>"
+            + (f"<br>{ozet['ne_olcuyor'].strip()}" if ozet.get("ne_olcuyor") else "")
+        )
+        puan = kayit["puanlar"].get(kosu_id)
+        if puan:
+            _puan_goster(puan)
+        if st.button("Yeniden gizle"):
+            st.session_state[anahtar] = False
+            st.rerun()
 
     with st.expander("Ham cevap (JSON)"):
         st.json(cevap)
 
     st.markdown("---")
-    st.markdown("### Denemenin butunu")
-    ozet = kayit["ozet"]
-    a, b = st.columns(2)
-    a.metric("Ortalama puan (kati)", ozet.get("mean_score", "-"))
-    b.metric("Ortalama puan (tespit-farkindalikli)", ozet.get("mean_score_tespit", "-"))
+    st.markdown("### Denemenin bütünü")
+    puanlar = list(kayit["puanlar"].values())
+    if puanlar:
+        n = len(puanlar)
+        teshis = sum(p["diagnosis_score"] for p in puanlar) / n
+        tespit = sum(p["diagnosis_score_tespit"] for p in puanlar) / n
+        rubrik = kayit["ozet"].get("mean_score")
+        a, b, c = st.columns(3)
+        a.metric("Doğru neden teşhisi", f"{teshis:.1%}")
+        b.metric("Tespit-farkındalıklı", f"{tespit:.1%}")
+        c.metric("Rubrik ortalaması", f"{rubrik:.1%}" if rubrik else "-")
+        stil.kutu(
+            "Rubrik ortalaması üç bileşenin ortalamasıdır ve ikisi (kanıt, "
+            "sınırlama) her koşuda tam puan alır. Ayırt eden tek bileşen "
+            "teşhistir; ajanın <b>doğru nedeni bulma oranı "
+            f"%{teshis * 100:.0f}</b>'dir."
+        )
     stil.yorum(
-        "Kosu basina tek deneme yapildi; bu bir nokta tahminidir ve guven "
-        "araligi hesaplanamaz. Ajanin hata profili icin 'Deney Tasarimi ve "
-        "Sinirlar' bolumune bakin."
+        "Koşu başına tek deneme yapıldı; bunlar nokta tahminidir ve güven "
+        "aralığı hesaplanamaz. Ajanın hata profili için 'Deney Tasarımı ve "
+        "Sınırlar' bölümüne bakın."
     )

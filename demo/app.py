@@ -46,29 +46,29 @@ st.set_page_config(
 stil.uygula()
 
 BOLUMLER = {
-    "Genel Bakis": genel_bakis.goster,
-    "Deney Tasarimi ve Sinirlar": tasarim.goster,
+    "Genel Bakış": genel_bakis.goster,
+    "Deney Tasarımı ve Sınırlar": tasarim.goster,
     "Senaryolar": senaryolar.goster,
-    "Karsilastirma ve Gurultu": karsilastirma.goster,
+    "Karşılaştırma ve Gürültü": karsilastirma.goster,
     "Hata Analizi": hata_analizi.goster,
     "Ajan": ajan.goster,
 }
 
-st.sidebar.markdown("### Termal Teshis")
-secim = st.sidebar.radio("Bolum", list(BOLUMLER), label_visibility="collapsed")
+st.sidebar.markdown("### Termal Teşhis")
+secim = st.sidebar.radio("Bölüm", list(BOLUMLER), label_visibility="collapsed")
 
 st.sidebar.markdown("---")
 st.sidebar.caption(
-    "Bu konsol mevcut olcum ciktilarini okur; egitim veya test calistirmaz. "
-    "Tek istisna Ajan bolumundeki 'canli calistir' dugmesidir."
+    "Bu konsol mevcut ölçüm çıktılarını okur; eğitim veya test çalıştırmaz. "
+    "Tek istisna Ajan bölümündeki 'canlı çalıştır' düğmesidir."
 )
 
 try:
     BOLUMLER[secim]()
 except Exception as hata:  # noqa: BLE001
     # Sunum sirasinda tek bir bolumun hatasi butun konsolu goturmemeli.
-    st.error(f"'{secim}' bolumu yuklenemedi: {type(hata).__name__}: {hata}")
-    with st.expander("Ayrinti"):
+    st.error(f"'{secim}' bölümü yüklenemedi: {type(hata).__name__}: {hata}")
+    with st.expander("Ayrıntı"):
         import traceback
 
         st.code(traceback.format_exc())

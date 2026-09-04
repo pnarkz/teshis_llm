@@ -34,7 +34,7 @@ def _gurultu_tablosu():
 def goster() -> None:
     st.title("Deney Tasarimi ve Sinirlar")
 
-    st.markdown("## Kontrollu deney kurgusu")
+    st.markdown("## Kontrollü deney kurgusu")
     st.markdown(
         "Gercek hayatta \"model neden kotu calisiyor?\" sorusu cevaplanamaz, "
         "cunku ayni anda birden fazla sey yanlis olabilir. Burada tersi "
@@ -44,7 +44,7 @@ def goster() -> None:
 
     a, b = st.columns(2)
     with a:
-        stil.ust_baslik("degisen")
+        stil.ust_baslik("değişen")
         stil.kutu(
             "<b>D serisi:</b> veri (etiket, dagilim, temsil)<br>"
             "<b>E serisi:</b> egitim veya cikarim ayari<br>"
@@ -59,7 +59,7 @@ def goster() -> None:
             "Test seti - final asamasina kadar yasak"
         )
 
-    st.markdown("### Protokol sapmalari beyan edilir")
+    st.markdown("### Protokol sapmaları beyan edilir")
     st.markdown(
         "E serisi protokolu **kasitli olarak** bozar. Sapmalar koda dagilmis "
         "bayraklarla degil, `senaryolar/egitim_protokolu.yaml` icinde beyan "
@@ -75,7 +75,7 @@ def goster() -> None:
     )
 
     st.markdown("---")
-    st.markdown("## Ajanin korlestirilmesi")
+    st.markdown("## Ajanın körleştirilmesi")
     st.markdown(
         "Ajan hangi kosunun hangi senaryo oldugunu bilmez. Filtreler yapisaldir "
         "ve testlidir; ad listesine dayanmaz."
@@ -91,7 +91,7 @@ def goster() -> None:
     )
 
     st.markdown("---")
-    st.markdown("## Gurultu tabani")
+    st.markdown("## Gürültü tabanı")
     st.markdown(
         "Hicbir sey bozulmadan, yalnizca rastgelelik tohumu degistirilerek "
         "egitilen kosular arasindaki yayilim. Bir farkin bu bandin altinda "
@@ -107,7 +107,7 @@ def goster() -> None:
     )
 
     st.markdown("---")
-    st.markdown("## Neyi HENUZ soyleyemiyoruz")
+    st.markdown("## Neyi HENÜZ söyleyemiyoruz")
     st.markdown(
         "Projenin asil sorusu \"bir LLM bozulmayi teshis edebilir mi?\" idi. "
         "**Bu soruyu cevaplayacak orneklem henuz yok.**"

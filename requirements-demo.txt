@@ -1,3 +1,6 @@
 # width="stretch" API'si icin 1.49+ gerekir (use_container_width kullanimdan kalkti).
 streamlit>=1.49
 pandas>=2.0
+# Streamlit altair'i dolayli kuruyor; demo dogrudan import ettigi icin
+# acikca yaziliyor - dolayli bagimliliga guvenmemek gerekir.
+altair>=5.0

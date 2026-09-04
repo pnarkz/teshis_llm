@@ -38,9 +38,9 @@ def goster() -> None:
 
     a, b = st.columns([2, 1])
     with a:
-        siralama = st.radio("Siralama", list(SIRALAMA), horizontal=True)
+        siralama = st.radio("Sıralama", list(SIRALAMA), horizontal=True)
     with b:
-        adet = st.slider("Gosterilecek ornek", 3, 12, 6)
+        adet = st.slider("Gösterilecek örnek", 3, 12, 6)
 
     anahtar = SIRALAMA[siralama]
     ters = anahtar != "mean_iou"          # dusuk IoU'da kucukten buyuge
@@ -53,7 +53,7 @@ def goster() -> None:
         st.warning("Bu galeride siralanabilir kayit bulunamadi.")
         return
 
-    st.markdown("### Ozet")
+    st.markdown("### Özet")
     st.dataframe(
         pd.DataFrame([{
             "goruntu": k.get("source", k.get("image", "")).split("/")[-1],
@@ -69,7 +69,7 @@ def goster() -> None:
         "birlestiren siralama olcutudur; en sorunlu kareleri one cikarir."
     )
 
-    st.markdown("### Ornekler")
+    st.markdown("### Örnekler")
     klasor = galeri["folder"]
     for k in sirali:
         yol = k.get("image")

@@ -104,9 +104,31 @@ def _checkpoint_ciftleri(sonuclar: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(satirlar)
 
 
+def _band_verisi(sonuclar: pd.DataFrame, metrik: str) -> pd.DataFrame:
+    """Her senaryonun farkini ve o metrigin gurultu bandini bir arada verir."""
+    satirlar = []
+    for _, r in sonuclar.iterrows():
+        senaryo = str(r["scenario"])
+        g = ne_gozlendi(senaryo)
+        if not g or metrik not in g["metrikler"]:
+            continue
+        d = g["metrikler"][metrik]
+        esik = d["gurultu_esigi"]
+        if esik is None:
+            continue
+        satirlar.append({
+            "senaryo": senaryo,
+            "fark": d["fark"],
+            "band_alt": -esik,
+            "band_ust": esik,
+            "asiyor": "evet" if d["asiyor"] else "hayir",
+        })
+    return pd.DataFrame(sorted(satirlar, key=lambda s: s["fark"]))
+
+
 def goster() -> None:
     sonuclar = load_results()
-    st.title("Karsilastirma ve Gurultu")
+    st.title("Karşılaştırma ve Gürültü")
 
     st.markdown(
         "Butun kosular saglikli referansa (v00) gore, **olculmus gurultu "
@@ -115,16 +137,34 @@ def goster() -> None:
     )
 
     df = _tablo(sonuclar)
-    sadece_asan = st.checkbox("Yalnizca gurultu esigini asanlari goster", value=False)
+
+    st.markdown("### Farklar ve gürültü bandı")
+    st.markdown(
+        "Gri kuşak, hiçbir bozulma içermeyen koşular arasında gözlenen "
+        "yayılımdır. Kuşağın içinde kalan bir nokta, saf rastgelelikten "
+        "ayırt edilemez."
+    )
+    metrik = st.radio("Metrik", ["mAP50", "precision", "recall"], horizontal=True)
+    st.altair_chart(
+        stil.gurultu_bandi_grafigi(_band_verisi(sonuclar, metrik)),
+        use_container_width=True,
+    )
+    stil.yorum(
+        "Turuncu noktalar bandın içinde: o metrikte bozulma kanıtı yok. "
+        "Mavi noktalar bandı aşıyor."
+    )
+
+    st.markdown("### Tablo")
+    sadece_asan = st.checkbox("Yalnızca gürültü eşiğini aşanları göster", value=False)
     gosterilen = df[df["esigi asan"] != "-"] if sadece_asan else df
-    st.dataframe(gosterilen, hide_index=True, width="stretch", height=520)
+    st.dataframe(gosterilen, hide_index=True, width="stretch", height=420)
     stil.yorum(
         "'kanit' sutunu uc seviye alir: guclu (birden fazla metrik esigi asiyor), "
         "zayif (tek metrik), gurultu icinde (hicbiri)."
     )
 
     st.markdown("---")
-    st.markdown("## Gurultu tabani olculunce ne degisti")
+    st.markdown("## Gürültü tabanı ölçülünce ne değişti")
     st.markdown(
         "Ilk olcum tek bir kontrol kosusuna dayaniyordu ve gurultuyu ciddi "
         "bicimde **kucuk** gosteriyordu. Uc kontrol kosusuna cikildiginda "
@@ -141,7 +181,7 @@ def goster() -> None:
         hide_index=True, width="stretch",
     )
 
-    st.markdown("### Zayiflayan bes iddia")
+    st.markdown("### Zayıflayan beş iddia")
     st.dataframe(
         pd.DataFrame([
             {"senaryo": "D1", "kaybettigi": "mAP50, recall (yalnizca mAP50-95 kaldi)"},
@@ -157,7 +197,7 @@ def goster() -> None:
         "seed degiskenligi (0.043) precision'inkinin (0.018) iki katindan fazla."
     )
 
-    st.markdown("### Erken durdurma noktasi da seed'e bagli")
+    st.markdown("### Erken durdurma noktası da seed'e bağlı")
     st.dataframe(_erken_durdurma(sonuclar), hide_index=True, width="stretch")
     stil.yorum(
         "Ayni veri, ayni protokol: egitim suresi 11 ile 30 epoch arasinda "
@@ -165,7 +205,7 @@ def goster() -> None:
     )
 
     st.markdown("---")
-    st.markdown("## Checkpoint secimi bir kor nokta")
+    st.markdown("## Checkpoint seçimi bir kör nokta")
     st.dataframe(_checkpoint_ciftleri(sonuclar), hide_index=True, width="stretch")
     stil.yorum(
         "Ayni kosunun iki checkpoint'i arasindaki fark, 'bu kosu saglikli mi' "

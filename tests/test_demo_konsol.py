@@ -21,8 +21,8 @@ AppTest = streamlit_testing.AppTest
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "demo" / "app.py"
 BOLUMLER = [
-    "Genel Bakis", "Deney Tasarimi ve Sinirlar", "Senaryolar",
-    "Karsilastirma ve Gurultu", "Hata Analizi", "Ajan",
+    "Genel Bakış", "Deney Tasarımı ve Sınırlar", "Senaryolar",
+    "Karşılaştırma ve Gürültü", "Hata Analizi", "Ajan",
 ]
 
 
@@ -47,7 +47,7 @@ def _sorunlar(app) -> list[str]:
     hatalar = [str(getattr(x, "message", x)) for x in app.exception]
     hatalar += [
         str(e.value) for e in app.error
-        if "yuklenemedi" in str(e.value)
+        if "yüklenemedi" in str(e.value)
     ]
     return hatalar
 
