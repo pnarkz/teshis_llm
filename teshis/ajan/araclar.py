@@ -123,6 +123,24 @@ def _referans_satiri() -> "pd.Series":
     return satir.iloc[0]
 
 
+def _protokol_sapmasi_var_mi(satir) -> bool:
+    """Kosu, ortak egitim protokolunden sapmis mi?
+
+    Kosu manifesti kendi sapmasini tasir (`e_senaryo`, `protokol_sapmalari`);
+    tek dogru kaynak odur. Ad listesine E senaryolarini tek tek eklemek bu
+    projede BES kez geride kaldi - E4, E2, last_pt, sonra E1, sonra E3b.
+    Manifest okumak listeyi kendiliginden gunceller.
+    """
+    yol = ROOT / Path(str(satir["weights_path"])).parent.parent / "run_manifest.json"
+    if not yol.is_file():
+        return False
+    try:
+        manifest = json.loads(yol.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return bool(manifest.get("e_senaryo") or manifest.get("protokol_sapmalari"))
+
+
 def ajana_uygun_mu(satir) -> bool:
     """Bir results.csv satiri ajana verilebilir mi?
 
@@ -135,6 +153,11 @@ def ajana_uygun_mu(satir) -> bool:
     referanstan TEK bir sekilde ayrilmalidir - veri surumu.
     """
     if satir["scenario"] in AJANA_VERILMEYEN:
+        return False
+    # E serisi ortak protokolu kasitli olarak bozar; ajanin butun
+    # karsilastirma mantigi "protokol sabit, yalnizca veri degisir"
+    # varsayimina dayanir.
+    if _protokol_sapmasi_var_mi(satir):
         return False
     if satir["evaluation_set"] != KILITLI_DEGERLENDIRME_SETI:
         return False

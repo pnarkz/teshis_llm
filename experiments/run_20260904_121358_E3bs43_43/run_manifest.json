@@ -1,0 +1,19 @@
+{
+  "format": "experiment_manifest_v1",
+  "created_at_utc": "2026-09-04T09:13:58.237205+00:00",
+  "scenario": "E3bs43",
+  "model": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\main_model.pt",
+  "data": "C:\\Users\\ASUS\\Desktop\\termal_teshis\\veri_surumleri\\v00_saglikli\\data.yaml",
+  "device": "0",
+  "seed": 43,
+  "epochs": 30,
+  "batch": 8,
+  "imgsz": 768,
+  "test_evaluated_during_training": false,
+  "e_senaryo": "E3b",
+  "protokol_sapmalari": {
+    "optimizer": "AdamW",
+    "lr0": 0.0125,
+    "warmup_epochs": 0
+  }
+}

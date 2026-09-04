@@ -289,3 +289,45 @@ def test_c2_beklenen_cevabi_degisim_yok():
     from teshis.ajan.puanlama import SENARYO_BEKLENEN
 
     assert SENARYO_BEKLENEN["C2 seed7"] == "anlamli_degisim_yok"
+
+
+def test_protokolden_sapan_kosular_ajana_verilmez():
+    """E serisi ortak protokolu bozar; ajanin varsayimini gecersiz kilar.
+
+    Ad listesine E senaryolarini tek tek eklemek BES kez geride kaldi
+    (E4, E2, last_pt, E1, E3b). Filtre artik kosunun KENDI manifestini okur:
+    manifest e_senaryo veya protokol_sapmalari tasiyorsa kosu ajana verilmez.
+    Yeni bir E senaryosu eklendiginde liste kendiliginden guncellenir.
+    """
+    import json
+    from pathlib import Path as _Path
+
+    from teshis.ajan import araclar
+
+    frame = araclar._scenario_rows()
+    gorunen = set(araclar.anonim_kosu_haritasi().values())
+    sizan = []
+    for r in frame.itertuples():
+        yol = (araclar.ROOT / _Path(str(r.weights_path)).parent.parent
+               / "run_manifest.json")
+        if not yol.is_file():
+            continue
+        m = json.loads(yol.read_text(encoding="utf-8"))
+        if (m.get("e_senaryo") or m.get("protokol_sapmalari")) and str(r.run_id) in gorunen:
+            sizan.append(str(r.run_id))
+    assert not sizan, f"Protokolden sapan kosular ajana verilmis: {sizan}"
+
+
+def test_ajan_kosu_numaralari_hala_ayni():
+    """Tamamlanmis denemenin kosu_NN eslemesi korunmali."""
+    from teshis.ajan import araclar
+
+    harita = araclar.anonim_kosu_haritasi()
+    for kosu, beklenen in (
+        ("kosu_02", "d1_v2_20260825"),
+        ("kosu_08", "d4_20260826"),
+        ("kosu_11", "c2_seed7_20260901"),
+    ):
+        assert harita.get(kosu) == beklenen, (
+            f"{kosu} kaymis: {harita.get(kosu)} (beklenen {beklenen})"
+        )

@@ -1091,6 +1091,54 @@ her kural er gec ayrilir.**
 
 - experiments/run_20260903_220254_E3s42_42/results.csv (nan tablosu)
 
+### E3b Sonucu — kararsizlik olculdu: ayni protokol, seed'e gore 29 kat oynaklik
+
+E3'te 100 kat ogrenme orani tam iraksama uretti ve hicbir sey ogrenilmedigi
+icin "kararsizlik" gozlenemedi. E3b ayni sapmayi **10 kat** ile tekrarlar
+(lr=0.0125): model ogrenmeye devam eder, ama kararsizdir.
+
+Beklenen imza birebir cikti.
+
+#### Iki seed arasindaki fark saglikli gurultunun cok uzerinde
+
+| Metrik | seed 42 | seed 43 | Fark | Saglikli esik | Kat |
+|---|---:|---:|---:|---:|---:|
+| mAP50 | 0.6224 | 0.7950 | **0.1727** | 0.0060 | **28.7x** |
+| Precision | 0.5184 | 0.8834 | **0.3650** | 0.0184 | **19.9x** |
+| Recall | 0.7028 | 0.7783 | 0.0754 | 0.0430 | 1.8x |
+
+Ayni veri, ayni protokol, tek degisken seed. Saglikli protokolde bu fark
+mAP50'de 0.0060 iken burada **0.1727** - yirmi dokuz kat.
+
+#### Kararsizlik egitim suresinde de gorunuyor
+
+| | seed 42 | seed 43 |
+|---|---:|---:|
+| Kosulan epoch | 16 | 30 |
+| Sure | 209 dk | 364 dk |
+| Egitim-ici oynaklik (ardisik epoch mAP50 farki, ortalama) | **0.0893** | 0.0299 |
+| En iyi mAP50 (egitim val) | 0.6390 | 0.7959 |
+
+Saglikli referansin egitim-ici oynakligi 0.0281. seed 42 bunun **uc kati**
+oynadi ve erken durdurma 16. epoch'ta devreye girdi; seed 43 ise 30 epoch'un
+tamamini kosup daha yuksek bir tepe buldu.
+
+Yani ayni ayar, bir seed'de erken pes eden, digerinde dayanan bir egitim
+uretti. **Kararsizligin tanimi budur.**
+
+#### Ders
+
+Bu senaryo, projenin gurultu tabani calismasinin neden gerekli oldugunu
+tersinden gosteriyor. Saglikli protokolde seed degisimi mAP50'yi 0.006
+oynatiyor; kotu secilmis bir ogrenme oraniyla ayni degisim 0.173 oynatiyor.
+**Bir modelin "iyi" cikmasi bazen ayarlarin degil seed'in eseridir** - ve bu,
+yalnizca birden fazla seed kosuldugunda gorunur.
+
+- reports/senaryo_E3b_seed42/d1_metrics.json
+- reports/senaryo_E3b_seed43/d1_metrics.json
+- experiments/run_20260904_083848_E3bs42_42/results.csv (egitim egrisi)
+- experiments/run_20260904_121358_E3bs43_43/results.csv
+
 ### E2 Sonucu — HIPOTEZ DESTEKLENMEDI: yakinsamis modelde epoch kesmek underfitting uretmez
 
 E2'nin konfigdeki beklenen kaniti: *"train ve val birlikte dusuk, loss hala

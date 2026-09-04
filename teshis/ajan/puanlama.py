@@ -48,6 +48,10 @@ SENARYO_BEKLENEN: dict[str, str] = {
     # "degisim yok". Asiri uyum yalnizca last.pt ve egitim egrisinde gorunur.
     "E1": "anlamli_degisim_yok",
     "E1 last_pt": "asiri_uyum",
+    # E3b: 10 kat yuksek lr. Beklenen imza kararsizlik - iki seed arasinda
+    # buyuk oynaklik ve gurultulu egitim egrisi.
+    "E3b seed42": "egitim_kararsizligi",
+    "E3b seed43": "egitim_kararsizligi",
     # C2: hicbir bozulma yok, yalnizca farkli seed. Dogru cevap "degisim yok";
     # baska her cevap ajanin YANLIS POZITIF uretmesi demektir.
     "C2 seed7": "anlamli_degisim_yok",
@@ -76,6 +80,11 @@ SENARYO_BEKLENEN: dict[str, str] = {
 # olarak ayirt edilir ve sessizce yanlis puanlanmaz.
 ANAHTAR_KALIPLAR: dict[str, tuple[str, str]] = {
     "saglikli_referans": (r"baseline|saglikli|referans|optimal|dengeli|en yuksek", "saglikli referans"),
+    "egitim_kararsizligi": (
+        r"kararsiz|instabil|instabil|oynak|dalgalan|yuksek.*ogrenme|lr.*yuksek|"
+        r"diverg|iraksa|seed.*fark",
+        "egitim kararsizligi",
+    ),
     "asiri_uyum": (
         r"asiri uyum|overfit|ezber|memoriz|train.*val.*fark|genelleme kayb",
         "asiri uyum",

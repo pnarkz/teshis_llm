@@ -88,6 +88,7 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   E2 (negatif sonuc: yakinsamis modelde epoch kesmek underfitting uretmiyor),
   E1 (asiri uyum gerceklesti; best.pt onu tamamen gizliyor),
   E3 (negatif sonuc: 100 kat lr kararsizlik degil tam iraksama uretti),
+  E3b (kararsizlik olculdu: seed'e gore mAP50'de 29 kat oynaklik),
   **C2 negatif kontrolu** (seed 7, 13, 21 — gurultu tabani n=3), ajan
   denemesi (tek atislik vs fonksiyon cagirma karsilastirmasi).
 - **Devam ediyor:** yok.
@@ -97,7 +98,7 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
   fonksiyon cagirma ile tek atislik arasinda **olculebilir fark yok**
   (teshis 0.500 vs 0.444; dokuz kosuda yarim kosu). Arac kullanim orani 1.0.
 - **Yapilmadi:** Asama 2 (calisma zamani servisi), final test kosusu.
-- **Kosuyor:** E3b (kararsizligin olculebilir bandi, iki seed).
+
 - **Sartname boslugu:** Gurultu tabani uc kontrol kosusuna cikarildi ve
   **bes iddia zayifladi**; D6b artik hicbir metrikte gurultuyu asmiyor.
   Ajanin yanlis pozitif orani hala dar bir kanita dayaniyor (2 kontrol,

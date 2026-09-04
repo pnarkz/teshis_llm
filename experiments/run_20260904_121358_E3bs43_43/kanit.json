@@ -1,0 +1,252 @@
+{
+  "format": "kanit_sozlesmesi_v1",
+  "run_id": "e3b_seed43_20260904",
+  "senaryo": "E3b seed43",
+  "kural": "Tek basina mAP hicbir teshis icin yeterli kanit sayilmaz.",
+  "degerlendirme_seti": "val_diagnostic",
+  "genel_metrikler": {
+    "mAP50": 0.795,
+    "mAP50_95": 0.5637,
+    "precision": 0.8834,
+    "recall": 0.7783
+  },
+  "sinif_metrikleri": [
+    {
+      "sinif": "tasit",
+      "bbox_n": 1264,
+      "precision": 0.7776,
+      "recall": 0.8236,
+      "f1": 0.7999,
+      "ap50": 0.8307,
+      "ap50_95": 0.5095,
+      "recall_kirilim": 0.8608,
+      "recall_ga": [
+        0.8351,
+        0.8843
+      ],
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
+    },
+    {
+      "sinif": "insan",
+      "bbox_n": 2718,
+      "precision": 0.7873,
+      "recall": 0.7082,
+      "f1": 0.7457,
+      "ap50": 0.7694,
+      "ap50_95": 0.3916,
+      "recall_kirilim": 0.7877,
+      "recall_ga": [
+        0.7649,
+        0.808
+      ],
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
+    },
+    {
+      "sinif": "UAP",
+      "bbox_n": 15,
+      "precision": 0.9688,
+      "recall": 1.0,
+      "f1": 0.9842,
+      "ap50": 0.995,
+      "ap50_95": 0.8639,
+      "recall_kirilim": 1.0,
+      "recall_ga": [
+        1.0,
+        1.0
+      ],
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
+    },
+    {
+      "sinif": "UAI",
+      "bbox_n": 17,
+      "precision": 1.0,
+      "recall": 0.5814,
+      "f1": 0.7353,
+      "ap50": 0.585,
+      "ap50_95": 0.4899,
+      "recall_kirilim": 0.5294,
+      "recall_ga": [
+        0.2857,
+        0.7692
+      ],
+      "ga_hangi_olcum": "recall_kirilim",
+      "ga_yontemi": "tabakali_goruntu_bootstrap (sartnameye uygun)"
+    }
+  ],
+  "yapilandirma": {
+    "veri_surumu": "v00_saglikli",
+    "baslangic_modeli": "main_model.pt",
+    "seed": 43,
+    "imgsz_egitim": 768,
+    "imgsz_degerlendirme": 768,
+    "epochs": 30,
+    "batch": 8,
+    "lr0_beyan_edilen": 0.0125,
+    "lr0_gecerli": 0.00125,
+    "lr0_notu": "optimizer=auto oldugu icin beyan edilen lr0 (0.0125) UYGULANMADI; Ultralytics AdamW(lr=0.00125) secti. bkz. docs/BULGULAR.md.",
+    "protokol_sapmalari": {
+      "optimizer": "AdamW",
+      "lr0": 0.0125,
+      "warmup_epochs": 0
+    },
+    "e_senaryo": "E3b"
+  },
+  "kapsam": {
+    "kare_sayisi": 1056,
+    "benzersiz_kaynak_sayisi": 4
+  },
+  "sozlesme_durumu": {
+    "tam_mi": true,
+    "eksikler": []
+  },
+  "boyut_bandi_recall": {
+    "cok_kucuk_16_alti": {
+      "gercek_kutu": 1167,
+      "yakalanan": 774,
+      "recall": 0.6632
+    },
+    "kucuk_16_32": {
+      "gercek_kutu": 2011,
+      "yakalanan": 1699,
+      "recall": 0.8449
+    },
+    "orta_32_64": {
+      "gercek_kutu": 520,
+      "yakalanan": 490,
+      "recall": 0.9423
+    },
+    "buyuk_64_ustu": {
+      "gercek_kutu": 316,
+      "yakalanan": 290,
+      "recall": 0.9177
+    }
+  },
+  "bant_tanimi": {
+    "cok_kucuk_16_alti": "0-16 px",
+    "kucuk_16_32": "16-32 px",
+    "orta_32_64": "32-64 px",
+    "buyuk_64_ustu": "64+ px"
+  },
+  "kaynak_recall": {
+    "aaterm": {
+      "gercek_kutu": 885,
+      "yakalanan": 771,
+      "recall": 0.8712
+    },
+    "tf2026": {
+      "gercek_kutu": 106,
+      "yakalanan": 73,
+      "recall": 0.6887
+    },
+    "hituav": {
+      "gercek_kutu": 2165,
+      "yakalanan": 1753,
+      "recall": 0.8097
+    },
+    "termal": {
+      "gercek_kutu": 858,
+      "yakalanan": 656,
+      "recall": 0.7646
+    }
+  },
+  "karisiklik_matrisi": {
+    "UAI": {
+      "bulunamadi": 8,
+      "UAI": 9
+    },
+    "UAP": {
+      "UAP": 15
+    },
+    "insan": {
+      "insan": 2140,
+      "bulunamadi": 573,
+      "tasit": 5
+    },
+    "tasit": {
+      "bulunamadi": 176,
+      "tasit": 1088
+    }
+  },
+  "background_fn": {
+    "UAI": 8,
+    "UAP": 0,
+    "insan": 573,
+    "tasit": 176
+  },
+  "toplam_tahmin": 4790,
+  "egitim_egrisi": {
+    "epoch_sayisi": 30,
+    "en_iyi_epoch": {
+      "epoch": 22,
+      "mAP50": 0.79592
+    },
+    "son_epoch_mAP50": 0.74513,
+    "val_cls_loss_dip_epoch": {
+      "epoch": 29,
+      "val_cls_loss": 1.43541
+    },
+    "dip_sonrasi_yukselis": 0.0186,
+    "train_val_farki": {
+      "ilk_epoch": {
+        "train_cls_loss": 1.92807,
+        "val_cls_loss": 5.60643,
+        "fark": 3.6784
+      },
+      "son_epoch": {
+        "train_cls_loss": 0.7188,
+        "val_cls_loss": 1.45398,
+        "fark": 0.7352
+      },
+      "fark_acildi_mi": false
+    }
+  },
+  "hata_ornekleri": {
+    "kaynak": "reports/hata_galerisi_E3b_seed43/gallery.json",
+    "ornek_sayisi": 50,
+    "en_kotu_bes": [
+      {
+        "image": "images/001_hituav__1_130_30_0_03841.jpg",
+        "source": "hituav__1_130_30_0_03841.jpg",
+        "false_negatives": 17,
+        "false_positives": 11,
+        "mean_iou": 0.6850447721878802,
+        "score": 28.31495522781212
+      },
+      {
+        "image": "images/002_hituav__1_120_30_0_02792.jpg",
+        "source": "hituav__1_120_30_0_02792.jpg",
+        "false_negatives": 9,
+        "false_positives": 12,
+        "mean_iou": 0.7596388293242481,
+        "score": 21.24036117067575
+      },
+      {
+        "image": "images/003_hituav__1_120_30_0_02799.jpg",
+        "source": "hituav__1_120_30_0_02799.jpg",
+        "false_negatives": 12,
+        "false_positives": 8,
+        "mean_iou": 0.7451595956238447,
+        "score": 20.254840404376154
+      },
+      {
+        "image": "images/004_hituav__1_130_30_0_07136.jpg",
+        "source": "hituav__1_130_30_0_07136.jpg",
+        "false_negatives": 4,
+        "false_positives": 15,
+        "mean_iou": 0.6063448315928264,
+        "score": 19.393655168407175
+      },
+      {
+        "image": "images/005_hituav__1_120_40_0_02847.jpg",
+        "source": "hituav__1_120_40_0_02847.jpg",
+        "false_negatives": 11,
+        "false_positives": 7,
+        "mean_iou": 0.6798018319366432,
+        "score": 18.320198168063357
+      }
+    ]
+  }
+}
