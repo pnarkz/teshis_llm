@@ -1,58 +1,88 @@
-# Ara Sunum Konsolu
+# Sunum Konsolu
 
-Bu Streamlit uygulaması tamamlanmış deney raporlarını görselleştirir. Eğitim
-veya test çalıştırmaz; bu nedenle ara sunumda hızlı ve tekrarlanabilirdir.
+Tamamlanmış ölçüm çıktılarını gezilebilir hale getiren Streamlit uygulaması.
+Eğitim veya test çalıştırmaz; yalnızca `reports/`, `experiments/` ve
+`results.csv` içindeki mevcut sonuçları okur. Tek istisna **Ajan**
+bölümündeki açıkça işaretlenmiş "canlı çalıştır" düğmesidir.
 
-Tasarım yönü **ölçüm aleti / mühendislik konsolu**: monospace tipografi,
-keskin köşeler, ince ızgara çizgileri; gradyan, gölge ve yuvarlak köşe yok.
-Yalnızca işletim sisteminde hazır bulunan monospace yazı tipleri kullanılır,
-bu yüzden sunum sırasında internet olmasa da görünüm bozulmaz.
+## Kurulum ve çalıştırma
 
-## Kurulum
-
-Proje klasöründe:
-
-```powershell
+```bash
 python -m pip install -r requirements-demo.txt
-streamlit run demo/app.py
+python -m streamlit run demo/app.py
 ```
 
-Tarayıcıda varsayılan adres: `http://localhost:8501`
+Tema `.streamlit/config.toml` içinde **açık** olarak sabitlenmiştir.
+Görünümü izleyicinin işletim sistemi temasına bırakmak sunumda risklidir:
+koyu temada metin renkleri çakışıyor ve içerik neredeyse görünmez oluyordu.
 
-## Bölümler
+## Yapı
 
-| Bölüm | İçerik |
+Konsol **sıra dayatmaz**. Bölümler birbirinden bağımsızdır; gelen soruya göre
+istenen bölüme atlanır. Her bölüm kendi modülünde durur, böylece birini
+değiştirmek diğerlerine dokunmayı gerektirmez.
+
+```text
+demo/
+  app.py            yalnizca yonlendirme ve stil (~80 satir)
+  stil.py           ortak gorsel dil; renk anlamlari her sayfada ayni
+  data_loader.py    rapor okuma + ajan katmani
+  bolumler/
+    genel_bakis.py     proje, durum, uc ana bulgu
+    tasarim.py         kontrollu deney kurgusu + NEYI SOYLEYEMIYORUZ
+    senaryolar.py      kosu basina deney ozeti ve kanit
+    karsilastirma.py   capraz tablo + gurultu tabani
+    hata_analizi.py    siralanmis hata ornekleri
+    ajan.py            kor teshis: kayitli / canli
+```
+
+## Üç tasarım kararı
+
+**Senaryo özeti türetilir, yazılmaz.** Sayfanın beş bileşeninden dördü kaynak
+dosyalardan gelir (`teshis/degerlendirme/senaryo_ozeti.py`); elle yazılan tek
+alan senaryonun ne ölçtüğüdür (`senaryolar/anlatim.yaml`). Ekran, bulgunun ne
+kadar sağlam olduğunu kendisi söyler: *güçlü* / *zayıf* / *gürültü içinde*.
+
+Önceki sürümde bu bilgi `app.py` içinde 24 girdilik elle tutulan bir sözlükte
+duruyordu ve geride kalıyordu: D6a, D6b, v00n ve D1n eklendiğinde demo onları
+sessizce eksik gösterdi.
+
+**Ajan bölümünde kayıtlı mod varsayılandır.** Canlı çağrı asli parça değil,
+isteğe bağlıdır. Gerekçe ölçüldü: ücretsiz katman 20 istek/gün ve 5 istek/dk
+ile sınırlı, geliştirme sırasında hem kota tükendi hem 503 alındı. Kayıtlı mod
+API harcamaz, her zaman çalışır ve **daha denetlenebilirdir** — ajanın gördüğü
+kanıt yerelde yeniden üretilir, çünkü araçlar deterministiktir.
+
+**Sınırlar birinci sınıf içeriktir.** "Neyi henüz söyleyemiyoruz" gizlenmez;
+gürültü tabanı ölçüldükten sonra beş iddianın geri çekildiği açıkça yazar.
+
+## Görsel dil
+
+Sakin ve akademik: kırık beyaz zemin, koyu gri metin, tek vurgu rengi.
+Emoji, animasyon ve pazarlama dili yoktur. Renk anlamları bütün sayfalarda
+sabittir (`stil.py`):
+
+| Renk | Anlamı |
 |---|---|
-| Genel Bakış | Tüm koşuların readout kartları, epoch sparkline'ları, karşılaştırma tablosu, metrik ve sınıf profili |
-| Senaryo İncele | Seçilen koşu için baseline farkı, epoch bazlı eğitim eğrileri, confusion matrix, eşik eğrileri, etiket-vs-tahmin görselleri, bozulmuş eğitim verisi önizlemesi |
-| Hata Galerisi | 50 görüntülük D2a hata galerisi; FN/FP/IoU dağılımı ve sıralanabilir kareler |
-| Proje ve Senaryolar | Deney tasarımının amacı ve senaryo kataloğu |
-| LLM Ajan | Anonim metriklerden üretilen pilot teşhisler ve rubrik puanları |
+| vurgu | incelenen koşu |
+| nötr | referans (v00) — her grafikte aynı renk |
+| uyarı | gürültü içinde kalan / zayıf kanıt |
+| olumlu | gürültü eşiğini belirgin aşan kanıt |
 
-## Gösterilecek akış
+Sayılar her zaman "değer + referansa fark" olarak verilir; her grafiğin
+altında tek cümlelik okuma notu bulunur.
 
-1. Genel Bakış'ta baseline ve tüm koşular tek ekranda gösterilir; sparkline'lar
-   her koşunun eğitim boyunca nasıl ilerlediğini özetler.
-2. Senaryo İncele'de D1, D2a, D2b ve D3 sırayla seçilerek metrik farkları,
-   eğitim eğrisi ve görsel kanıt incelenir.
-3. Hata Galerisi'nde modelin gerçekte nerede hata yaptığı somut karelerle
-   gösterilir.
-4. LLM Ajan bölümünde pilot teşhisler ve puanlama sunulur.
-5. Sonuç, "hangi veri problemi hangi metriği etkiledi" sorusuyla açıklanır.
+## Testler
 
-## Veri kaynakları
+```bash
+python -m pytest tests/test_demo_konsol.py tests/test_demo_veri.py
+```
 
-Konsol hiçbir metrik değerini kendi içinde saklamaz; hepsi şu dosyalardan
-okunur:
+`test_demo_konsol.py` altı bölümü ve açılır listedeki **her seçeneği**
+headless render eder — sunum sırasında bir bölümün çökmesi en kötü
+senaryodur. Senaryo listesi demonun kendi kaynağından alınır; `results.csv`
+okumak yetmiyordu, demo ayrıca bir "Baseline" satırı ekliyor.
 
-- `results.csv` — koşu başına özet metrikler.
-- `reports/<senaryo>_sonuc/` — diagnostic değerlendirme JSON'u ve görselleri.
-- `experiments/<run>/results.csv` — epoch bazlı eğitim eğrileri
-  (koşu klasörü `results.csv`'deki `weights_path` sütunundan türetilir, ayrıca
-  eşleme tablosu tutulmaz).
-- `reports/*_hata_galerisi/` — hata galerileri (otomatik keşfedilir).
-- `reports/llm_trial/` — LLM pilot çıktısı ve puanı.
-
-Yeni bir senaryo `results.csv`'ye eklendiğinde konsol onu otomatik tanır;
-yalnızca `demo/app.py` içindeki `scenario_info` sözlüğüne açıklama metni
-eklemek gerekir.
+`test_demo_veri.py` veri katmanının sözleşmesini korur: sabit kodlu yol
+haritalarının geri gelmemesi ve galeri anahtarlarının senaryo adlarıyla
+eşleşmesi.

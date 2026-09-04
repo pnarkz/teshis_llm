@@ -13,6 +13,27 @@ import stil
 from data_loader import ajan_kaydi, error_galleries, load_results
 
 
+def _guc_dagilimi(sonuclar: pd.DataFrame) -> pd.DataFrame:
+    """Kosularin kanit gucune gore dagilimi.
+
+    Metin yiginini bir bakista okunabilir hale getirir: kac kosu gercekten
+    gurultu esigini asiyor, kacinin iddiasi zayif.
+    """
+    from teshis.degerlendirme.senaryo_ozeti import kanit_gucu
+
+    sayim: dict[str, int] = {}
+    for _, r in sonuclar.iterrows():
+        seviye = kanit_gucu(str(r["scenario"]))["seviye"]
+        if seviye == "olcum yok":
+            continue
+        sayim[seviye] = sayim.get(seviye, 0) + 1
+    sira = ["guclu", "zayif", "gurultu icinde"]
+    return pd.DataFrame(
+        {"kosu": [sayim.get(s, 0) for s in sira]},
+        index=[s for s in sira],
+    )
+
+
 def _kontrol_sayisi(sonuclar: pd.DataFrame) -> int:
     return sum(
         1 for _, r in sonuclar.iterrows()
@@ -51,31 +72,37 @@ def goster() -> None:
         "4.014 bbox) uzerinde yapildi."
     )
 
+    st.markdown("### Kosularin kanit gucu")
+    st.markdown(
+        "Her kosu, saglikli referansa gore **olculmus gurultu tabanina karsi** "
+        "tartilir. Esigi asmayan bir fark, hicbir bozulma icermeyen kosular "
+        "arasinda da gorulmustur."
+    )
+    st.bar_chart(_guc_dagilimi(sonuclar), height=200)
+    stil.yorum(
+        "Ayrinti icin 'Karsilastirma ve Gurultu' bolumune bakin; her kosunun "
+        "hangi metrikte esigi astigi orada listelenir."
+    )
+
     st.markdown("### Uc ana bulgu")
-
-    st.markdown("**1. Bozulmanin turu metrik imzasindan okunabiliyor**")
-    st.markdown(
-        "Cikarim cozunurlugu uyumsuzlugu recall'u cokertirken precision'a "
-        "dokunmuyor; etiket bozulmalari precision'i da bozuyor. Yani \"model "
-        "kotu calisiyor\" demek yetmiyor - hangi metrigin bozuldugu arizanin "
-        "turunu soyluyor."
-    )
-
-    st.markdown("**2. Standart raporlama bir arizayi tamamen gizleyebiliyor**")
-    st.markdown(
-        "E1'de 200 epoch suren ders kitabi niteliginde bir asiri uyum elde "
-        "edildi. En iyi checkpoint ile raporlandiginda model **saglikli** "
-        "gorunuyor (mAP50 farki -0.001); ariza yalnizca egitim egrisinde ve "
-        "son checkpoint'te goruluyor (-0.088)."
-    )
-
-    st.markdown("**3. Gurultu olculmeden \"etki\" denemez**")
-    st.markdown(
-        "Ayni veri ve ayni protokolle, yalnizca rastgelelik tohumu "
-        "degistirilerek egitilen dort model arasinda bile belirgin fark var. "
-        "Bu taban olculunce bes iddia zayifladi ve bir senaryo (D6b) bulgu "
-        "olmaktan cikti."
-    )
+    for baslik, metin in (
+        ("Bozulmanin turu metrik imzasindan okunabiliyor",
+         "Cikarim cozunurlugu uyumsuzlugu recall'u cokertirken precision'a "
+         "dokunmuyor; etiket bozulmalari precision'i da bozuyor. Hangi "
+         "metrigin bozuldugu arizanin turunu soyluyor."),
+        ("Standart raporlama bir arizayi tamamen gizleyebiliyor",
+         "E1'de 200 epoch suren ders kitabi niteliginde bir asiri uyum elde "
+         "edildi. En iyi checkpoint ile raporlandiginda model saglikli "
+         "gorunuyor (mAP50 farki -0.001); ariza yalnizca egitim egrisinde ve "
+         "son checkpoint'te goruluyor (-0.088)."),
+        ("Gurultu olculmeden \"etki\" denemez",
+         "Ayni veri ve protokolle, yalnizca rastgelelik tohumu degistirilerek "
+         "egitilen dort model arasinda bile belirgin fark var. Bu taban "
+         "olculunce bes iddia zayifladi ve bir senaryo (D6b) bulgu olmaktan "
+         "cikti."),
+    ):
+        with st.expander(baslik, expanded=False):
+            st.markdown(metin)
 
     st.markdown("### Ajan")
     ozet = ajan.get("ozet", {})
