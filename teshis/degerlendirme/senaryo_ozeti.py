@@ -99,15 +99,15 @@ def ne_sabit_kaldi(senaryo: str) -> list[str]:
     satir = _defter().get(senaryo, {})
     konfig = _konfig(senaryo)
     sabitler = [
-        "Degerlendirme seti: val_diagnostic (kilitli, hic degismez)",
-        f"Cikarim cozunurlugu: {satir.get('imgsz_eval', '?')} px",
-        f"Baslangic modeli: {satir.get('model', '?')}",
+        "Değerlendirme seti: val_diagnostic (kilitli, hiç değişmez)",
+        f"Çıkarım çözünürlüğü: {satir.get('imgsz_eval', '?')} px",
+        f"Başlangıç modeli: {satir.get('model', '?')}",
         f"Seed: {satir.get('seed', '?')}",
     ]
     if konfig.get("hedef_split") == "train":
-        sabitler.append("Yalnizca train bolumu degistirildi; val ve test dokunulmadi")
+        sabitler.append("Yalnızca train bölümü değiştirildi; val ve test dokunulmadı")
     if _katalog().get(_kod(senaryo), {}).get("tur") == "veri":
-        sabitler.append("Egitim protokolu sabit (senaryolar/egitim_protokolu.yaml)")
+        sabitler.append("Eğitim protokolü sabit (senaryolar/egitim_protokolu.yaml)")
     return sabitler
 
 
@@ -153,7 +153,7 @@ def kanit_gucu(senaryo: str) -> dict[str, Any]:
     """Bulgunun ne kadar guclu oldugunu tek bakista soyler."""
     gozlem = ne_gozlendi(senaryo)
     if not gozlem:
-        return {"seviye": "olcum yok", "aciklama": "Bu kosu defterde bulunamadi."}
+        return {"seviye": "olcum yok", "aciklama": "Bu koşu defterde bulunamadı."}
 
     asan = gozlem["asan_metrikler"]
     n = gozlem["kontrol_kosu_sayisi"]
@@ -161,8 +161,8 @@ def kanit_gucu(senaryo: str) -> dict[str, Any]:
         return {
             "seviye": "gurultu icinde",
             "aciklama": (
-                "Hicbir genel metrik, bozulmasiz kosular arasinda gozlenen "
-                f"yayilimi asmiyor ({n} kontrol kosusu). Bu senaryonun genel "
+                "Hiçbir genel metrik, bozulmasız koşular arasında gözlenen "
+                f"yayılımı aşmıyor ({n} kontrol koşusu). Bu senaryonun genel "
                 "metriklerine dayanan bir iddia kurulamaz."
             ),
         }
@@ -170,14 +170,14 @@ def kanit_gucu(senaryo: str) -> dict[str, Any]:
         return {
             "seviye": "zayif",
             "aciklama": (
-                f"Yalnizca {asan[0]} gurultu esigini asiyor. Tek metrige dayanan "
-                "bir bulgu, kirilim kanitiyla desteklenmedikce zayiftir."
+                f"Yalnızca {asan[0]} gürültü eşiğini aşıyor. Tek metriğe dayanan "
+                "bir bulgu, kırılım kanıtıyla desteklenmedikçe zayıftır."
             ),
         }
     return {
         "seviye": "guclu",
         "aciklama": (
-            f"{len(asan)} genel metrik gurultu esigini asiyor: {', '.join(asan)}."
+            f"{len(asan)} genel metrik gürültü eşiğini aşıyor: {', '.join(asan)}."
         ),
     }
 
@@ -192,24 +192,24 @@ def sinirlamalar(senaryo: str) -> list[str]:
     az = [f"{ad} (n={n})" for ad, n in VAL_DIAGNOSTIC_BBOX_N.items() if n < 30]
     if az:
         sinirlar.append(
-            f"Dusuk ornekli siniflar: {', '.join(az)}. Bu siniflardaki oranlar "
+            f"Düşük örnekli sınıflar: {', '.join(az)}. Bu sınıflardaki oranlar "
             "genellenemez."
         )
     gozlem = ne_gozlendi(senaryo)
     if gozlem:
         sinirlar.append(
-            f"Gurultu esigi {gozlem['kontrol_kosu_sayisi']} kontrol kosusundan "
-            "hesaplandi; az gozlemle esik gercek yayilimi oldugundan kucuk gosterir."
+            f"Gürültü eşiği {gozlem['kontrol_kosu_sayisi']} kontrol koşusundan "
+            "hesaplandı; az gözlemle eşik gerçek yayılımı olduğundan küçük gösterir."
         )
     if satir.get("evaluation_set") != "val_diagnostic":
         sinirlar.append(
-            f"Bu kosu kilitli set yerine '{satir.get('evaluation_set')}' uzerinde "
-            "olculdu; digerleriyle dogrudan karsilastirilamaz."
+            f"Bu koşu kilitli set yerine '{satir.get('evaluation_set')}' üzerinde "
+            "ölçüldü; diğerleriyle doğrudan karşılaştırılamaz."
         )
     if not satir.get("weights_path", "").endswith("best.pt"):
         sinirlar.append(
-            "Bu satir last.pt checkpoint'ine aittir; best.pt satiriyla birlikte "
-            "okunmalidir."
+            "Bu satır last.pt checkpoint'ine aittir; best.pt satırıyla birlikte "
+            "okunmalıdır."
         )
     return sinirlar
 

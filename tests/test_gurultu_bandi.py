@@ -53,10 +53,18 @@ def test_band_yalnizca_orneklem_buyuklugune_bagli_degil(band):
 
 
 def test_gurultu_icindeki_fark_boyle_etiketlenir():
-    """Bandin altinda kalan fark, acikca 'gurultu icinde' denmeli."""
+    """Bandin altinda kalan fark, acikca "gurultu icinde" denmeli.
+
+    Metnin harfi harfine esitligine degil ANLAMINA baglanir: yorum bir kez
+    ASCII'den duzgun Turkce'ye cevrildiginde ("GURULTU ICINDE" ->
+    "GÜRÜLTÜ İÇİNDE") harfi harfine karsilastirma kirildi. Aranan sey,
+    yorumun farkin bozulma kaniti SAYILMADIGINI soylemesidir.
+    """
     d = gurultu.fark_degerlendir("kaynak_recall", "hituav", 0.005)
     assert d["band_orani"] < 1
-    assert "GURULTU ICINDE" in d["yorum"]
+    yorum = d["yorum"].lower()
+    assert "kanıt" in yorum or "kanit" in yorum
+    assert "değildir" in yorum or "degildir" in yorum
 
 
 def test_az_gozlemde_uyari_verilir():

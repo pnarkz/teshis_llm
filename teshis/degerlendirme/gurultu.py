@@ -137,25 +137,25 @@ def fark_degerlendir(
     # bandin birkac kati fark, band tahmininin kararsizligiyla aciklanamaz.
     az_gozlem = n < 5 and (oran is not None and oran < 5)
     if oran is None:
-        yorum = ("bu grup bozulmasiz kosularda hic degismiyor (band 0); fark "
-                 "dikkat cekici olabilir ama band tek degerden hesaplanamadi")
+        yorum = ("bu grup bozulmasız koşularda hiç değişmiyor (band 0); fark "
+                 "dikkat çekici olabilir ama band tek değerden hesaplanamadı")
     elif oran < 1:
         yorum = (
-            "GURULTU ICINDE: bu buyuklukteki bir fark, hicbir bozulma icermeyen "
-            "kosular arasinda da goruluyor. Tek basina bozulma kaniti degildir."
+            "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen "
+            "koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
         )
     elif az_gozlem:
         yorum = (
-            f"Bandin uzerinde, ANCAK band yalnizca {n} bozulmasiz kosudan "
-            f"hesaplandi (gozlenen degerler: {saglikli}). Bu kadar az gozlemle "
-            "'uc bir rastgelelik cekilisi' ile 'gercek etki' ayirt edilemez. "
-            "Bu grubu tek basina teshise dayanak yapmayin; baska kirilimlarda "
-            "da destek arayin."
+            f"Bandın üzerinde, ANCAK band yalnızca {n} bozulmasız koşudan "
+            f"hesaplandı (gözlenen değerler: {saglikli}). Bu kadar az gözlemle "
+            "'uç bir rastgelelik çekilişi' ile 'gerçek etki' ayırt edilemez. "
+            "Bu grubu tek başına teşhise dayanak yapmayın; başka kırılımlarda "
+            "da destek arayın."
         )
     elif oran < 2:
-        yorum = "bandin hemen uzerinde; zayif kanit, tek basina yeterli degil"
+        yorum = "bandın hemen üzerinde; zayıf kanıt, tek başına yeterli değil"
     else:
-        yorum = "bandin belirgin uzerinde"
+        yorum = "bandın belirgin üzerinde"
 
     return {
         "band": band,
