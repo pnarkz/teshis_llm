@@ -69,7 +69,7 @@ def _erken_durdurma(sonuclar: pd.DataFrame) -> pd.DataFrame:
             "seed": int(r["seed"]),
             "durdugu epoch": len(kayit),
             "en iyi epoch": en_iyi[0],
-            "en iyi mAP50 (egitim val)": round(en_iyi[1], 4),
+            "en iyi mAP50 (eğitim val)": round(en_iyi[1], 4),
         })
     return pd.DataFrame(sorted(satirlar, key=lambda s: s["seed"]))
 
@@ -105,7 +105,7 @@ def _checkpoint_ciftleri(sonuclar: pd.DataFrame) -> pd.DataFrame:
 
 
 def _band_verisi(sonuclar: pd.DataFrame, metrik: str) -> pd.DataFrame:
-    """Her senaryonun farkini ve o metrigin gurultu bandini bir arada verir."""
+    """Her senaryonun farkini ve o metrigin gürültü bandini bir arada verir."""
     satirlar = []
     for _, r in sonuclar.iterrows():
         senaryo = str(r["scenario"])
@@ -131,9 +131,9 @@ def goster() -> None:
     st.title("Karşılaştırma ve Gürültü")
 
     st.markdown(
-        "Butun kosular saglikli referansa (v00) gore, **olculmus gurultu "
-        "tabanina karsi** tartilmistir. Esigi asmayan bir fark, hicbir bozulma "
-        "icermeyen kosular arasinda da gorulmustur."
+        "Bütün koşular sağlıklı referansa (v00) gore, **ölçülmüş gürültü "
+        "tabanına karşı** tartılmıştır. Esigi aşmayan bir fark, hiçbir bozulma "
+        "içermeyen koşular arasında da görülmüştür."
     )
 
     df = _tablo(sonuclar)
@@ -159,15 +159,15 @@ def goster() -> None:
     gosterilen = df[df["esigi asan"] != "-"] if sadece_asan else df
     st.dataframe(gosterilen, hide_index=True, width="stretch", height=420)
     stil.yorum(
-        "'kanit' sutunu uc seviye alir: guclu (birden fazla metrik esigi asiyor), "
-        "zayif (tek metrik), gurultu icinde (hicbiri)."
+        "'kanıt' sütunu uc seviye alır: güçlü (birden fazla metrik eşiği aşıyor), "
+        "zayıf (tek metrik), gürültü içinde (hiçbiri)."
     )
 
     st.markdown("---")
     st.markdown("## Gürültü tabanı ölçülünce ne değişti")
     st.markdown(
-        "Ilk olcum tek bir kontrol kosusuna dayaniyordu ve gurultuyu ciddi "
-        "bicimde **kucuk** gosteriyordu. Uc kontrol kosusuna cikildiginda "
+        "Ilk ölçüm tek bir kontrol koşusuna dayanıyordu ve gurultuyu ciddi "
+        "biçimde **küçük** gösteriyordu. Uc kontrol koşusuna çıkıldığında "
         "esikler buyudu:"
     )
     st.dataframe(
@@ -184,38 +184,38 @@ def goster() -> None:
     st.markdown("### Zayıflayan beş iddia")
     st.dataframe(
         pd.DataFrame([
-            {"senaryo": "D1", "kaybettigi": "mAP50, recall (yalnizca mAP50-95 kaldi)"},
+            {"senaryo": "D1", "kaybettigi": "mAP50, recall (yalnızca mAP50-95 kaldi)"},
             {"senaryo": "D2b", "kaybettigi": "mAP50-95, recall"},
             {"senaryo": "D3", "kaybettigi": "recall"},
             {"senaryo": "D4", "kaybettigi": "recall"},
-            {"senaryo": "D6b", "kaybettigi": "mAP50 - geriye hicbir sey kalmadi"},
+            {"senaryo": "D6b", "kaybettigi": "mAP50 - geriye hiçbir sey kalmadi"},
         ]),
         hide_index=True, width="stretch",
     )
     stil.yorum(
-        "Genel oruntu: recall'a dayanan iddialar en kirilgan olanlar. Recall'un "
-        "seed degiskenligi (0.043) precision'inkinin (0.018) iki katindan fazla."
+        "Genel örüntü: recall'a dayanan iddialar en kırılgan olanlar. Recall'un "
+        "seed değişkenliği (0.043) precision'inkinin (0.018) iki katından fazla."
     )
 
     st.markdown("### Erken durdurma noktası da seed'e bağlı")
     st.dataframe(_erken_durdurma(sonuclar), hide_index=True, width="stretch")
     stil.yorum(
-        "Ayni veri, ayni protokol: egitim suresi 11 ile 30 epoch arasinda "
-        "degisiyor. Gurultu yalnizca son metrikte degil surecin kendisinde de var."
+        "Aynı veri, aynı protokol: eğitim süresi 11 ile 30 epoch arasında "
+        "degisiyor. Gürültü yalnızca son metrikte değil surecin kendisinde de var."
     )
 
     st.markdown("---")
     st.markdown("## Checkpoint seçimi bir kör nokta")
     st.dataframe(_checkpoint_ciftleri(sonuclar), hide_index=True, width="stretch")
     stil.yorum(
-        "Ayni kosunun iki checkpoint'i arasindaki fark, 'bu kosu saglikli mi' "
+        "Aynı koşunun iki checkpoint'i arasindaki fark, 'bu koşu sağlıklı mi' "
         "sorusunun cevabini degistiriyor. Bu yuzden defterde her ikisi de "
         "ayri satir olarak tutuluyor."
     )
     stil.kutu(
-        "<b>Dikkat - son checkpoint dususunun de bir tabani var.</b> "
+        "<b>Dikkat - son checkpoint dususunun de bir tabanı var.</b> "
         "Saglikli referansin kendisi best.pt'den last.pt'ye gecerken "
         "<b>-0.0280</b> dusuyor. Yani her last.pt dususu bozulma isareti "
-        "degildir; D4 (-0.0329) ve D6b (-0.0330) bu tabana cok yakin. "
+        "değildir; D4 (-0.0329) ve D6b (-0.0330) bu tabana cok yakin. "
         "Ayrisanlar E1 (-0.0881) ve ozellikle D5 (-0.5848)."
     )

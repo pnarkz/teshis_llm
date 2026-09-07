@@ -109,7 +109,7 @@ def _teshis_goster(cevap: dict) -> None:
 def _puan_goster(puan: dict) -> None:
     st.markdown("### Cevap anahtarıyla karşılaştırma")
     st.markdown(
-        "Cevap anahtari ajana **gonderilmedi**; puanlama cevap uretildikten "
+        "Cevap anahtari ajana **gönderilmedi**; puanlama cevap üretildikten "
         "sonra yerelde yapildi."
     )
     st.dataframe(
@@ -125,18 +125,18 @@ def _puan_goster(puan: dict) -> None:
     )
     if puan.get("tespit_notu"):
         stil.yorum(
-            "Bu kosuda bozulma kanitta anlamli iz birakmiyor; "
+            "Bu koşuda bozulma kanıtta anlamlı iz bırakmıyor; "
             f"tespit-farkindalikli puan {puan.get('diagnosis_score_tespit')}. "
             f"Gerekce: {puan['tespit_notu']}"
         )
 
 
 def _canli_calistir(kosu_id: str) -> dict | None:
-    """Ajani o anda calistirir. Hata turlerini ayirt ederek raporlar."""
+    """Ajani o anda calistirir. Hata turlerini ayırt ederek raporlar."""
     if not os.environ.get("GEMINI_API_KEY"):
         st.error(
             "GEMINI_API_KEY ortam degiskeni tanimli degil. Canli calistirma "
-            "icin anahtar gerekir; kayitli kosu modu anahtarsiz calisir."
+            "için anahtar gerekir; kayıtlı koşu modu anahtarsız çalışır."
         )
         return None
 
@@ -152,14 +152,14 @@ def _canli_calistir(kosu_id: str) -> dict | None:
                 durum.update(label="Gunluk kota bitti", state="error")
                 st.error(
                     "429 RESOURCE_EXHAUSTED - gunluk istek kotasi asildi.\n\n"
-                    "Ucretsiz katman 20 istek/gun. Kayitli kosu modu calismaya "
+                    "Ücretsiz katman 20 istek/gun. Kayıtlı koşu modu calismaya "
                     "devam eder."
                 )
             elif any(k in metin for k in ("503", "unavailable", "high demand")):
                 durum.update(label="Gecici sunucu hatasi", state="error")
                 st.warning(
-                    "503 UNAVAILABLE - saglayicida gecici yogunluk. Bu hata "
-                    "kotayla ilgili degildir; birkac saniye sonra yeniden "
+                    "503 UNAVAILABLE - sağlayıcıda geçici yoğunluk. Bu hata "
+                    "kotayla ilgili değildir; birkaç saniye sonra yeniden "
                     "denenebilir."
                 )
             else:
@@ -184,8 +184,8 @@ def _senaryo_ozeti(senaryo: str) -> dict:
 def goster() -> None:
     st.title("Ajan")
     st.markdown(
-        "Ajana yalnizca anonim metrikler ve kirilim araclari verilir; hangi "
-        "kosunun hangi senaryo oldugunu bilmez. Teshisini kendi sectigi "
+        "Ajana yalnızca anonim metrikler ve kırılım araçları verilir; hangi "
+        "koşunun hangi senaryo olduğunu bilmez. Teshisini kendi seçtiği "
         "kanitla uretir."
     )
 
@@ -205,7 +205,7 @@ def goster() -> None:
 
     mod = st.radio(
         "Kaynak", ["Kayıtlı koşu", "Canlı çalıştır"], horizontal=True,
-        help=("Kayitli kosu API harcamaz ve her zaman calisir. Canli mod "
+        help=("Kayıtlı koşu API harcamaz ve her zaman çalışır. Canlı mod "
               "ucretsiz katman sinirlarina tabidir (20 istek/gun, 5 istek/dk)."),
     )
 
@@ -236,8 +236,8 @@ def goster() -> None:
                     st.json(sonuc["cevap"])
         else:
             st.info(
-                "Canli mod secildi. 'Ajani calistir' dugmesine basildiginda "
-                "saglayiciya gercek bir istek gonderilir."
+                "Canlı mod secildi. 'Ajani calistir' düğmesine basıldığında "
+                "sağlayıcıya gerçek bir istek gönderilir."
             )
         return
 

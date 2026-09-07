@@ -67,6 +67,19 @@ E4: >
   Model egitildiginden farkli bir cozunurlukte calistirildiginda kaybin
   precision'da mi recall'da mi olustugunu olcer.
 
+Baseline: >
+  Dagitimdaki modelin (main_model.pt) hic fine-tune edilmeden olculmus hali.
+  Senaryolarla ayni protokolde EGITILMEDIGI icin bozulma karsilastirmasinda
+  taban olarak kullanilmaz; onun yerine v00 kullanilir. Buradaki islevi,
+  fine-tune'un kendi etkisini gorunur kilmak.
+
+# E3: iraksadigi icin degerlendirilemedi; defterde satiri yoktur.
+# Bulgusu docs/BULGULAR.md "E3 Sonucu" bolumunde durur.
+E3: >
+  Ogrenme orani 100 kat yuksek secildiginde egitimin kararsizlasip
+  kararsizlasmadigini olcer. OLCULEMEDI: egitim epoch 1'de iraksadi
+  (butun kayiplar nan), degerlendirilebilir bir model uretilmedi.
+
 # Kontrol kosullari - bozulma icermez.
 C2: >
   Hicbir sey bozulmadan yalnizca rastgelelik tohumu degistirildiginde

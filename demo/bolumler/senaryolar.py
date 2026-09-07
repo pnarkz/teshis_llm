@@ -41,7 +41,7 @@ def _metrik_tablosu(gozlem: dict) -> pd.DataFrame:
 
 
 def _kirilim_tablosu(senaryo: str, kosu_id: str | None):
-    """Ajanin gordugu kirilimi, gurultu bandiyla birlikte gosterir."""
+    """Ajanın gördüğü kirilimi, gürültü bandiyla birlikte gösterir."""
     from teshis.ajan import araclar
 
     if kosu_id is None:
@@ -111,7 +111,7 @@ def goster() -> None:
                     unsafe_allow_html=True)
         stil.yorum(
             f"Gurultu esigi {gozlem['kontrol_kosu_sayisi']} kontrol kosusundan "
-            "hesaplandi. Esigin altinda kalan bir fark, saf rastgelelikten "
+            "hesaplandı. Esigin altında kalan bir fark, saf rastgelelikten "
             "ayirt edilemez."
         )
 
@@ -127,8 +127,8 @@ def goster() -> None:
             stil.ust_baslik("nesne boyutu")
             st.dataframe(boyut_df, hide_index=True, width="stretch")
         stil.yorum(
-            "'band orani' = |fark| / o grubun gurultu bandi. 1'in altindaki "
-            "bir oran, farkin bozulmasiz kosular arasinda da goruldugu "
+            "'band orani' = |fark| / o grubun gürültü bandi. 1'in altindaki "
+            "bir oran, farkin bozulmasiz koşular arasında da goruldugu "
             "anlamina gelir."
         )
 

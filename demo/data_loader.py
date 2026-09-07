@@ -191,7 +191,7 @@ def sparkline(values: list[float], blocks: str = "▁▂▃▄▅▆▇█") -> 
 
 
 def llm_response() -> list | dict:
-    """TEK ATISLIK denemenin cevaplari (tum kanit onceden prompt'a konur)."""
+    """TEK ATISLIK denemenin cevaplari (tum kanıt onceden prompt'a konur)."""
     return read_json(ROOT / "reports/ajan_denemesi/gemini_response.json")
 
 
@@ -244,7 +244,7 @@ def ajan_kaydi() -> dict:
 
 
 def ajan_araclarini_calistir(kosu_id: str) -> dict:
-    """Ajanin gordugu kaniti yerel olarak yeniden uretir (API harcamaz)."""
+    """Ajanın gördüğü kanıtı yerel olarak yeniden üretir (API harcamaz)."""
     from teshis.ajan import araclar
 
     cagrilabilir = {
@@ -275,7 +275,7 @@ def ajana_gizlenenler() -> dict[str, str]:
         "Bozulma parametresi": "Gonderilmiyor",
         "Kaynak grubu adlari": "Takma adla (kaynak_a, kaynak_b ...)",
         "Dosya yollari": "Gonderilmiyor",
-        "Cevap anahtari": "Gonderilmiyor - puanlama cevap uretildikten SONRA yerelde yapilir",
+        "Cevap anahtari": "Gonderilmiyor - puanlama cevap üretildikten SONRA yerelde yapilir",
         "Anonim metrikler": "Gonderiliyor",
         "Kirilim araclari": f"Kullanilabilir ({len(araclar.ARAC_ADLARI) if hasattr(araclar, 'ARAC_ADLARI') else 7} arac)",
     }

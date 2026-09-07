@@ -82,7 +82,7 @@ def yorum(metin: str) -> None:
 
 
 def fark_metni(deger: float, fark: float, basamak: int = 4) -> str:
-    """Sayilari her zaman 'deger (referansa fark)' olarak gosterir."""
+    """Sayilari her zaman 'deger (referansa fark)' olarak gösterir."""
     return f"{deger:.{basamak}f}  ({fark:+.{basamak}f})"
 
 

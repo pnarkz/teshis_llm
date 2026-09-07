@@ -37,8 +37,8 @@ def goster() -> None:
     st.markdown("## Kontrollü deney kurgusu")
     st.markdown(
         "Gercek hayatta \"model neden kotu calisiyor?\" sorusu cevaplanamaz, "
-        "cunku ayni anda birden fazla sey yanlis olabilir. Burada tersi "
-        "yapilir: saglikli bir referans egitilir, sonra **her seferinde tek "
+        "cunku aynı anda birden fazla sey yanlış olabilir. Burada tersi "
+        "yapilir: sağlıklı bir referans egitilir, sonra **her seferinde tek "
         "bir sey** kasitli olarak bozulur."
     )
 
@@ -47,14 +47,14 @@ def goster() -> None:
         stil.ust_baslik("değişen")
         stil.kutu(
             "<b>D serisi:</b> veri (etiket, dagilim, temsil)<br>"
-            "<b>E serisi:</b> egitim veya cikarim ayari<br>"
-            "<b>C serisi:</b> yalnizca rastgelelik tohumu"
+            "<b>E serisi:</b> eğitim veya cikarim ayari<br>"
+            "<b>C serisi:</b> yalnızca rastgelelik tohumu"
         )
     with b:
         stil.ust_baslik("sabit tutulan")
         stil.kutu(
             "Kilitli tanı seti (val_diagnostic) - hic degismez<br>"
-            "Egitim protokolu - tek dosyada beyan edilir<br>"
+            "Eğitim protokolu - tek dosyada beyan edilir<br>"
             "Baslangic modeli, seed, cozunurluk<br>"
             "Test seti - final asamasina kadar yasak"
         )
@@ -63,8 +63,8 @@ def goster() -> None:
     st.markdown(
         "E serisi protokolu **kasitli olarak** bozar. Sapmalar koda dagilmis "
         "bayraklarla degil, `senaryolar/egitim_protokolu.yaml` icinde beyan "
-        "edilir; her kosu kendi sapmasini manifestinde tasir. Boylece hangi "
-        "kosunun protokolden nerede ayrildigi tek yerden okunur."
+        "edilir; her koşu kendi sapmasini manifestinde tasir. Boylece hangi "
+        "koşunun protokolden nerede ayrildigi tek yerden okunur."
     )
     stil.kutu(
         "Somut ornek: E3'un tezi \"ogrenme orani 100 kat yuksek\". Ultralytics "
@@ -77,7 +77,7 @@ def goster() -> None:
     st.markdown("---")
     st.markdown("## Ajanın körleştirilmesi")
     st.markdown(
-        "Ajan hangi kosunun hangi senaryo oldugunu bilmez. Filtreler yapisaldir "
+        "Ajan hangi koşunun hangi senaryo olduğunu bilmez. Filtreler yapisaldir "
         "ve testlidir; ad listesine dayanmaz."
     )
     gizli = ajana_gizlenenler()
@@ -93,16 +93,16 @@ def goster() -> None:
     st.markdown("---")
     st.markdown("## Gürültü tabanı")
     st.markdown(
-        "Hicbir sey bozulmadan, yalnizca rastgelelik tohumu degistirilerek "
-        "egitilen kosular arasindaki yayilim. Bir farkin bu bandin altinda "
-        "kalmasi, o farkin **saf rastgelelikten ayirt edilemedigi** anlamina "
+        "Hicbir sey bozulmadan, yalnızca rastgelelik tohumu değiştirilerek "
+        "egitilen koşular arasindaki yayilim. Bir farkin bu bandin altında "
+        "kalmasi, o farkin **saf rastgelelikten ayırt edilemedigi** anlamina "
         "gelir - buyuklugu ne olursa olsun."
     )
     satirlar = _gurultu_tablosu()
     st.dataframe(satirlar, hide_index=True, width="stretch")
     stil.yorum(
-        "Dikkat: bu yalnizca kucuk orneklem sorunu degil. termal grubu 858 "
-        "bbox tasir ama bandi hituav'in (2.165 bbox) bandinin on katindan "
+        "Dikkat: bu yalnızca küçük orneklem sorunu değil. termal grubu 858 "
+        "bbox tasir ama bandi hituav'in (2.165 bbox) bandinin on katından "
         "fazladir; bazi gruplar gercekten oynaktir."
     )
 
@@ -113,22 +113,22 @@ def goster() -> None:
         "**Bu soruyu cevaplayacak orneklem henuz yok.**"
     )
     for madde in (
-        "Tek model, kosu basina tek deneme, tekrar yok. Olculen skor bir "
+        "Tek model, koşu basina tek deneme, tekrar yok. Olculen skor bir "
         "nokta tahminidir; guven araligi hesaplanamaz.",
-        "Ajanin \"sorun uydurmama\" orani icin verilebilecek aralik cok genis "
+        "Ajanin \"sorun uydurmama\" orani için verilebilecek aralik cok genis "
         "(dort saf kontrolun birinde uydurdu).",
-        "Gurultu bandi dort kosudan hesaplandi; az gozlemle band gercek "
+        "Gürültü bandi dort kosudan hesaplandı; az gozlemle band gerçek "
         "yayilimi oldugundan kucuk gosterir.",
-        "Referans tek bir kosudur (v00) ve dort saglikli kosunun en zayifidir; "
+        "Referans tek bir kosudur (v00) ve dort sağlıklı koşunun en zayifidir; "
         "daha saglam bir taban onlarin ortalamasi olurdu.",
-        "D6b'nin grup bazli iddiasi last.pt uzerinden kuruldu; saglikli "
+        "D6b'nin grup bazli iddiasi last.pt uzerinden kuruldu; sağlıklı "
         "last.pt kontrolleri henuz olculmedi.",
     ):
         st.markdown(f"- {madde}")
 
     stil.kutu(
-        "<b>Bu bolumun amaci:</b> bulgulari zayiflatmak degil, hangilerinin "
-        "ne kadar dayanikli oldugunu acikca soylemek. Gurultu tabani "
+        "<b>Bu bolumun amaci:</b> bulgulari zayiflatmak değil, hangilerinin "
+        "ne kadar dayanikli olduğunu acikca soylemek. Gürültü tabanı "
         "olculdukten sonra bes iddia geri cekildi; bu, olcumun calistiginin "
         "kanitidir."
     )

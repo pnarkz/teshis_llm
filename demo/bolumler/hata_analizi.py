@@ -50,7 +50,7 @@ def goster() -> None:
     )[:adet]
 
     if not sirali:
-        st.warning("Bu galeride siralanabilir kayit bulunamadi.")
+        st.warning("Bu galeride sıralanabilir kayit bulunamadı.")
         return
 
     st.markdown("### Özet")
@@ -65,8 +65,8 @@ def goster() -> None:
         hide_index=True, width="stretch",
     )
     stil.yorum(
-        "Skor, yanlis negatif ve yanlis pozitif sayilariyla dusuk IoU'yu "
-        "birlestiren siralama olcutudur; en sorunlu kareleri one cikarir."
+        "Skor, yanlış negatif ve yanlış pozitif sayilariyla düşük IoU'yu "
+        "birleştiren sıralama ölçütüdür; en sorunlu kareleri one çıkarır."
     )
 
     st.markdown("### Örnekler")
@@ -91,7 +91,7 @@ def goster() -> None:
         st.markdown("### Confusion matrix")
         st.image(str(matris[0]), width="stretch")
         stil.yorum(
-            "Not: Ultralytics'in urettigi bu gorsel bir kez kendi raporladigi "
-            "recall ile celisti (D3b). Projedeki karisiklik iddialari bagimsiz "
+            "Not: Ultralytics'in ürettiği bu görsel bir kez kendi raporladığı "
+            "recall ile çelişti (D3b). Projedeki karışıklık iddiaları bağımsız "
             "olcumle (metrikler.py) uretilir."
         )
