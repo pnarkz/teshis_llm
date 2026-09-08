@@ -58,11 +58,41 @@ def test_veri_senaryolarinda_degisen_parametre_yazili():
         assert d["parametreler"], f"{kod}: degisen parametre bulunamadi"
 
 
-def test_sabit_kalanlar_kilitli_seti_her_zaman_iceriyor(senaryolar):
-    """Karsilastirmanin gecerliligi kilitli sete bagli; her ozette gorunmeli."""
+def test_sabit_kalanlar_gercek_degerlendirme_setini_soyler(senaryolar):
+    """Ozet, kosunun GERCEKTEN olculdugu kumeyi yazmali.
+
+    GERCEK HATA: bu satir "val_diagnostic (kilitli, hic degismez)" diye SABIT
+    yaziliyordu. D6a ise kasitli olarak sizintili kume uzerinde olculmustur,
+    dolayisiyla sayfa kendi kendisiyle celisiyordu: ust kutuda "kilitli set
+    hic degismez", alt kutuda "baska sette olculdu". Ustelik eski test tam
+    da bu celiskiyi DOGRULUYORDU - her ozette "val_diagnostic" ariyordu.
+    """
+    import csv
+
+    from teshis.degerlendirme.senaryo_ozeti import RESULTS_CSV
+
+    with RESULTS_CSV.open(encoding="utf-8") as f:
+        defter = {r["scenario"]: r for r in csv.DictReader(f)}
+
     for s in senaryolar:
         sabitler = " ".join(so.ne_sabit_kaldi(s))
-        assert "val_diagnostic" in sabitler or "evaluation_set" in sabitler, s
+        kume = defter[s]["evaluation_set"]
+        assert kume in sabitler, f"{s}: ozette '{kume}' gecmiyor"
+        if kume != "val_diagnostic":
+            assert "kilitli set DEĞİL" in sabitler, (
+                f"{s} kilitli set disinda olculdu ama ozet bunu soylemiyor"
+            )
+        else:
+            assert "kilitli" in sabitler, s
+
+
+def test_d6a_ozeti_kendisiyle_celismiyor():
+    """Somut regresyon: D6a'nin sabitleri ve sinirlamalari ayni seyi soylemeli."""
+    sabitler = " ".join(so.ne_sabit_kaldi("D6a"))
+    sinirlar = " ".join(so.sinirlamalar("D6a"))
+    assert "v08_sizintili_kume" in sabitler
+    assert "v08_sizintili_kume" in sinirlar
+    assert "val_diagnostic (kilitli" not in sabitler
 
 
 def test_gurultu_icinde_kalan_senaryo_boyle_isaretlenir():

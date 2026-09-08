@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import csv
 import functools
-import json
 from pathlib import Path
 from typing import Any
 
@@ -70,12 +69,6 @@ def _konfig(senaryo: str) -> dict[str, Any]:
     return yaml.safe_load(yol.read_text(encoding="utf-8")) or {}
 
 
-def _referans() -> dict[str, Any]:
-    return json.loads(
-        (KOK / "reports/referans_v00/d1_metrics.json").read_text(encoding="utf-8")
-    )
-
-
 def ne_degisti(senaryo: str) -> dict[str, Any]:
     """Bozulma turu ve uygulanan parametreler."""
     kayit = _katalog().get(_kod(senaryo), {})
@@ -91,18 +84,29 @@ def ne_degisti(senaryo: str) -> dict[str, Any]:
 
 
 def ne_sabit_kaldi(senaryo: str) -> list[str]:
-    """Kontrollu deneyin degismeyen tarafi.
+    """Aday ile REFERANSI arasinda sabit tutulan alanlar.
 
     Bunlari yazmak sekil degil: karsilastirmanin gecerliligi tam olarak bu
-    listenin dogru olmasina baglidir.
+    listenin dogru olmasina baglidir. Liste kosunun KENDI degerlerini
+    gosterir; referansin ayni degerleri tasidigi karsilastirilabilirlik.py
+    tarafindan garanti edilir. Tek istisna, kosunun kasitli olarak farkli
+    olan alanidir (D6a'nin degerlendirme kumesi gibi) - o zaman satir bunu
+    acikca soyler.
     """
     satir = _defter().get(senaryo, {})
     konfig = _konfig(senaryo)
+    # Degerlendirme seti SABIT YAZILAMAZ: D6a kasitli olarak sizintili kume
+    # uzerinde olculur. Sabit yazildiginda sayfa kendi kendisiyle celisiyordu -
+    # ust kutuda "kilitli set hic degismez", alt kutuda "baska sette olculdu".
+    kume = satir.get("evaluation_set", "?")
     sabitler = [
-        "Değerlendirme seti: val_diagnostic (kilitli, hiç değişmez)",
+        (f"Değerlendirme seti: {kume} (kilitli, hiç değişmez)"
+         if kume == "val_diagnostic"
+         else f"Değerlendirme seti: {kume} — kilitli set DEĞİL"),
         f"Çıkarım çözünürlüğü: {satir.get('imgsz_eval', '?')} px",
         f"Başlangıç modeli: {satir.get('model', '?')}",
         f"Seed: {satir.get('seed', '?')}",
+        f"Checkpoint: {'last.pt' if str(satir.get('weights_path', '')).endswith('last.pt') else 'best.pt'}",
     ]
     if konfig.get("hedef_split") == "train":
         sabitler.append("Yalnızca train bölümü değiştirildi; val ve test dokunulmadı")
@@ -112,51 +116,110 @@ def ne_sabit_kaldi(senaryo: str) -> list[str]:
 
 
 def ne_gozlendi(senaryo: str) -> dict[str, Any]:
-    """Referansa gore genel metrik farklari ve gurultu bandi degerlendirmesi."""
-    from .gurultu import alt_grup_bandi  # dairesel import olmasin diye burada
+    """Kendi olcegindeki referansa gore farklar ve o olcegin gurultu esigi.
+
+    Referans SABIT DEGILDIR. Her kosu, dort kimlik alani (model, degerlendirme
+    kumesi, cozunurluk, checkpoint) kendisiyle ayni olan saglikli kosuyla
+    karsilastirilir; esik de yalnizca o olcegin kontrol kosularindan gelir.
+    Ayrinti ve gerekce: karsilastirilabilirlik.py.
+    """
+    from .karsilastirilabilirlik import esikler as _grup_esikleri
+    from .karsilastirilabilirlik import karsilastirma
 
     satir = _defter().get(senaryo)
     if satir is None:
         return {}
-    ref = _referans()
 
-    kontroller = [
-        s for ad, s in _defter().items()
-        if (ad.startswith("C") and ad[1:2].isdigit())
-        and s["weights_path"].endswith("best.pt")
-    ]
-    esikler = {
-        m: max((abs(float(k[m]) - ref[m]) for k in kontroller), default=None)
-        for m in GENEL_METRIKLER
-    }
+    karsi = karsilastirma(senaryo)
+    ref_ad = karsi["referans"]
+    ref = _defter().get(ref_ad) if ref_ad else None
+    grup_esik = _grup_esikleri(senaryo)
 
     metrikler = {}
     for m in GENEL_METRIKLER:
         deger = float(satir[m])
-        fark = deger - ref[m]
-        esik = esikler[m]
+        ref_deger = float(ref[m]) if ref else None
+        fark = None if ref_deger is None else deger - ref_deger
+        esik = grup_esik.get(m)
         metrikler[m] = {
             "deger": round(deger, 4),
-            "referans": round(ref[m], 4),
-            "fark": round(fark, 4),
+            "referans": None if ref_deger is None else round(ref_deger, 4),
+            "fark": None if fark is None else round(fark, 4),
             "gurultu_esigi": round(esik, 4) if esik is not None else None,
-            "asiyor": (abs(fark) > esik) if esik is not None else None,
+            "asiyor": (abs(fark) > esik) if (fark is not None and esik) else None,
         }
     return {
         "metrikler": metrikler,
-        "kontrol_kosu_sayisi": len(kontroller),
+        "kontrol_kosu_sayisi": len(karsi["kontroller"]),
         "asan_metrikler": [m for m, d in metrikler.items() if d["asiyor"]],
+        "referans_senaryo": ref_ad,
+        "karsilastirma_turu": karsi["tur"],
+        "karsilastirma_aciklamasi": karsi["aciklama"],
+        "kimlik": karsi["kimlik"]._asdict() if karsi["kimlik"] else None,
     }
 
 
 def kanit_gucu(senaryo: str) -> dict[str, Any]:
-    """Bulgunun ne kadar guclu oldugunu tek bakista soyler."""
+    """Bulgunun ne kadar guclu oldugunu tek bakista soyler.
+
+    Onemli: "guclu / zayif / gurultu icinde" derecelendirmesi YALNIZCA kendi
+    olceginde bir referansi VE bir gurultu esigi olan kosular icin anlamlidir.
+    Digerleri derecelendirilmez - derecelendirilirse saglikli bir kontrol
+    kosusu "guclu bozulma kaniti" gorunur. Tam olarak bu olmustu:
+    `v00_saglikli last_pt` uc metrikte "esigi asiyor" diye isaretlenmisti,
+    oysa o kosuda bozulma yok, yalnizca checkpoint farkli.
+    """
+    from .karsilastirilabilirlik import bozulmasiz_mi
+
     gozlem = ne_gozlendi(senaryo)
     if not gozlem:
         return {"seviye": "olcum yok", "aciklama": "Bu koşu defterde bulunamadı."}
 
+    tur = gozlem["karsilastirma_turu"]
+    if tur == "yok":
+        return {"seviye": "karsilastirilamaz", "aciklama": gozlem["karsilastirma_aciklamasi"]}
+    if senaryo == gozlem["referans_senaryo"]:
+        return {
+            "seviye": "referans",
+            "aciklama": (
+                "Bu koşu kendi ölçeğinin sağlıklı referansıdır; kendisiyle "
+                "karşılaştırılamaz."
+            ),
+        }
+    if tur == "eslenik":
+        return {"seviye": "eslenik olcum", "aciklama": gozlem["karsilastirma_aciklamasi"]}
+
     asan = gozlem["asan_metrikler"]
     n = gozlem["kontrol_kosu_sayisi"]
+
+    # Kontrol kosusu OLCUM ARACIDIR, olcum nesnesi degil. Derecelendirilirse
+    # kendi kendini "bozulma" sanir: kosu bandin disinda birakildiginda kalan
+    # iki gozlemin araligi daralir ve kosu "uc deger" gorunur. C2 seed21 tam
+    # boyle "guclu bozulma kaniti" cikmisti - icinde hicbir bozulma yokken.
+    if bozulmasiz_mi(senaryo):
+        ek = (
+            " Aynı ölçütle tartılsaydı şu metriklerde 'eşiği aşıyor' "
+            f"çıkardı: {', '.join(asan)}. Bu, ölçütün kendisinin ne kadar "
+            "oynak olduğunu gösterir." if asan else
+            " Aynı ölçütle tartıldığında hiçbir metrikte eşiği aşmıyor."
+        )
+        return {
+            "seviye": "kontrol kosusu",
+            "aciklama": (
+                "Bu koşu hiçbir bozulma içermez; gürültü tabanını ölçmek için "
+                "vardır. Kendisi bir bulgu olarak derecelendirilmez." + ek
+            ),
+        }
+
+    if n == 0:
+        return {
+            "seviye": "esik yok",
+            "aciklama": (
+                f"Referans var ({gozlem['referans_senaryo']}) ama bu ölçekte "
+                "hiç kontrol koşusu yok. Fark ölçülebiliyor, gürültüden ayırt "
+                "edilemiyor: başka bir ölçeğin eşiği ödünç alınamaz."
+            ),
+        }
     if not asan:
         return {
             "seviye": "gurultu icinde",
@@ -197,14 +260,17 @@ def sinirlamalar(senaryo: str) -> list[str]:
         )
     gozlem = ne_gozlendi(senaryo)
     if gozlem:
-        sinirlar.append(
-            f"Gürültü eşiği {gozlem['kontrol_kosu_sayisi']} kontrol koşusundan "
-            "hesaplandı; az gözlemle eşik gerçek yayılımı olduğundan küçük gösterir."
-        )
+        sinirlar.append(gozlem["karsilastirma_aciklamasi"])
+        n = gozlem["kontrol_kosu_sayisi"]
+        if n:
+            sinirlar.append(
+                f"Gürültü eşiği {n} kontrol koşusundan hesaplandı; az gözlemle "
+                "eşik gerçek yayılımı olduğundan küçük gösterir."
+            )
     if satir.get("evaluation_set") != "val_diagnostic":
         sinirlar.append(
             f"Bu koşu kilitli set yerine '{satir.get('evaluation_set')}' üzerinde "
-            "ölçüldü; diğerleriyle doğrudan karşılaştırılamaz."
+            "ölçüldü; kilitli sette ölçülen koşularla aynı tabloda okunamaz."
         )
     if not satir.get("weights_path", "").endswith("best.pt"):
         sinirlar.append(
