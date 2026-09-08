@@ -43,6 +43,7 @@ Kullanim
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 from pathlib import Path
@@ -50,6 +51,29 @@ from pathlib import Path
 KOK = Path(__file__).resolve().parents[1]
 RAPORLAR = KOK / "reports"
 HEDEF = KOK / "demo/assets/sunum_gorselleri"
+
+def ayna_yolu(kok: Path, goreli: Path) -> Path:
+    """Ayna icindeki kisa, deterministik yol.
+
+    GERCEK HATA: ayna once orijinal dosya adini birebir kullaniyordu ve
+    `git clone` Windows'ta COKUYORDU:
+
+        error: unable to create file demo/assets/sunum_gorselleri/
+        hata_galerisi_C2_seed13/images/030_aaterm__frameoriginal_0280_jpg.
+        rf.6b78233d05175da1fe040a835a29e98d.jpg: Filename too long
+        fatal: unable to checkout working tree
+
+    Roboflow adlari ~70 karakter; ust dizinlerle birlikte 260 karakterlik
+    MAX_PATH sinirini asiyor. Depoyu klonlamak icin kullanicidan
+    `core.longpaths` ayarlamasini istemek kabul edilemez - depo kendi
+    basina calismali.
+
+    Cozum: dosya adi goreli yolun SHA-1 ozetinden turetilir. Eslestirme
+    tablosuna gerek yok; `data_loader.gorsel_coz()` ayni hesabi yapar.
+    """
+    ozet = hashlib.sha1(goreli.as_posix().encode("utf-8")).hexdigest()[:16]
+    return kok / goreli.parts[0] / f"{ozet}{goreli.suffix.lower()}"
+
 
 # Demonun Hata Analizi bolumundeki siralama olcutleri. Buradaki liste
 # demo/bolumler/hata_analizi.py::SIRALAMA ile ayni alanlari kullanir.
@@ -136,7 +160,7 @@ def hazirla(adet: int = 8, en_fazla_kenar: int = 1100, kalite: int = 82) -> dict
             kaynak = klasor / goreli
             if not kaynak.is_file():
                 continue
-            hedef = HEDEF / klasor.name / goreli
+            hedef = ayna_yolu(HEDEF, Path(klasor.name) / goreli)
             toplam_bayt += _kucult(kaynak, hedef, en_fazla_kenar, kalite)
             kare_sayisi += 1
 
@@ -145,7 +169,7 @@ def hazirla(adet: int = 8, en_fazla_kenar: int = 1100, kalite: int = 82) -> dict
         goreli = kaynak.relative_to(RAPORLAR)
         # Confusion matrix bir grafik: JPEG'e cevirmek metni bulaniklastirir,
         # PNG olarak yalnizca kucultulur.
-        hedef = HEDEF / goreli
+        hedef = ayna_yolu(HEDEF, goreli)
         hedef.parent.mkdir(parents=True, exist_ok=True)
         try:
             from PIL import Image

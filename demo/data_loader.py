@@ -38,11 +38,19 @@ def _onbellek(fn):
 # `scripts/sunum_gorselleri_hazirla.py` kucultulmus bir ALT KUME uretir ve
 # ayni goreli yol duzeniyle demo/assets/sunum_gorselleri altina koyar.
 #
-# Ayna duzeni bilerek birebir: burada baska bir eslestirme kurali yok,
-# yalnizca "reports/" onekini degistir. Iki farkli adlandirma kurali olsaydi
-# biri er gec digerinden ayrisirdi.
+# Aynadaki dosya ADI kisaltilir: Roboflow adlari ~70 karakter ve Windows'un
+# 260 karakterlik yol siniri `git clone` sirasinda depoyu KIRIYORDU. Ad,
+# goreli yolun SHA-1 ozetinden turetilir; eslestirme tablosu tutulmaz,
+# betik ve okuyucu ayni hesabi yapar (scripts/sunum_gorselleri_hazirla.py).
 
 SUNUM_GORSELLERI = ROOT / "demo/assets/sunum_gorselleri"
+
+
+def _ayna_yolu(goreli: Path) -> Path:
+    import hashlib
+
+    ozet = hashlib.sha1(goreli.as_posix().encode("utf-8")).hexdigest()[:16]
+    return SUNUM_GORSELLERI / goreli.parts[0] / f"{ozet}{goreli.suffix.lower()}"
 
 
 def gorsel_coz(yol: Path | None) -> Path | None:
@@ -55,7 +63,7 @@ def gorsel_coz(yol: Path | None) -> Path | None:
         goreli = yol.relative_to(ROOT / "reports")
     except ValueError:
         return None
-    yedek = SUNUM_GORSELLERI / goreli
+    yedek = _ayna_yolu(goreli)
     return yedek if yedek.is_file() else None
 
 
