@@ -5,4 +5,4 @@ hedef_split: train
 parametreler:
   etkin_sqrt_alan_esigi_px: 16
 seed: 42
-beklenen_kanit: yalnizca kucuk nesne recall duser
+beklenen_kanit: yalnızca küçük nesne recall'ı düşer

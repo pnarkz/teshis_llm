@@ -6,7 +6,7 @@ parametreler:
   sinif_ciftii: [0, 1]
   takas_orani: 0.30
 seed: 42
-beklenen_kanit: tasit ve insan arasinda capraz karisiklik; her iki sinifta precision dususu
+beklenen_kanit: taşıt ve insan arasında çapraz karışıklık; her iki sınıfta precision düşüşü
 
 gerekce: >
   D3 ayni bilimsel soruyu (sinif ID etiket hatasinin etkisi) UAP/UAI uzerinde

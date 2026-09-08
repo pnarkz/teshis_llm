@@ -5,4 +5,4 @@ hedef_split: train
 parametreler:
   izinli_kaynaklar: [aaterm]
 seed: 42
-beklenen_kanit: kaynak gruplari arasinda belirgin metrik ayrismasi
+beklenen_kanit: kaynak grupları arasında belirgin metrik ayrışması

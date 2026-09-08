@@ -39,7 +39,7 @@ from bolumler import (  # noqa: E402
 )
 
 st.set_page_config(
-    page_title="Termal Teshis Konsolu",
+    page_title="Termal Teşhis Konsolu",
     layout="wide",
     initial_sidebar_state="expanded",
 )

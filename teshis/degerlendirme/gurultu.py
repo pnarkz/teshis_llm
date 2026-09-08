@@ -120,8 +120,8 @@ def fark_degerlendir(
             "band": None,
             "band_orani": None,
             "yorum": (
-                "bu grup icin gurultu bandi yok (en az iki saglikli kosu olcumu "
-                "gerekir); fark tek basina yorumlanmamalidir"
+                "bu grup için gürültü bandı yok (en az iki sağlıklı koşu ölçümü "
+                "gerekir); fark tek başına yorumlanmamalıdır"
             ),
         }
 

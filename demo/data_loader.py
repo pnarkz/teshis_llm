@@ -15,12 +15,29 @@ from teshis.degerlendirme.raporlar import rapor_klasoru as _rapor_klasoru
 ROOT = Path(__file__).resolve().parents[1]
 
 
+# --- Onbellek ---------------------------------------------------------------
+#
+# Streamlit her etkilesimde butun sayfayi bastan calistirir. Onbelleksiz
+# calisildiginda tek bir radyo dugmesi 26 kosu icin JSON dosyalarini yeniden
+# okuyordu. `st.cache_data` bunu bir kez okur; dosyalar sunum sirasinda
+# degismedigi icin bayatlamaz. Streamlit yoksa (testler, betikler) dekorator
+# etkisizdir - bu modul Streamlit'siz de calisabilmelidir.
+
+def _onbellek(fn):
+    try:
+        import streamlit as st
+    except ModuleNotFoundError:
+        return fn
+    return st.cache_data(show_spinner=False)(fn)
+
+
 def read_json(path: Path) -> dict:
     if not path.is_file():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@_onbellek
 def load_results() -> pd.DataFrame:
     frame = pd.read_csv(ROOT / "results.csv")
     baseline = read_json(ROOT / "reports/model_secimi/model_karsilastirma.json")["aday"]
@@ -63,6 +80,7 @@ def rapor_klasoru(scenario: str) -> Path | None:
     return _rapor_klasoru(scenario, ROOT)
 
 
+@_onbellek
 def evidence_for(scenario: str) -> dict:
     if scenario == "Baseline":
         return read_json(ROOT / "reports/model_secimi/model_karsilastirma.json").get("aday", {})
@@ -94,9 +112,9 @@ def examples_for(scenario: str) -> list[Path]:
 
 CURVE_FILES = (
     ("BoxPR_curve.png", "Precision-Recall"),
-    ("BoxF1_curve.png", "F1 / guven esigi"),
-    ("BoxP_curve.png", "Precision / guven esigi"),
-    ("BoxR_curve.png", "Recall / guven esigi"),
+    ("BoxF1_curve.png", "F1 / güven eşiği"),
+    ("BoxP_curve.png", "Precision / güven eşiği"),
+    ("BoxR_curve.png", "Recall / güven eşiği"),
 )
 
 
@@ -152,6 +170,7 @@ def label_distribution_image(row: pd.Series) -> Path | None:
     return path if path.is_file() else None
 
 
+@_onbellek
 def error_galleries() -> dict[str, dict]:
     """Hata galerilerini SENARYO ADINA gore dondurur.
 
@@ -190,11 +209,13 @@ def sparkline(values: list[float], blocks: str = "▁▂▃▄▅▆▇█") -> 
     return "".join(blocks[round((number - low) / (high - low) * scale)] for number in numbers)
 
 
+@_onbellek
 def llm_response() -> list | dict:
     """TEK ATISLIK denemenin cevaplari (tum kanıt onceden prompt'a konur)."""
     return read_json(ROOT / "reports/ajan_denemesi/gemini_response.json")
 
 
+@_onbellek
 def ajan_cevaplari() -> list:
     """FONKSIYON CAGIRMA denemesinin cevaplari (ajan kaniti kendi secer).
 
@@ -206,6 +227,7 @@ def ajan_cevaplari() -> list:
     return d if isinstance(d, list) else []
 
 
+@_onbellek
 def llm_score() -> dict:
     return read_json(ROOT / "reports/ajan_denemesi/llm_score.json")
 
@@ -217,6 +239,7 @@ def llm_score() -> dict:
 # araclar yerel ve deterministiktir, ayni kosu icin ayni cevabi verir. Ekranda
 # "yerel olarak yeniden calistirildi" diye etiketlenir.
 
+@_onbellek
 def ajan_kosu_haritasi() -> dict[str, str]:
     """kosu_NN -> gercek senaryo adi. YALNIZCA sunucu gorunumu icin."""
     import csv
@@ -230,6 +253,7 @@ def ajan_kosu_haritasi() -> dict[str, str]:
     return harita
 
 
+@_onbellek
 def ajan_kaydi() -> dict:
     """Tamamlanmis denemenin cevaplari, arac kaydi ve puanlari."""
     cevaplar = ajan_cevaplari()
@@ -243,6 +267,7 @@ def ajan_kaydi() -> dict:
     }
 
 
+@_onbellek
 def ajan_araclarini_calistir(kosu_id: str) -> dict:
     """Ajanın gördüğü kanıtı yerel olarak yeniden üretir (API harcamaz)."""
     from teshis.ajan import araclar
@@ -270,12 +295,12 @@ def ajana_gizlenenler() -> dict[str, str]:
     from teshis.ajan import araclar
 
     return {
-        "Senaryo adi": "Gonderilmiyor - kosular kosu_NN olarak sunulur",
-        "Veri surumu / manifest": "Gonderilmiyor",
-        "Bozulma parametresi": "Gonderilmiyor",
-        "Kaynak grubu adlari": "Takma adla (kaynak_a, kaynak_b ...)",
-        "Dosya yollari": "Gonderilmiyor",
-        "Cevap anahtari": "Gonderilmiyor - puanlama cevap üretildikten SONRA yerelde yapilir",
-        "Anonim metrikler": "Gonderiliyor",
-        "Kirilim araclari": f"Kullanilabilir ({len(araclar.ARAC_ADLARI) if hasattr(araclar, 'ARAC_ADLARI') else 7} arac)",
+        "Senaryo adı": "Gönderilmiyor — koşular kosu_NN olarak sunulur",
+        "Veri sürümü / manifest": "Gönderilmiyor",
+        "Bozulma parametresi": "Gönderilmiyor",
+        "Kaynak grubu adları": "Takma adla (kaynak_a, kaynak_b ...)",
+        "Dosya yolları": "Gönderilmiyor",
+        "Cevap anahtarı": "Gönderilmiyor — puanlama cevap üretildikten SONRA yerelde yapılır",
+        "Anonim metrikler": "Gönderiliyor",
+        "Kırılım araçları": f"Kullanılabilir ({len(araclar.ARAC_ADLARI) if hasattr(araclar, 'ARAC_ADLARI') else 7} araç)",
     }

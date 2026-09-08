@@ -7,93 +7,98 @@
 # dosyasinda yazmaz; buraya yazilir.
 #
 # Kural: duz, iddiasiz, arastirma dili. Sonucu degil SORUYU anlatir.
+# Metinler ARAYUZDE gorunur, bu yuzden duzgun Turkce yazilir; yorumlar
+# (bu satirlar) ASCII kalabilir.
+#
+# DIKKAT: bu dosyada bir anahtar iki kez yazilirsa YAML sessizce sonuncuyu
+# alir. E3 bir donem iki kez tanimliydi ve ilk tanim hic gorunmuyordu;
+# tests/test_anlatim.py bunu artik yasakliyor.
 
 D1: >
-  Bir sinifin egitimdeki temsil payi dusurulunce, kaybin yalnizca o sinifta
-  mi yoksa genel metriklerde de mi gorunecegini olcer.
+  Bir sınıfın eğitimdeki temsil payı düşürülünce, kaybın yalnızca o sınıfta
+  mı yoksa genel metriklerde de mi görüneceğini ölçer.
 
 D2a: >
-  Etiket kutulari kaydirildiginda (lokalizasyon gurultusu), bozulmanin
-  precision'da mi recall'da mi yoksa ikisinde birden mi gorunecegini olcer.
+  Etiket kutuları kaydırıldığında (lokalizasyon gürültüsü), bozulmanın
+  precision'da mı recall'da mı yoksa ikisinde birden mi görüneceğini ölçer.
 
 D2b: >
-  Egitim etiketlerinin bir bolumu silindiginde modelin ne yaptigini olcer:
-  etiketsiz kalan gercek nesneleri arka plan olarak ogrenip ogrenmedigini.
+  Eğitim etiketlerinin bir bölümü silindiğinde modelin ne yaptığını ölçer:
+  etiketsiz kalan gerçek nesneleri arka plan olarak öğrenip öğrenmediğini.
 
 D3: >
-  Birbirine benzeyen iki az ornekli sinif (UAP/UAI) karistirildiginda,
-  karisikligin sinif bazli metriklerde gorunur olup olmadigini olcer.
+  Birbirine benzeyen iki az örnekli sınıf (UAP/UAI) karıştırıldığında,
+  karışıklığın sınıf bazlı metriklerde görünür olup olmadığını ölçer.
 
 D3b: >
-  Ayni sinif karisikligi bol ornekli siniflarda (tasit/insan) uygulandiginda
-  modelin bozulmayi sogurup soguramadigini olcer.
+  Aynı sınıf karışıklığı bol örnekli sınıflarda (taşıt/insan) uygulandığında
+  modelin bozulmayı soğurup soğuramadığını ölçer.
 
 D4: >
-  Egitimden kucuk nesne sinyali silindiginde, kaybin toplam metriklerde
-  gorunur olup olmadigini olcer.
+  Eğitimden küçük nesne sinyali silindiğinde, kaybın toplam metriklerde
+  görünür olup olmadığını ölçer.
 
 D5: >
-  Egitim verisinin kaynak dagilimi kaydirildiginda, bozulmanin hangi kaynak
-  grubunda ve hangi checkpoint'te gorunecegini olcer.
+  Eğitim verisinin kaynak dağılımı kaydırıldığında, bozulmanın hangi kaynak
+  grubunda ve hangi checkpoint'te görüneceğini ölçer.
 
 D6a: >
-  Train ve validation kumeleri arasinda sizinti oldugunda olcumun ne kadar
-  iyimser hale geldigini olcer.
+  Train ve validation kümeleri arasında sızıntı olduğunda ölçümün ne kadar
+  iyimser hale geldiğini ölçer. Aynı ağırlıklar iki farklı küme üzerinde
+  değerlendirildiği için fark tamamen kümenin etkisidir.
 
 D6b: >
-  Bir avuc kare asiri temsil edildiginde, temsil payi ile sinif performansi
-  arasinda bir iliski olusup olusmadigini olcer.
+  Bir avuç kare aşırı temsil edildiğinde, temsil payı ile sınıf performansı
+  arasında bir ilişki oluşup oluşmadığını ölçer.
 
 E1: >
-  Az veriyle cok epoch ve augmentasyonsuz egitim yapildiginda olusan asiri
-  uyumun, standart raporlamada (en iyi checkpoint) gorunur olup olmadigini
-  olcer.
+  Az veriyle çok epoch ve augmentasyonsuz eğitim yapıldığında oluşan aşırı
+  uyumun, standart raporlamada (en iyi checkpoint) görünür olup olmadığını
+  ölçer.
 
 E2: >
-  Epoch sayisi cok dusuruldugunde yetersiz egitim olusup olusmadigini olcer.
+  Epoch sayısı çok düşürüldüğünde yetersiz eğitim oluşup oluşmadığını ölçer.
 
-E3: >
-  Ogrenme orani cok yuksek secildiginde egitimin kararsizlasip
-  kararsizlasmadigini ve bunun iki farkli seed arasinda ne kadar oynadigini
-  olcer.
-
-E3b: >
-  Ogrenme orani 10 kat yuksek secildiginde egitimin kararsizlasip
-  kararsizlasmadigini olcer. E3'te 100 kat tam iraksama urettigi ve hicbir
-  sey ogrenilmedigi icin kararsizlik gozlenemedi; bu senaryo olculebilir
-  bandi arar.
-
-E4: >
-  Model egitildiginden farkli bir cozunurlukte calistirildiginda kaybin
-  precision'da mi recall'da mi olustugunu olcer.
-
-Baseline: >
-  Dagitimdaki modelin (main_model.pt) hic fine-tune edilmeden olculmus hali.
-  Senaryolarla ayni protokolde EGITILMEDIGI icin bozulma karsilastirmasinda
-  taban olarak kullanilmaz; onun yerine v00 kullanilir. Buradaki islevi,
-  fine-tune'un kendi etkisini gorunur kilmak.
-
-# E3: iraksadigi icin degerlendirilemedi; defterde satiri yoktur.
+# E3 iraksadigi icin degerlendirilemedi; defterde satiri yoktur.
 # Bulgusu docs/BULGULAR.md "E3 Sonucu" bolumunde durur.
 E3: >
-  Ogrenme orani 100 kat yuksek secildiginde egitimin kararsizlasip
-  kararsizlasmadigini olcer. OLCULEMEDI: egitim epoch 1'de iraksadi
-  (butun kayiplar nan), degerlendirilebilir bir model uretilmedi.
+  Öğrenme oranı 100 kat yüksek seçildiğinde eğitimin kararsızlaşıp
+  kararsızlaşmadığını ölçer. ÖLÇÜLEMEDİ: eğitim epoch 1'de ıraksadı
+  (bütün kayıplar nan), değerlendirilebilir bir model üretilmedi.
+
+E3b: >
+  Öğrenme oranı 10 kat yüksek seçildiğinde eğitimin kararsızlaşıp
+  kararsızlaşmadığını ölçer. E3'te 100 kat tam ıraksama ürettiği ve hiçbir
+  şey öğrenilmediği için kararsızlık gözlenemedi; bu senaryo ölçülebilir
+  bandı arar.
+
+E4: >
+  Model eğitildiğinden farklı bir çözünürlükte çalıştırıldığında kaybın
+  precision'da mı recall'da mı oluştuğunu ölçer. Ağırlıklar v00 ile aynıdır;
+  değişen tek şey çıkarım çözünürlüğüdür.
+
+Baseline: >
+  Dağıtımdaki modelin (main_model.pt) hiç fine-tune edilmeden ölçülmüş hâli.
+  Senaryolarla aynı protokolde EĞİTİLMEDİĞİ için bozulma karşılaştırmasında
+  taban olarak kullanılmaz; onun yerine v00 kullanılır. Buradaki işlevi,
+  fine-tune'un kendi etkisini görünür kılmak.
 
 # Kontrol kosullari - bozulma icermez.
 C2: >
-  Hicbir sey bozulmadan yalnizca rastgelelik tohumu degistirildiginde
-  metriklerin ne kadar oynadigini olcer. Butun "etki" iddialarinin altinda
-  duran gurultu tabanini verir.
+  Hiçbir şey bozulmadan yalnızca rastgelelik tohumu değiştirildiğinde
+  metriklerin ne kadar oynadığını ölçer. Bütün "etki" iddialarının altında
+  duran gürültü tabanını verir. Kendisi bir bulgu olarak derecelendirilmez;
+  ölçüm aracıdır, ölçüm nesnesi değil.
 
 v00_saglikli: >
-  Senaryolarla birebir ayni protokolde, temiz veriyle egitilmis saglikli
-  referans. Butun karsilastirmalarin tabani budur.
+  Senaryolarla birebir aynı protokolde, temiz veriyle eğitilmiş sağlıklı
+  referans. Ana ölçeğin (main_model.pt, val_diagnostic, 768 px, best.pt)
+  tabanı budur.
 
 v00n: >
-  Farkli bir taban modelin (yolo26n) temiz veriyle egitilmis hali; kendi
-  ciftinin referansi.
+  Farklı bir taban modelin (yolo26n) temiz veriyle eğitilmiş hâli; kendi
+  ölçeğinin referansıdır ve v00 ile karşılaştırılmaz.
 
 D1n: >
-  D1 bozulmasinin farkli bir taban model (yolo26n) uzerindeki etkisi;
-  v00n ile karsilastirilir.
+  D1 bozulmasının farklı bir taban model (yolo26n) üzerindeki etkisi;
+  v00 ile değil v00n ile karşılaştırılır.

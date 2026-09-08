@@ -5,4 +5,4 @@ hedef_split: train
 parametreler:
   hedef_tekrar: 40
 seed: 42
-beklenen_kanit: baskin sahneler ve nadir sinif precision bozulmasi
+beklenen_kanit: baskın sahneler ve nadir sınıf precision bozulması

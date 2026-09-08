@@ -6,4 +6,4 @@ parametreler:
   sinif_id: 1
   kare_cikarma_orani: 0.90
 seed: 42
-beklenen_kanit: insan recall ve AP belirgin duser
+beklenen_kanit: insan recall ve AP belirgin düşer

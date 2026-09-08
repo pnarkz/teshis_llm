@@ -7,7 +7,7 @@ parametreler:
   takas_orani: 0.30
   siniflar: [2, 3]
 seed: 42
-beklenen_kanit: UAP ve UAI arasinda iki yonlu confusion matrix caprazi
+beklenen_kanit: UAP ve UAI arasında iki yönlü karışıklık (confusion matrix çaprazı)
 kurallar:
   val_d3_etiketleri_bozulmaz: true
   arka_plan_egitimde_bulunamaz: true

@@ -5,4 +5,4 @@ hedef_split: train
 parametreler:
   kutu_silme_orani: 0.25
 seed: 42
-beklenen_kanit: precision duser, FP sayisi artar
+beklenen_kanit: precision düşer, yanlış pozitif sayısı artar

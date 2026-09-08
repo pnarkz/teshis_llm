@@ -5,4 +5,4 @@ hedef_split: train
 parametreler:
   merkez_kayma_orani: 0.15
 seed: 42
-beklenen_kanit: mAP50-95 mAP50'den daha fazla duser
+beklenen_kanit: mAP50-95 mAP50'den daha fazla düşer

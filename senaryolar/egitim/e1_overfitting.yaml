@@ -6,4 +6,4 @@ parametreler:
   epoch: 200
   augmentasyon: kapali
 seed: 42
-beklenen_kanit: train yuksek, val dusuk, train_val farki acilir
+beklenen_kanit: train yüksek, val düşük, train-val farkı açılır

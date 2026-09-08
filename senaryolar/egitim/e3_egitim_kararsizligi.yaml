@@ -5,4 +5,4 @@ parametreler:
   lr0: 0.10
   ikinci_seed_zorunlu: true
 seed: 42
-beklenen_kanit: loss gürültülü, seedler arasi oynaklik
+beklenen_kanit: loss gürültülü, seed'ler arası oynaklık

@@ -26,7 +26,7 @@ def goster() -> None:
     st.title("Hata Analizi")
     galeriler = error_galleries()
     if not galeriler:
-        st.info("Henuz hata galerisi uretilmemis.")
+        st.info("Henüz hata galerisi üretilmemiş.")
         return
 
     adlar = sorted(galeriler)
@@ -50,7 +50,7 @@ def goster() -> None:
     )[:adet]
 
     if not sirali:
-        st.warning("Bu galeride sıralanabilir kayit bulunamadı.")
+        st.warning("Bu galeride sıralanabilir kayıt bulunamadı.")
         return
 
     st.markdown("### Özet")
@@ -65,8 +65,8 @@ def goster() -> None:
         hide_index=True, width="stretch",
     )
     stil.yorum(
-        "Skor, yanlış negatif ve yanlış pozitif sayilariyla düşük IoU'yu "
-        "birleştiren sıralama ölçütüdür; en sorunlu kareleri one çıkarır."
+        "Skor, yanlış negatif ve yanlış pozitif sayılarıyla düşük IoU'yu "
+        "birleştiren sıralama ölçütüdür; en sorunlu kareleri öne çıkarır."
     )
 
     st.markdown("### Örnekler")
@@ -93,5 +93,5 @@ def goster() -> None:
         stil.yorum(
             "Not: Ultralytics'in ürettiği bu görsel bir kez kendi raporladığı "
             "recall ile çelişti (D3b). Projedeki karışıklık iddiaları bağımsız "
-            "olcumle (metrikler.py) uretilir."
+            "ölçümle (metrikler.py) üretilir."
         )

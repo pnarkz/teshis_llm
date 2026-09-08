@@ -5,4 +5,4 @@ parametreler:
   imgsz_egitim: 640
   imgsz_degerlendirme: 1280
 seed: 42
-beklenen_kanit: tum boyut gruplarinda performans duser
+beklenen_kanit: tüm boyut gruplarında performans düşer

@@ -6,4 +6,4 @@ parametreler:
   kaynak_sizdirma_orani: 0.20
 seed: 42
 degerlendirme_kumesi: evaluation_set_sizintili
-beklenen_kanit: val yapay yuksek, test-val farki buyuk
+beklenen_kanit: val yapay yüksek, test-val farkı büyük
