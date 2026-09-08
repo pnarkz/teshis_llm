@@ -391,3 +391,23 @@ def sinif_karisikligini_getir(kosu_id: str) -> dict[str, Any]:
             ),
         }
     return sonuc
+
+
+# --- Arac surumu -----------------------------------------------------------
+#
+# Bir ajan kaydinin "ajanin gordugu kanit" olarak okunabilmesi icin, o kaydin
+# HANGI arac surumuyle uretildigi bilinmelidir. Kirilim araclarina gurultu
+# bandi alanlari eklendiginde eski kayitlarin gordugu cikti degisti ve
+# "yeniden uretilen kanit" ile "ajanin gercekte gordugu kanit" ayristi.
+# Bu parmak izi her kayda yazilir; sonradan hangi kaydin hangi surume ait
+# oldugu belirsiz kalmaz.
+
+def arac_surumu() -> str:
+    """Arac katmaninin kaynak dosyalarindan turetilen kisa parmak izi."""
+    import hashlib
+
+    kaynaklar = [Path(__file__), Path(gurultu.__file__)]
+    ozet = hashlib.sha256()
+    for yol in sorted(kaynaklar, key=lambda p: p.name):
+        ozet.update(yol.read_bytes())
+    return ozet.hexdigest()[:12]

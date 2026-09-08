@@ -109,16 +109,16 @@ def _teshis_goster(cevap: dict) -> None:
 def _puan_goster(puan: dict) -> None:
     st.markdown("### Cevap anahtarıyla karşılaştırma")
     st.markdown(
-        "Cevap anahtari ajana **gönderilmedi**; puanlama cevap üretildikten "
-        "sonra yerelde yapildi."
+        "Cevap anahtarı ajana **gönderilmedi**; puanlama cevap üretildikten "
+        "sonra yerelde yapıldı."
     )
     st.dataframe(
         pd.DataFrame([{
-            "gercek senaryo (beklenen)": puan.get("expected"),
-            "ajanin teshisi": puan.get("model_diagnosis"),
-            "teshis puani": puan.get("diagnosis_score"),
-            "kanit puani": puan.get("evidence_score"),
-            "sinirlama puani": puan.get("limitation_score"),
+            "gerçek senaryo (beklenen)": puan.get("expected"),
+            "ajanın teşhisi": puan.get("model_diagnosis"),
+            "teşhis puanı": puan.get("diagnosis_score"),
+            "kanıt puanı": puan.get("evidence_score"),
+            "sınırlama puanı": puan.get("limitation_score"),
             "toplam": puan.get("total"),
         }]),
         hide_index=True, width="stretch",
@@ -126,8 +126,8 @@ def _puan_goster(puan: dict) -> None:
     if puan.get("tespit_notu"):
         stil.yorum(
             "Bu koşuda bozulma kanıtta anlamlı iz bırakmıyor; "
-            f"tespit-farkindalikli puan {puan.get('diagnosis_score_tespit')}. "
-            f"Gerekce: {puan['tespit_notu']}"
+            f"tespit-farkındalıklı puan {puan.get('diagnosis_score_tespit')}. "
+            f"Gerekçe: {puan['tespit_notu']}"
         )
 
 
@@ -135,7 +135,7 @@ def _canli_calistir(kosu_id: str) -> dict | None:
     """Ajani o anda calistirir. Hata turlerini ayırt ederek raporlar."""
     if not os.environ.get("GEMINI_API_KEY"):
         st.error(
-            "GEMINI_API_KEY ortam degiskeni tanimli degil. Canli calistirma "
+            "GEMINI_API_KEY ortam değişkeni tanımlı değil. Canlı çalıştırma "
             "için anahtar gerekir; kayıtlı koşu modu anahtarsız çalışır."
         )
         return None
@@ -143,31 +143,31 @@ def _canli_calistir(kosu_id: str) -> dict | None:
     from teshis.ajan import ajan as ajan_modulu
 
     baslangic = time.time()
-    with st.status(f"{kosu_id} icin canli teshis uretiliyor...", expanded=True) as durum:
+    with st.status(f"{kosu_id} için canlı teşhis üretiliyor...", expanded=True) as durum:
         try:
             cevap, kayit = ajan_modulu.teshis_uret(kosu_id)
         except Exception as hata:  # noqa: BLE001
             metin = f"{type(hata).__name__}: {hata}".lower()
             if any(k in metin for k in ("quota", "resource_exhausted", "429")):
-                durum.update(label="Gunluk kota bitti", state="error")
+                durum.update(label="Günlük kota bitti", state="error")
                 st.error(
-                    "429 RESOURCE_EXHAUSTED - gunluk istek kotasi asildi.\n\n"
-                    "Ücretsiz katman 20 istek/gun. Kayıtlı koşu modu calismaya "
+                    "429 RESOURCE_EXHAUSTED — günlük istek kotası aşıldı.\n\n"
+                    "Ücretsiz katman 20 istek/gün. Kayıtlı koşu modu çalışmaya "
                     "devam eder."
                 )
             elif any(k in metin for k in ("503", "unavailable", "high demand")):
-                durum.update(label="Gecici sunucu hatasi", state="error")
+                durum.update(label="Geçici sunucu hatası", state="error")
                 st.warning(
-                    "503 UNAVAILABLE - sağlayıcıda geçici yoğunluk. Bu hata "
+                    "503 UNAVAILABLE — sağlayıcıda geçici yoğunluk. Bu hata "
                     "kotayla ilgili değildir; birkaç saniye sonra yeniden "
                     "denenebilir."
                 )
             else:
-                durum.update(label="Basarisiz", state="error")
+                durum.update(label="Başarısız", state="error")
                 st.error(f"{type(hata).__name__}: {hata}")
             return None
         sure = time.time() - baslangic
-        durum.update(label=f"Tamamlandi ({sure:.1f} sn, {len(kayit)} arac cagrisi)",
+        durum.update(label=f"Tamamlandı ({sure:.1f} sn, {len(kayit)} araç çağrısı)",
                      state="complete")
     return {"cevap": cevap, "kayit": kayit, "sure": sure}
 
@@ -181,12 +181,55 @@ def _senaryo_ozeti(senaryo: str) -> dict:
         return {}
 
 
+def _kanit_goster(kosu_id: str, kayit: dict) -> None:
+    """Ajanin gordugu kanit: kayittan mi, yeniden mi uretildi?
+
+    Bu ayrimi yapmak zorunlu. Kirilim araclarina sonradan gurultu bandi
+    alanlari eklendi; dolayisiyla ESKI bir kaydin cevabini bugunku arac
+    ciktisiyla yan yana koyup "ajanin gordugu kanit tam olarak budur" demek
+    YANLIS olur. Ajan o alanlari hic gormemis olabilir.
+
+    Kayit araç cevaplarini iceriyorsa (snapshot) onlar gosterilir; icermiyorsa
+    cikti bugun yeniden uretilir ve bu acikca soylenir.
+    """
+    kosu_kaydi = (kayit.get("arac_kaydi") or {}).get(kosu_id) or {}
+    cagrilar = kosu_kaydi.get("arac_cagrilari") or []
+    snapshot = [c for c in cagrilar if "cevap" in c]
+
+    if snapshot:
+        st.markdown(
+            "Aşağıdaki çıktılar **denemenin kendi kaydından** geliyor: ajanın "
+            "o an gördüğü değerlerin birebir kopyası."
+        )
+        surum = kosu_kaydi.get("arac_surumu")
+        if surum:
+            stil.yorum(f"Araç sürümü parmak izi: `{surum}`")
+        with st.expander("Araç çıktıları (kayıttan)", expanded=False):
+            for c in snapshot:
+                st.markdown(f"**{c.get('arac')}**")
+                st.json(c.get("cevap"), expanded=False)
+        return
+
+    st.warning(
+        "Bu koşunun kaydında araç **cevapları** saklanmamış — yalnızca hangi "
+        "aracın çağrıldığı var. Aşağıdaki çıktı bugünün araçlarıyla yeniden "
+        "üretildi. Araçlar deterministiktir ve API harcamaz, ancak sonradan "
+        "gürültü bandı alanları eklendiği için ajanın o an gördüğü sürüm "
+        "bundan farklı olabilir: bu, **yaklaşık** bir yeniden üretimdir."
+    )
+    kanit = ajan_araclarini_calistir(kosu_id)
+    with st.expander("Araç çıktıları (bugün yeniden üretildi)", expanded=False):
+        for ad, deger in kanit.items():
+            st.markdown(f"**{ad}**")
+            st.json(deger, expanded=False)
+
+
 def goster() -> None:
     st.title("Ajan")
     st.markdown(
         "Ajana yalnızca anonim metrikler ve kırılım araçları verilir; hangi "
-        "koşunun hangi senaryo olduğunu bilmez. Teshisini kendi seçtiği "
-        "kanitla uretir."
+        "koşunun hangi senaryo olduğunu bilmez. Teşhisini kendi seçtiği "
+        "kanıtla üretir."
     )
 
     kayit = ajan_kaydi()
@@ -206,22 +249,14 @@ def goster() -> None:
     mod = st.radio(
         "Kaynak", ["Kayıtlı koşu", "Canlı çalıştır"], horizontal=True,
         help=("Kayıtlı koşu API harcamaz ve her zaman çalışır. Canlı mod "
-              "ucretsiz katman sinirlarina tabidir (20 istek/gun, 5 istek/dk)."),
+              "ücretsiz katman sınırlarına tabidir (20 istek/gün, 5 istek/dk)."),
     )
 
     st.markdown("---")
     _korluk_paneli(kosu_id, senaryo, acik)
 
     st.markdown("### Ajana verilen kanıt")
-    st.markdown(
-        "Araçlar deterministiktir; aşağıdaki çıktı yerelde yeniden üretildi ve "
-        "API harcamadı. Ajanın gördüğü kanıt tam olarak budur."
-    )
-    kanit = ajan_araclarini_calistir(kosu_id)
-    with st.expander("Araç çıktıları", expanded=False):
-        for ad, deger in kanit.items():
-            st.markdown(f"**{ad}**")
-            st.json(deger, expanded=False)
+    _kanit_goster(kosu_id, kayit)
 
     st.markdown("---")
     if mod == "Canlı çalıştır":
@@ -236,14 +271,14 @@ def goster() -> None:
                     st.json(sonuc["cevap"])
         else:
             st.info(
-                "Canlı mod secildi. 'Ajani calistir' düğmesine basıldığında "
+                "Canlı mod seçildi. 'Ajanı çalıştır' düğmesine basıldığında "
                 "sağlayıcıya gerçek bir istek gönderilir."
             )
         return
 
     cevap = kayit["cevaplar"].get(kosu_id)
     if not cevap:
-        st.warning(f"{kosu_id} icin kayitli cevap yok. Canli modu deneyebilirsiniz.")
+        st.warning(f"{kosu_id} için kayıtlı cevap yok. Canlı modu deneyebilirsiniz.")
         return
 
     cagrilar = (kayit["arac_kaydi"].get(kosu_id) or {}).get("arac_cagrilari", [])
@@ -252,7 +287,7 @@ def goster() -> None:
         st.dataframe(_arac_zaman_cizelgesi(cagrilar), hide_index=True,
                      width="stretch")
         stil.yorum(
-            f"Ajan bu kosuda {len(cagrilar)} arac cagirdi. Hangi kaniti "
+            f"Ajan bu koşuda {len(cagrilar)} araç çağırdı. Hangi kanıtı "
             "isteyecegine kendisi karar verdi."
         )
 

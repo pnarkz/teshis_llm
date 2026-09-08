@@ -352,7 +352,11 @@ def kor_deneme_calistir(
                 teshis["_sema_hatalari"] = hatalar
                 print(f"  {kosu_id}: UYARI sema hatalari {hatalar}")
             sonuclar[kosu_id] = teshis
-            kayitlar[kosu_id] = {"arac_cagrilari": arac_kaydi, "hata": None}
+            kayitlar[kosu_id] = {
+                "arac_cagrilari": arac_kaydi,
+                "arac_surumu": araclar.arac_surumu(),
+                "hata": None,
+            }
             araclar_ozeti = ", ".join(dict.fromkeys(k["arac"] for k in arac_kaydi)) or "(yok)"
             print(f"  {kosu_id}: {len(arac_kaydi)} arac cagrisi -> {araclar_ozeti}")
         except GunlukKotaBitti as hata:
@@ -436,7 +440,11 @@ def main() -> None:
             _mevcut_sonuclari_oku(args.output, args.log) if args.devam else ({}, {})
         )
         mevcut[args.kosu] = teshis
-        mevcut_kayit[args.kosu] = {"arac_cagrilari": kayit, "hata": None}
+        mevcut_kayit[args.kosu] = {
+            "arac_cagrilari": kayit,
+            "arac_surumu": araclar.arac_surumu(),
+            "hata": None,
+        }
         _kaydet(args.output, args.log, mevcut, mevcut_kayit)
         print(json.dumps({"teshis": teshis, "arac_cagrilari": kayit},
                          indent=2, ensure_ascii=False))
