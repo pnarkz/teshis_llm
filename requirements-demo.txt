@@ -4,3 +4,9 @@ pandas>=2.0
 # Streamlit altair'i dolayli kuruyor; demo dogrudan import ettigi icin
 # acikca yaziliyor - dolayli bagimliliga guvenmemek gerekir.
 altair>=5.0
+
+# Ajan bolumunun "canli calistir" dugmesi google-genai kullanir. Kayitli kosu
+# modu bu paket olmadan da calisir; canli mod ImportError verir. Temiz bir
+# sanal ortamda sunum yapilacaksa bu satir gereklidir.
+google-genai>=1.0
+PyYAML>=6.0

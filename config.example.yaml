@@ -1,0 +1,35 @@
+# ORNEK yapilandirma - kendi makineniz icin kopyalayin:
+#
+#     cp config.example.yaml config.local.yaml
+#
+# config.local.yaml Git disidir ve varsa config.yaml yerine okunur
+# (teshis/config.py). Yollar GORELI yazilabilir; proje kokune gore cozulur.
+#
+# Demo konsolu bu dosyayi kullanmaz - yalnizca egitim, istatistik ve
+# val_olustur adimlari icin gereklidir.
+
+aktif_ortam: lokal
+
+ortamlar:
+  lokal:
+    dataset_yaml: ../HYZ/dataset/data.yaml   # goreli: proje kokune gore
+    dataset_root: ../HYZ/dataset
+    output_root: .                            # bos birakilirsa proje koku
+    use_for: [istatistik, val_olustur, degerlendirme, ajan]
+  kaggle:
+    dataset_yaml: /kaggle/input/datasets/pnarkcgz/dataset/dataset/data.yaml
+    dataset_root: /kaggle/input/datasets/pnarkcgz/dataset/dataset
+    output_root: /kaggle/working/termal_teshis
+    use_for: [egitim]
+
+siniflar:
+  0: tasit
+  1: insan
+  2: UAP
+  3: UAI
+
+rapor:
+  output_dir: reports
+  json_name: veri_raporu.json
+
+tohum: 42

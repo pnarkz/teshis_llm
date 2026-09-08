@@ -55,3 +55,6 @@ veri_surumleri/*/labels/
 
 # Ultralytics etiket onbellegi (uretilen dosya)
 *.cache
+
+# Kisiye ozel yol yapilandirmasi; ortak config.yaml temiz kalir.
+config.local.yaml
