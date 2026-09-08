@@ -29,9 +29,17 @@ import stil
 from data_loader import (
     ajan_araclarini_calistir,
     ajan_kaydi,
+    ajan_kaydi_var_mi,
     ajan_kosu_haritasi,
     ajana_gizlenenler,
 )
+
+# Kosu rozetleri: hangi kaydin nereden geldigi secicide gorunur.
+KAYIT_ROZETI = {
+    "ana": ("ana deneme", "guclu"),
+    "tekrar": ("kontrol tekrarı", "ikincil"),
+    "yok": ("kayıt yok", "uyari"),
+}
 
 ARAC_ACIKLAMA = {
     "baseline_metriklerini_getir": "sağlıklı referansın genel metrikleri",
@@ -262,7 +270,11 @@ def goster() -> None:
 
     kayit = ajan_kaydi()
     harita = ajan_kosu_haritasi()
-    kosular = sorted(kayit["cevaplar"]) or sorted(harita)
+    # Ajana verilen HER kosu listelenir; kaydi olmayan varsa rozetiyle
+    # gorunur. Onceden yalnizca ana denemenin 11 kosusu listeleniyordu ve
+    # kosu_12/kosu_13'un ayri dosyalardaki cevaplari hic gorunmuyordu.
+    kosular = sorted(set(harita) | set(kayit["cevaplar"])
+                     | set(kayit.get("tekrarlar") or {}))
     varsayilan = kosular.index("kosu_08") if "kosu_08" in kosular else 0
 
     a, b = st.columns([2, 3])
@@ -276,8 +288,9 @@ def goster() -> None:
         kosu_id = st.selectbox(
             "Koşu", kosular, index=varsayilan,
             format_func=lambda k: (
-                f"{k}  ·  sunum için önerilen"
-                if k in ajan_katmani.ONERILEN_CANLI else k
+                f"{k}  ·  {KAYIT_ROZETI[ajan_kaydi_var_mi(k)][0]}"
+                + ("  ·  sunum için önerilen"
+                   if k in ajan_katmani.ONERILEN_CANLI else "")
             ),
         )
     with b:
@@ -314,11 +327,24 @@ def goster() -> None:
         return
 
     cevap = kayit["cevaplar"].get(kosu_id)
-    if not cevap:
+    cagrilar = (kayit["arac_kaydi"].get(kosu_id) or {}).get("arac_cagrilari", [])
+    tekrarlar = (kayit.get("tekrarlar") or {}).get(kosu_id) or []
+
+    if not cevap and tekrarlar:
+        # Ana denemede yok ama kontrol tekrarinda var: kosu_12 ve kosu_13
+        # ana denemeden SONRA eklendi. Kayit ayri bir dosyada duruyordu ve
+        # demo "kayitli cevap yok" diyordu - kayip degil, bagli degildi.
+        st.info(
+            f"**{kosu_id} ana denemede yok.** Bu koşu kontrol koşusu olarak "
+            "sonradan eklendi ve ayrı bir **kontrol tekrarı** olarak "
+            "çalıştırıldı. Aşağıdaki cevap o kayıttan geliyor; ana denemenin "
+            "puan ortalamalarına dahil DEĞİLDİR."
+        )
+        cevap = tekrarlar[0]["cevap"]
+        cagrilar = tekrarlar[0]["arac_cagrilari"]
+    elif not cevap:
         st.warning(f"{kosu_id} için kayıtlı cevap yok. Canlı modu deneyebilirsiniz.")
         return
-
-    cagrilar = (kayit["arac_kaydi"].get(kosu_id) or {}).get("arac_cagrilari", [])
     if cagrilar:
         st.markdown("### Araç çağrıları")
         st.dataframe(_arac_zaman_cizelgesi(cagrilar), hide_index=True,
@@ -330,6 +356,9 @@ def goster() -> None:
         )
 
     _cevap_kartlari(cevap)
+
+    if kayit["cevaplar"].get(kosu_id) and tekrarlar:
+        _tekrar_karsilastirmasi(kayit["cevaplar"][kosu_id], tekrarlar)
 
     st.markdown("---")
     if not acik:
@@ -348,6 +377,38 @@ def goster() -> None:
 
     st.markdown("---")
     _denemenin_butunu(kayit)
+
+
+def _tekrar_karsilastirmasi(ana: dict, tekrarlar: list[dict]) -> None:
+    """Ayni kosu iki kez soruldugunda ajan ayni seyi mi diyor?
+
+    Tekrarlanabilirlik sinyali: ana denemenin cevabi ile kontrol tekrarinin
+    cevabi yan yana. Ortalamalara KARISTIRILMAZ - iki ayri deneydir.
+    """
+    with st.expander("Bu koşu ikinci kez de soruldu — ajan aynı şeyi dedi mi?"):
+        satirlar = [{
+            "deneme": "ana deneme",
+            "teşhis": ana.get("diagnosis"),
+            "güven": ana.get("confidence"),
+            "kanıt sayısı": len(ana.get("evidence") or []),
+        }]
+        for t in tekrarlar:
+            c = t["cevap"]
+            satirlar.append({
+                "deneme": f"kontrol tekrarı ({t['dosya']})",
+                "teşhis": c.get("diagnosis"),
+                "güven": c.get("confidence"),
+                "kanıt sayısı": len(c.get("evidence") or []),
+            })
+        st.dataframe(pd.DataFrame(satirlar), hide_index=True, width="stretch")
+        ayni = len({s["teşhis"] for s in satirlar}) == 1
+        stil.yorum(
+            "İki denemede de aynı teşhis üretildi." if ayni else
+            "Teşhis metinleri birebir aynı değil. Bu tek başına tutarsızlık "
+            "demek değildir — puanlama serbest metni değil, teşhisin "
+            "ANLAMINI eşleştirir; ama tekrar sayısı bir güven aralığı "
+            "vermeye yetmiyor."
+        )
 
 
 def _canli_bolum(kosu_id: str) -> None:

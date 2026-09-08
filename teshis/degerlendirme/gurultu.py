@@ -162,6 +162,11 @@ def fark_degerlendir(
         "band_orani": oran,
         "band_kosu_sayisi": n,
         "bozulmasiz_kosu_degerleri": saglikli,
+        # Kural YAPISAL alan olarak da disari verilir. Onceden yalnizca
+        # `yorum` metninin icinde yasiyordu ve kullanan taraf ya metinde
+        # arama yapmak ya da kurali kendi yeniden yazmak zorunda kaliyordu -
+        # ikisi de "ayni kural iki yerde" demek.
+        "az_gozlem": az_gozlem,
         "yorum": yorum,
     }
 

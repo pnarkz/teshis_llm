@@ -44,24 +44,30 @@ def _bolum_adi(parca: str) -> str:
 
 
 def _senaryolar() -> list[str]:
-    """Senaryolar sayfasinin acilir listesinde GERCEKTEN gorunen kosular.
+    """Senaryo katalogundaki ARASTIRMA senaryolari.
 
-    results.csv'yi okumak yetmiyor ve fazlasini da veriyor: demo veri
-    katmani bir "Baseline" satiri ekler (fine-tune edilmemis model), ama o
-    satirin defterde karsiligi yoktur - dolayisiyla bir olcegi, referansi ve
-    esigi de yoktur. Senaryo kartlarina girmez; "Veri ve Saglikli Model"
-    sayfasinda fine-tune etkisi olarak gosterilir.
-
-    Listeyi sayfanin KENDI kaynagindan almak, secilebilen her secenegin
-    test edilmesini garanti eder.
+    Onceden bu liste `results.csv`'den geliyordu ve 26 kosuyu kapsiyordu -
+    ama senaryo ile kosu ayni sey degil. Katalog yalnizca arastirma sorusu
+    tasiyan senaryolari icerir; referanslar, kontroller ve seed/checkpoint/
+    cozunurluk varyantlari kosu defterine aittir.
     """
     import sys
 
     sys.path.insert(0, str(ROOT / "demo"))
-    from bolumler.senaryolar import _kosu_ozetleri
+    import katalog
+
+    return [s["kod"] for s in katalog.senaryolar()]
+
+
+def _kosular() -> list[str]:
+    """Defterdeki her kosu - kosu defteri ve karsilastirma sayfasi icin."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from teshis.degerlendirme.karsilastirilabilirlik import kimlik
     from data_loader import load_results
 
-    return _kosu_ozetleri(load_results())["senaryo"].tolist()
+    return [str(a) for a in load_results()["scenario"] if kimlik(str(a))]
 
 
 def test_baseline_senaryo_kartlarina_girmiyor():
@@ -72,6 +78,7 @@ def test_baseline_senaryo_kartlarina_girmiyor():
     okunurdu. Yeri "Veri ve Saglikli Model" sayfasidir.
     """
     assert "Baseline" not in _senaryolar()
+    assert "Baseline" not in _kosular()
     kaynak = (ROOT / "demo/bolumler/veri_ve_model.py").read_text(encoding="utf-8")
     assert "Baseline" in kaynak, (
         "Baseline hicbir yerde gosterilmiyor; fine-tune etkisi kayboldu"
@@ -111,17 +118,37 @@ def test_her_bolum_render_ediliyor(bolum: str):
 
 @pytest.mark.parametrize("senaryo", _senaryolar())
 def test_her_senaryo_render_ediliyor(senaryo: str):
-    """Defterdeki her kosu; biri bile cokerse sunumda o kosu acilamaz.
+    """Katalogdaki her senaryo; biri bile cokerse sunumda o senaryo acilamaz.
 
-    Sayi BILEREK yazilmaz - eskiden "24 kosu" diyordu ve defter buyudukce
-    geride kaldi. Liste defterden gelir.
+    Secim artik acilir liste degil DUGME: kart HTML'i tiklanabilir degildir,
+    gorsel olarak kart davranis olarak dugme olan bir yapi kullaniciyi
+    yaniltirdi.
     """
     app = _bolum(_bolum_adi("Senaryo"))
-    # Senaryo secicisi sayfadaki TEK selectbox degil; filtreler de var.
-    # Adiyla bulunur, sirasiyla degil - filtre eklenince sira kayar.
-    secici = next(s for s in app.selectbox if "Ayrıntılı" in (s.label or ""))
-    secici.set_value(senaryo).run()
+    dugme = next((d for d in app.button if d.key == f"sec_{senaryo}"), None)
+    if dugme is None:
+        # Secili senaryonun dugmesi devre disi birakilir; zaten acik demektir.
+        assert not _sorunlar(app), f"{senaryo}: {_sorunlar(app)}"
+        return
+    dugme.click().run()
     assert not _sorunlar(app), f"{senaryo}: {_sorunlar(app)}"
+
+
+@pytest.mark.parametrize("kosu", _kosular())
+def test_her_kosu_karsilastirmada_render_ediliyor(kosu: str):
+    """Karsilastirma sayfasi defterdeki her kosuyu acabilmeli."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from teshis.degerlendirme.karsilastirilabilirlik import bozulmasiz_mi
+
+    if bozulmasiz_mi(kosu):
+        pytest.skip("bozulmasiz kosu karsilastirma seciciye girmez")
+    app = _bolum(_bolum_adi("Karşılaştırma"))
+    secici = next(s for s in app.selectbox
+                  if "hata senaryosu" in (s.label or ""))
+    secici.set_value(kosu).run()
+    assert not _sorunlar(app), f"{kosu}: {_sorunlar(app)}"
 
 
 def test_ajan_bolumu_kayitli_modda_api_gerektirmiyor(monkeypatch):
@@ -180,7 +207,7 @@ def test_checkpoint_notunda_elle_yazilmis_sayi_kalmadi():
     geriye donmedigini korur.
     """
     kaynak = (ROOT / "demo/bolumler/karsilastirma.py").read_text(encoding="utf-8")
-    kutu = kaynak[kaynak.index("son checkpoint düşüşünün"):]
+    kutu = kaynak[kaynak.index("checkpoint düşüşünün"):]
     kutu = kutu[: kutu.index("    )")]
     elle = re.findall(r"(?<![:.\d])[-−]?0\.\d{3,}", kutu)
     assert not elle, f"Kutuda elle yazilmis sayi kalmis: {elle}"

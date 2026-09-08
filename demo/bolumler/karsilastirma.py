@@ -1,19 +1,23 @@
-"""Karsilastirma ve Gurultu: her kosu KENDI olceginde, gurultuye karsi tartilmis.
+"""Karsilastirma: SAGLIKLI MODEL ↔ secilen hata senaryosu.
 
-Bu sayfanin manseti bir sayi degil bir DUZELTMEDIR: gurultu tabani olculunce
-bir dizi iddia zayifladi ve bir senaryo bulgu olmaktan cikti. Bunu gizlemek
-yerine one koymak, olcumun calistiginin kanitidir.
+Sayfanin mantigi
+----------------
+Onceki surumde bu sayfa butun kosulari listeleyen bir tabloyla aciliyordu
+ve grafikler metne eslik ediyordu. Simdi tersi: **grafik ana anlatici**,
+metin yalnizca grafigin ne soyledigini tek cumleyle aciklar. Kullanici bir
+senaryo secer ve degisimin ne kadar oldugunu, hangi metrikte oldugunu,
+gurultuyu gecip gecmedigini ve hangi kirilimda olustugunu GRAFIKLE gorur.
 
-Sayfa iki kez duzeltildi. Ikincisi daha ciddiydi: butun kosular tek bir
-referansla (v00) karsilastiriliyordu, oysa bazilari farkli baslangic modeli,
-farkli degerlendirme kumesi veya farkli checkpoint tasiyor. O yuzden
-`v00_saglikli last_pt` - icinde hicbir bozulma olmayan bir kosu - "guclu
-bozulma kaniti" olarak etiketleniyordu. Artik her kosu yalnizca kendi
-olcegindeki referansla karsilastirilir (karsilastirilabilirlik.py).
+Butun kosularin toplu tablosu silinmedi; "Deney defteri" acilirina tasindi.
 
-Bu sayfadaki HICBIR tablo elle yazilmaz. Esik buyumesi ve zayiflayan
-iddialar defterden turetilir; elle yazildiklari donemde "bes" diyorlardi ve
-E1 ile E2 atlanmisti.
+Referans NEDEN kullaniciya sectirilmiyor
+----------------------------------------
+Arastirma duzeninde karsilastirma tabani zaten belirlidir. Ama tabani
+`v00_saglikli` diye SABITLEMEK de yanlis olurdu: `D1n`'in referansi
+`v00n`, `D4 last_pt`'ninki `v00_saglikli last_pt`. Sabitleseydik hicbir
+bozulma icermeyen kosular yeniden "bozulmus" gorunurdu - bu proje o hatayi
+bir kez yapti. Referans OTOMATIK belirlenir (karsilastirilabilirlik.py) ve
+basta acikca yazilir.
 """
 
 from __future__ import annotations
@@ -22,29 +26,194 @@ import pandas as pd
 import streamlit as st
 
 import grafik
+import senaryo_grafikleri as sg
 import stil
 import veri_seti as vs
-from data_loader import load_results
+from data_loader import error_galleries, gorsel_coz, load_results
 from teshis.degerlendirme.karsilastirilabilirlik import (
     METRIKLER,
     bozulmasiz_mi,
     kontrol_kosulari,
 )
 from teshis.degerlendirme.karsilastirilabilirlik import esikler as _grup_esikleri
-from teshis.degerlendirme.senaryo_ozeti import kanit_gucu, ne_gozlendi
+from teshis.degerlendirme.senaryo_ozeti import kanit_gucu, ne_gozlendi, ozet
 
 
-def _tablo(sonuclar: pd.DataFrame) -> pd.DataFrame:
+# --- Ust bant ---------------------------------------------------------------
+
+def _ne_degisti(o: dict) -> str:
+    """Tek satirlik "ne degistirildi" - parametrelerden turetilir.
+
+    "Veri azaltildi" gibi belirsiz ifade yerine gercek oran yazilir.
+    """
+    p = (o["ne_degisti"].get("parametreler") or {})
+    if not p:
+        return "Bu koşu için parametre kaydı yok."
+    return " · ".join(f"{k}: <b>{v}</b>" for k, v in p.items())
+
+
+def _ust_bant(senaryo: str, o: dict, gozlem: dict) -> None:
+    ref = gozlem.get("referans_senaryo") or "— referans yok —"
+    k = gozlem.get("kimlik") or {}
+    stil.kutu(
+        f'<div style="font-size:1.06rem;font-weight:600;color:#fff">'
+        f"Sağlıklı Model &nbsp;↔&nbsp; {senaryo}</div>"
+        f'<div style="margin-top:.45rem;font-size:.86rem">'
+        f"<b>Değişen:</b> {_ne_degisti(o)}</div>"
+        f'<div class="yorum" style="margin-top:.35rem">'
+        f"Referans: <code>{ref}</code> · sabit tutulanlar: "
+        f"<code>{k.get('model', '?')}</code>, "
+        f"<code>{k.get('degerlendirme_seti', '?')}</code>, "
+        f"<code>{k.get('imgsz_eval', '?')} px</code>, "
+        f"<code>{k.get('checkpoint', '?')}.pt</code></div>"
+    )
+
+
+# --- Ust sira: genel metrikler + gurultu bandi ------------------------------
+
+def _genel_metrik_verisi(senaryo: str, gozlem: dict) -> pd.DataFrame:
+    ref_ad = gozlem.get("referans_senaryo") or "referans"
+    satirlar = []
+    for ad, d in gozlem["metrikler"].items():
+        if d["referans"] is None:
+            continue
+        satirlar.append({"metrik": ad, "seri": "sağlıklı referans",
+                         "değer": d["referans"], "fark": 0.0})
+        satirlar.append({"metrik": ad, "seri": senaryo,
+                         "değer": d["deger"], "fark": d["fark"]})
+    return pd.DataFrame(satirlar)
+
+
+def _fark_bandi_verisi(gozlem: dict) -> pd.DataFrame:
+    satirlar = []
+    for ad, d in gozlem["metrikler"].items():
+        esik = d["gurultu_esigi"]
+        if d["fark"] is None or esik is None:
+            continue
+        satirlar.append({
+            "metrik": ad, "fark": d["fark"],
+            "band_alt": -esik, "band_ust": esik,
+            "gürültü eşiği": esik,
+            "asiyor": "evet" if d["asiyor"] else "hayir",
+        })
+    return pd.DataFrame(satirlar)
+
+
+def _sonuc_cumlesi(senaryo: str, gozlem: dict, yildiz_notu: str) -> str:
+    """Sayfanin tek cumlelik hukmu - olcumden turetilir."""
+    asan = gozlem["asan_metrikler"]
+    n = gozlem["kontrol_kosu_sayisi"]
+    if not n:
+        return (f"Bu ölçekte kontrol koşusu yok, bu yüzden {senaryo}'nun "
+                "farkı ölçülebiliyor ama gürültüden ayrılamıyor.")
+    if not asan:
+        return (f"{senaryo}'nun hiçbir genel metriği gürültü eşiğini aşmıyor: "
+                "genel metriklere dayanan bir etki iddiası kurulamaz.")
+    kalan = [m for m in METRIKLER if m not in asan]
+    cumle = (f"<b>{', '.join(asan)}</b> gürültü eşiğini aşıyor"
+             + (f", <b>{', '.join(kalan)}</b> gürültünün içinde kalıyor" if kalan
+                else "")
+             + ".")
+    return cumle
+
+
+# --- Gorsel kanit -----------------------------------------------------------
+
+OLCUT = {
+    "en fazla kaçırılan nesne": ("false_negatives", True),
+    "en fazla fazladan kutu": ("false_positives", True),
+    "en düşük IoU": ("mean_iou", False),
+    "sağlıklı modelden en çok ayrışan": ("_ayrisma", True),
+}
+
+
+def _gorsel_kanit(senaryo: str) -> None:
+    galeriler = error_galleries()
+    galeri = galeriler.get(senaryo)
+    saglikli_galeri = galeriler.get("v00_saglikli") or {}
+    if not galeri:
+        st.info(
+            "Bu koşu için hata galerisi üretilmemiş, görsel karşılaştırma "
+            "yapılamıyor."
+        )
+        return
+
+    saglikli = {e.get("source"): e for e in (saglikli_galeri.get("entries") or [])}
+    kayitlar = [k for k in galeri["entries"] if k.get("source") in saglikli]
+    if not kayitlar:
+        st.info(
+            "Bu koşunun en sorunlu kareleri sağlıklı modelin galerisinde yok; "
+            "galeriler her koşunun KENDİ en kötü kareleriyle üretildiği için "
+            "listeler her zaman örtüşmez."
+        )
+        return
+
+    olcut = st.radio("Kare seçimi", list(OLCUT), horizontal=True,
+                     key=f"olcut_{senaryo}")
+    alan, ters = OLCUT[olcut]
+    if alan == "_ayrisma":
+        # Saglikli modele gore en cok BOZULAN kare: iki kaydin hata
+        # sayilarindaki artis. Tek basina "en cok hata" yaniltici olurdu -
+        # zaten zor olan kareler her modelde kotu.
+        for k in kayitlar:
+            s = saglikli[k["source"]]
+            k["_ayrisma"] = (
+                (k.get("false_negatives") or 0) - (s.get("false_negatives") or 0)
+                + (k.get("false_positives") or 0) - (s.get("false_positives") or 0)
+            )
+    sirali = sorted([k for k in kayitlar if alan in k],
+                    key=lambda k: k[alan], reverse=ters)
+    if not sirali:
+        st.info("Bu ölçüte göre sıralanabilir kare bulunamadı.")
+        return
+    kayit = sirali[0]
+    eslesen = saglikli[kayit["source"]]
+
+    a, b = st.columns(2)
+    with a:
+        stil.ust_baslik("sağlıklı referans modeli")
+        yol = gorsel_coz((saglikli_galeri.get("folder") or galeri["folder"])
+                         / eslesen["image"])
+        if yol:
+            st.image(str(yol), width="stretch")
+        else:
+            st.info("Sağlıklı modelin bu karesi bulunamadı.")
+        stil.yorum(f"kaçırılan {eslesen.get('false_negatives')} · "
+                   f"fazladan {eslesen.get('false_positives')} · "
+                   f"IoU {eslesen.get('mean_iou', 0):.2f}")
+    with b:
+        stil.ust_baslik(f"{senaryo} modeli")
+        yol = gorsel_coz(galeri["folder"] / kayit["image"])
+        if yol:
+            st.image(str(yol), width="stretch")
+        else:
+            st.warning("Bu karenin görseli bulunamadı.")
+        stil.yorum(f"kaçırılan {kayit.get('false_negatives')} · "
+                   f"fazladan {kayit.get('false_positives')} · "
+                   f"IoU {kayit.get('mean_iou', 0):.2f}")
+
+    stil.yorum(
+        "Aynı termal kare, iki model. Yeşil = gerçek etiket, kırmızı = modelin "
+        "tahmini; yeşilin yanında kırmızı yoksa o nesne kaçırılmıştır. "
+        f"Bu karede kaçırma "
+        f"<b>{eslesen.get('false_negatives')} → {kayit.get('false_negatives')}</b>, "
+        f"fazladan kutu "
+        f"<b>{eslesen.get('false_positives')} → {kayit.get('false_positives')}</b>."
+    )
+
+
+# --- Deney defteri (ikincil) ------------------------------------------------
+
+def _defter_tablosu(sonuclar: pd.DataFrame) -> pd.DataFrame:
     satirlar = []
     for _, r in sonuclar.iterrows():
-        senaryo = r["scenario"]
-        g = ne_gozlendi(senaryo)
+        s = r["scenario"]
+        g = ne_gozlendi(s)
         if not g:
             continue
-        m = g["metrikler"]
-        k = g.get("kimlik") or {}
+        m, k = g["metrikler"], (g.get("kimlik") or {})
         satirlar.append({
-            "senaryo": senaryo,
+            "senaryo": s,
             "ölçek": " | ".join([
                 k.get("model", "?"), k.get("degerlendirme_seti", "?"),
                 f"{k.get('imgsz_eval', '?')} px", f"{k.get('checkpoint', '?')}.pt",
@@ -55,24 +224,19 @@ def _tablo(sonuclar: pd.DataFrame) -> pd.DataFrame:
             "Δ precision": m["precision"]["fark"],
             "Δ recall": m["recall"]["fark"],
             "eşiği aşan": ", ".join(g["asan_metrikler"]) or "-",
-            "kanıt": stil.seviye_adi(kanit_gucu(senaryo)["seviye"]),
+            "kanıt": stil.seviye_adi(kanit_gucu(s)["seviye"]),
         })
     df = pd.DataFrame(satirlar)
     # Referansi olmayan kosularda fark HESAPLANMAZ. None birakilirsa sutun
     # object tipine duser ve ekranda harfi harfine "None" yazar; sayisal
-    # tutulunca bos hucre olarak gorunur - dogru okuma da budur: deger yok,
-    # sifir degil.
+    # tutulunca bos hucre olur - dogru okuma da budur: deger yok, sifir degil.
     for sutun in ("Δ mAP50", "Δ precision", "Δ recall"):
         df[sutun] = pd.to_numeric(df[sutun], errors="coerce")
     return df
 
 
 def _erken_durdurma(sonuclar: pd.DataFrame) -> pd.DataFrame:
-    """Bozulmasiz kosularin durdugu ve en iyi checkpoint'i verdigi epoch.
-
-    Elle yazilmis bir tablo yerine kosu dizinlerinden okunur; yeni bir
-    kontrol kosusu eklendiginde tablo kendiliginden buyur.
-    """
+    """Bozulmasiz kosularin durdugu ve en iyi checkpoint'i verdigi epoch."""
     import csv as _csv
 
     from data_loader import run_dir_for
@@ -88,18 +252,14 @@ def _erken_durdurma(sonuclar: pd.DataFrame) -> pd.DataFrame:
             continue
         with yol.open(encoding="utf-8") as f:
             kayit = [{k.strip(): v for k, v in s.items()} for s in _csv.DictReader(f)]
-        ciftler = [
-            (int(float(s["epoch"])), float(s["metrics/mAP50(B)"]))
-            for s in kayit if s.get("metrics/mAP50(B)")
-        ]
+        ciftler = [(int(float(s["epoch"])), float(s["metrics/mAP50(B)"]))
+                   for s in kayit if s.get("metrics/mAP50(B)")]
         if not ciftler:
             continue
         en_iyi = max(ciftler, key=lambda c: c[1])
         satirlar.append({
-            "koşu": ad,
-            "seed": int(r["seed"]),
-            "durduğu epoch": len(kayit),
-            "en iyi epoch": en_iyi[0],
+            "koşu": ad, "seed": int(r["seed"]),
+            "durduğu epoch": len(kayit), "en iyi epoch": en_iyi[0],
             "en iyi mAP50 (eğitim val)": round(en_iyi[1], 4),
         })
     return pd.DataFrame(sorted(satirlar, key=lambda s: s["seed"]))
@@ -108,9 +268,8 @@ def _erken_durdurma(sonuclar: pd.DataFrame) -> pd.DataFrame:
 def _checkpoint_ciftleri(sonuclar: pd.DataFrame) -> pd.DataFrame:
     """Ayni kosunun best.pt / last.pt satirlarini yan yana koyar.
 
-    Her satir KENDI checkpoint ailesinin referansiyla karsilastirilir:
-    best.pt satiri v00'in best.pt'siyle, last.pt satiri v00'in last.pt'siyle.
-    Onceden ikisi de best.pt referansiyla tartiliyordu ve her last.pt satiri
+    Her satir KENDI checkpoint ailesinin referansiyla karsilastirilir;
+    onceden ikisi de best.pt referansiyla tartiliyordu ve her last.pt satiri
     otomatik olarak "bozulmus" gorunuyordu.
     """
     adlar = set(sonuclar["scenario"])
@@ -121,50 +280,41 @@ def _checkpoint_ciftleri(sonuclar: pd.DataFrame) -> pd.DataFrame:
         taban = ad[: -len(" last_pt")]
         if taban not in adlar:
             continue
-        for etiket, senaryo in ((f"{taban} best.pt", taban), (f"{taban} last.pt", ad)):
-            g = ne_gozlendi(senaryo)
+        for etiket, s in ((f"{taban} best.pt", taban), (f"{taban} last.pt", ad)):
+            g = ne_gozlendi(s)
             if not g:
                 continue
             m = g["metrikler"]["mAP50"]
             satirlar.append({
-                "koşu": etiket,
-                "mAP50": m["deger"],
+                "koşu": etiket, "mAP50": m["deger"],
                 "referansı": g.get("referans_senaryo") or "—",
                 "Δ kendi referansına": m["fark"],
-                "eşiği aşıyor": {True: "evet", False: "hayır"}.get(m["asiyor"], "eşik yok"),
+                "eşiği aşıyor": {True: "evet", False: "hayır"}.get(
+                    m["asiyor"], "eşik yok"),
             })
     return pd.DataFrame(satirlar)
 
 
 def _band_verisi(sonuclar: pd.DataFrame, metrik: str) -> pd.DataFrame:
-    """Her senaryonun farkini ve o metrigin gürültü bandini bir arada verir."""
     satirlar = []
     for _, r in sonuclar.iterrows():
-        senaryo = str(r["scenario"])
-        g = ne_gozlendi(senaryo)
+        s = str(r["scenario"])
+        g = ne_gozlendi(s)
         if not g or metrik not in g["metrikler"]:
             continue
         d = g["metrikler"][metrik]
         esik = d["gurultu_esigi"]
-        if esik is None or d["fark"] is None or bozulmasiz_mi(senaryo):
+        if esik is None or d["fark"] is None or bozulmasiz_mi(s):
             continue
-        satirlar.append({
-            "senaryo": senaryo,
-            "fark": d["fark"],
-            "band_alt": -esik,
-            "band_ust": esik,
-            "asiyor": "evet" if d["asiyor"] else "hayir",
-        })
+        satirlar.append({"senaryo": s, "fark": d["fark"], "band_alt": -esik,
+                         "band_ust": esik,
+                         "asiyor": "evet" if d["asiyor"] else "hayir"})
     return pd.DataFrame(sorted(satirlar, key=lambda s: s["fark"]))
 
 
-# --- Gurultu tabani buyudugunde ne degisti? Ikisi de TURETILIR --------------
-
 def _esikler(kontroller: list[str], ref: str, defter: dict) -> dict[str, float]:
-    return {
-        m: max(abs(float(defter[c][m]) - float(defter[ref][m])) for c in kontroller)
-        for m in METRIKLER
-    }
+    return {m: max(abs(float(defter[c][m]) - float(defter[ref][m]))
+                   for c in kontroller) for m in METRIKLER}
 
 
 def _esik_buyumesi(sonuclar: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, int]:
@@ -176,31 +326,25 @@ def _esik_buyumesi(sonuclar: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, 
     """
     defter = {str(r["scenario"]): r for _, r in sonuclar.iterrows()}
     ref = "v00_saglikli"
-    kontroller = kontrol_kosulari("D1")           # v00 ile ayni olcekteki C kosulari
+    kontroller = kontrol_kosulari("D1")
     if not kontroller or ref not in defter:
         return pd.DataFrame(), pd.DataFrame(), 0
     sirali = [ad for ad in sonuclar["scenario"] if ad in kontroller]
-    ilk = _esikler(sirali[:1], ref, defter)
-    hepsi = _esikler(sirali, ref, defter)
+    ilk, hepsi = _esikler(sirali[:1], ref, defter), _esikler(sirali, ref, defter)
 
-    buyume = pd.DataFrame([
-        {
-            "metrik": m,
-            f"n=1 eşiği ({sirali[0]})": round(ilk[m], 4),
-            f"n={len(sirali)} eşiği": round(hepsi[m], 4),
-            "kat": f"{hepsi[m] / ilk[m]:.1f}x" if ilk[m] else "—",
-        }
-        for m in METRIKLER
-    ])
+    buyume = pd.DataFrame([{
+        "metrik": m,
+        f"n=1 eşiği ({sirali[0]})": round(ilk[m], 4),
+        f"n={len(sirali)} eşiği": round(hepsi[m], 4),
+        "kat": f"{hepsi[m] / ilk[m]:.1f}x" if ilk[m] else "—",
+    } for m in METRIKLER])
 
-    # Hangi iddialar zayifladi? Ayni kosular, yalnizca esik degisti.
     zayiflayan = []
     for _, r in sonuclar.iterrows():
         ad = str(r["scenario"])
         g = ne_gozlendi(ad)
-        if not g or g["karsilastirma_turu"] != "ayni_olcek" or bozulmasiz_mi(ad):
-            continue
-        if g["referans_senaryo"] != ref:
+        if (not g or g["karsilastirma_turu"] != "ayni_olcek"
+                or bozulmasiz_mi(ad) or g["referans_senaryo"] != ref):
             continue
         once = [m for m in METRIKLER
                 if abs(float(r[m]) - float(defter[ref][m])) > ilk[m]]
@@ -209,26 +353,17 @@ def _esik_buyumesi(sonuclar: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, 
         if kaybedilen:
             zayiflayan.append({
                 "senaryo": ad,
-                "ilk yorum (n=1 eşiğiyle)":
-                    f"{', '.join(once)} metriklerinde etki var",
-                "düzeltilmiş yorum":
-                    (f"yalnızca {', '.join(sonra)} kaldı" if sonra
-                     else "hiçbir metrikte etki kanıtı kalmadı"),
+                "ilk yorum (n=1 eşiğiyle)": f"{', '.join(once)} etkilendi",
+                "düzeltilmiş yorum": (f"yalnızca {', '.join(sonra)} kaldı"
+                                      if sonra else "hiçbir kanıt kalmadı"),
                 "kaybettiği": ", ".join(kaybedilen),
             })
     return buyume, pd.DataFrame(zayiflayan), len(sirali)
 
 
-def _best_last_dususu(sonuclar: pd.DataFrame) -> tuple[float | None, list[tuple[str, float]]]:
-    """Her kosunun best.pt -> last.pt mAP50 dususu; taban saglikli referansinki.
-
-    Bu kutuda sayilar elle yaziliydi ve checkpoint tablosu kendi referansina
-    gecince onunla celisir hale geldi. Iki yerde yasayan bir kural er gec
-    ayrisir - bu projede tekrarlayan hata oruntusu tam olarak budur.
-    """
+def _best_last_dususu(sonuclar: pd.DataFrame):
     defter = {str(r["scenario"]): float(r["mAP50"]) for _, r in sonuclar.iterrows()}
-    taban = None
-    dususler = []
+    taban, dususler = None, []
     for ad, deger in defter.items():
         if not ad.endswith(" last_pt"):
             continue
@@ -244,262 +379,260 @@ def _best_last_dususu(sonuclar: pd.DataFrame) -> tuple[float | None, list[tuple[
 
 
 def _gurultu_tablosu() -> pd.DataFrame:
-    """Alt grup bandlari - genel metriklerin yaninda her kirilim grubununki."""
     from teshis.degerlendirme.gurultu import alt_grup_bandi
 
-    band = alt_grup_bandi()
     satirlar = []
-    for alan, gruplar in band.items():
+    for alan, gruplar in alt_grup_bandi().items():
         for grup, d in gruplar.items():
             satirlar.append({
                 "kırılım": alan.replace("_recall", ""),
                 "grup": vs.BANT_ADI.get(grup, vs.KOD_ADI.get(grup, grup)),
-                "bbox": d["bbox_n"],
-                "band": d["band"],
-                "std": d["std"],
-                "koşu": d["n_kosu"],
+                "bbox": d["bbox_n"], "band": d["band"],
+                "std": d["std"], "koşu": d["n_kosu"],
             })
     return pd.DataFrame(sorted(satirlar, key=lambda s: -s["band"]))
 
 
-# --- Coklu senaryo karsilastirmasi ------------------------------------------
+def _deney_defteri(sonuclar: pd.DataFrame) -> None:
+    st.markdown(
+        "Bütün koşuların toplu görünümü. Her koşu **kendi ölçeğindeki** "
+        "sağlıklı referansla karşılaştırılır: aynı başlangıç modeli, aynı "
+        "değerlendirme kümesi, aynı çözünürlük, aynı checkpoint."
+    )
+    df = _defter_tablosu(sonuclar)
+    olcekler = ["hepsi"] + sorted({s for s in df["ölçek"] if s})
+    a, b = st.columns([3, 2])
+    with a:
+        olcek = st.selectbox("Ölçek", olcekler, key="defter_olcek")
+    with b:
+        sadece = st.checkbox("Yalnızca eşiği aşanlar", key="defter_asan")
+    gosterilen = df if olcek == "hepsi" else df[df["ölçek"] == olcek]
+    if sadece:
+        gosterilen = gosterilen[gosterilen["eşiği aşan"] != "-"]
+    st.dataframe(gosterilen.drop(columns=["ölçek"]), hide_index=True,
+                 width="stretch", height=420)
+    st.download_button("Tabloyu CSV olarak indir",
+                       gosterilen.to_csv(index=False).encode("utf-8-sig"),
+                       file_name="deney_defteri.csv", mime="text/csv")
 
-def _coklu_genel(secilenler: list[str]) -> pd.DataFrame:
-    satirlar = []
-    for ad in secilenler:
-        g = ne_gozlendi(ad)
-        if not g:
-            continue
-        for metrik, d in g["metrikler"].items():
-            satirlar.append({"senaryo": ad, "metrik": metrik,
-                             "değer": d["deger"], "fark": d["fark"]})
-    return pd.DataFrame(satirlar)
+    st.markdown("### Bütün senaryolar tek grafikte")
+    metrik = st.radio("Metrik", ["mAP50", "precision", "recall"],
+                      horizontal=True, key="defter_metrik")
+    band = _band_verisi(sonuclar, metrik)
+    if not band.empty:
+        st.altair_chart(grafik.gurultu_bandi_grafigi(band), width="stretch")
+        stil.yorum(
+            "Dolu mavi kareler bandı aşıyor; içi açık turuncu daireler bandın "
+            "içinde. Kontrol koşuları ölçüm aracıdır, ölçüm nesnesi değil — "
+            "grafiğe girmezler."
+        )
+
+    st.markdown("### Gürültü tabanı ölçülünce ne değişti")
+    buyume, zayiflayan, n = _esik_buyumesi(sonuclar)
+    st.markdown(
+        f"İlk ölçüm tek bir kontrol koşusuna dayanıyordu. {n} kontrole "
+        "çıkıldığında eşikler büyüdü ve bazı iddialar geri çekildi:"
+    )
+    a, b = st.columns(2)
+    with a:
+        st.dataframe(buyume, hide_index=True, width="stretch")
+    with b:
+        st.dataframe(zayiflayan, hide_index=True, width="stretch")
+    stil.yorum(
+        "İki tablo da defterden türetilir; yeni bir kontrol koşusu "
+        "eklendiğinde kendiliğinden güncellenir. Elle yazıldıkları dönemde "
+        "\"beş iddia\" diyorlardı ve E1 ile E2 atlanmıştı."
+    )
+
+    st.markdown("### Alt grup gürültü bandı")
+    st.dataframe(_gurultu_tablosu(), hide_index=True, width="stretch")
+    stil.yorum(
+        "Bu yalnızca küçük örneklem sorunu değil: `termal` grubu 858 bbox "
+        "taşır ama bandı `hituav`ın (2.165 bbox) bandının on katından fazladır."
+    )
+
+    st.markdown("### Checkpoint ve seed")
+    a, b = st.columns(2)
+    with a:
+        st.dataframe(_checkpoint_ciftleri(sonuclar), hide_index=True,
+                     width="stretch")
+    with b:
+        st.dataframe(_erken_durdurma(sonuclar), hide_index=True, width="stretch")
+    taban, dususler = _best_last_dususu(sonuclar)
+    if taban is not None:
+        esik = _grup_esikleri("D1")["mAP50"] or 0.0
+        sert = [f"{a} ({d:+.4f})" for a, d in dususler if d < taban - esik]
+        yakin = [f"{a} ({d:+.4f})" for a, d in dususler if d >= taban - esik]
+        stil.kutu(
+            "<b>Son checkpoint düşüşünün de bir tabanı var.</b> Sağlıklı "
+            f"referansın kendisi best→last geçerken <b>{taban:+.4f}</b> "
+            "düşüyor. Tabanı mAP50 gürültü eşiği "
+            f"({esik:.4f}) kadar aşmayanlar: {', '.join(yakin) or 'yok'}. "
+            f"Belirgin ayrışanlar: {', '.join(sert) or 'yok'}."
+        )
 
 
-def _coklu_kirilim(secilenler: list[str], alan: str, harita=None) -> pd.DataFrame:
-    """Secilen kosular + referanslari, ayni kirilim alaninda."""
-    satirlar = []
-    ref_eklendi = set()
-    for ad in secilenler:
-        g = ne_gozlendi(ad)
-        ref = (g or {}).get("referans_senaryo")
-        for grup, d in (vs.kirilim(ad).get(alan) or {}).items():
-            satirlar.append({"grup": (harita or {}).get(grup, grup),
-                             "seri": ad, "recall": d.get("recall")})
-        if ref and ref not in ref_eklendi:
-            ref_eklendi.add(ref)
-            for grup, d in (vs.kirilim(ref).get(alan) or {}).items():
-                satirlar.append({"grup": (harita or {}).get(grup, grup),
-                                 "seri": f"{ref} (referans)",
-                                 "recall": d.get("recall")})
-    return pd.DataFrame([s for s in satirlar if s["recall"] is not None])
-
-
-def _coklu_sinif_ap(secilenler: list[str]) -> pd.DataFrame:
-    satirlar = []
-    for ad in secilenler:
-        for s in vs.sinif_metrikleri(ad):
-            satirlar.append({"sınıf": s["sınıf"], "seri": ad, "AP50": s["AP50"]})
-    return pd.DataFrame([s for s in satirlar if s["AP50"] is not None])
-
+# --- Sayfa ------------------------------------------------------------------
 
 def goster() -> None:
     sonuclar = load_results()
-    st.title("Karşılaştırma ve Gürültü")
+    st.title("Karşılaştırma")
 
-    st.markdown(
-        "Her koşu **kendi ölçeğindeki** sağlıklı referansla karşılaştırılır: "
-        "aynı başlangıç modeli, aynı değerlendirme kümesi, aynı çözünürlük, "
-        "aynı checkpoint. Bu dört alandan biri farklıysa fark, bozulmanın "
-        "değil o alanın etkisini taşır."
-    )
-    stil.kutu(
-        "<b>Bu kural sonradan eklendi ve bir hatayı ortaya çıkardı.</b> "
-        "Önceden bütün koşular v00'in best.pt'siyle karşılaştırılıyordu; "
-        "bu yüzden <code>v00_saglikli last_pt</code> — içinde hiçbir bozulma "
-        "olmayan bir koşu — üç metrikte \"eşiği aşıyor\" diye işaretleniyor ve "
-        "\"güçlü kanıt\" görünüyordu. Tek farkı checkpoint seçimiydi."
-    )
+    adaylar = [
+        str(r["scenario"]) for _, r in sonuclar.iterrows()
+        if not bozulmasiz_mi(str(r["scenario"])) and ne_gozlendi(str(r["scenario"]))
+    ]
+    varsayilan = adaylar.index("D4") if "D4" in adaylar else 0
+    senaryo = st.selectbox("Karşılaştırılacak hata senaryosu", adaylar,
+                           index=varsayilan)
 
-    genel, coklu, gurultu, checkpoint = st.tabs(
-        ["Genel tablo", "Çoklu karşılaştırma", "Gürültü tabanı",
-         "Checkpoint ve seed"]
-    )
+    o = ozet(senaryo)
+    gozlem = o["ne_gozlendi"]
+    _ust_bant(senaryo, o, gozlem)
+    if o["ne_olcuyor"]:
+        stil.yorum(o["ne_olcuyor"].strip())
 
-    df = _tablo(sonuclar)
-
-    with genel:
-        olcekler = ["hepsi"] + sorted({s for s in df["ölçek"] if s})
-        a, b = st.columns([3, 2])
-        with a:
-            olcek = st.selectbox(
-                "Ölçek (model | küme | çözünürlük | checkpoint)", olcekler
+    st.write("")
+    a, b = st.columns(2)
+    with a:
+        veri = _genel_metrik_verisi(senaryo, gozlem)
+        if veri.empty:
+            st.info(
+                "Bu koşunun kendi ölçeğinde sağlıklı bir referansı yok, "
+                "genel metrik karşılaştırması yapılamıyor."
             )
-        with b:
-            sadece_asan = st.checkbox("Yalnızca gürültü eşiğini aşanlar",
-                                      value=False)
-        gosterilen = df if olcek == "hepsi" else df[df["ölçek"] == olcek]
-        if sadece_asan:
-            gosterilen = gosterilen[gosterilen["eşiği aşan"] != "-"]
-        st.dataframe(gosterilen.drop(columns=["ölçek"]), hide_index=True,
-                     width="stretch", height=440)
-        st.download_button(
-            "Tabloyu CSV olarak indir",
-            gosterilen.to_csv(index=False).encode("utf-8-sig"),
-            file_name="karsilastirma.csv", mime="text/csv",
-        )
-        stil.yorum(
-            "'kanıt' sütunu yalnızca kendi ölçeğinde hem referansı hem gürültü "
-            "eşiği olan koşularda derecelendirilir (güçlü / zayıf / gürültü "
-            "içinde). Diğerleri neden derecelendirilemediğini söyler. Boş "
-            "bırakılmış Δ hücreleri 'değer yok' demektir, sıfır değil."
-        )
-        if olcek != "hepsi":
-            stil.yorum(
-                f"Bu ölçekte {len(gosterilen)} koşu var ve hepsi birbiriyle "
-                "doğrudan karşılaştırılabilir."
-            )
-
-    with coklu:
-        st.markdown(
-            "En fazla dört koşu seçin; referansları grafiklere otomatik "
-            "eklenir ve her zaman aynı nötr renkle çizilir."
-        )
-        adaylar = [s for s in df["senaryo"] if not bozulmasiz_mi(str(s))]
-        secilenler = st.multiselect(
-            "Koşular", adaylar,
-            default=[a for a in ("D4", "D2b", "E4 imgsz512") if a in adaylar],
-            max_selections=4,
-        )
-        if not secilenler:
-            st.info("Karşılaştırmak için en az bir koşu seçin.")
         else:
-            metrik_secim = st.multiselect(
-                "Genel metrikler", list(METRIKLER), default=["mAP50", "recall"],
+            st.altair_chart(
+                grafik.degerli_gruplu_bar(veri, "metrik", "değer", "seri",
+                                          baslik="Genel metrikler",
+                                          alan_adi="değer"),
+                width="stretch",
             )
-            veri = _coklu_genel(secilenler)
-            if metrik_secim and not veri.empty:
-                st.altair_chart(
-                    grafik.gruplu_bar(
-                        veri[veri["metrik"].isin(metrik_secim)],
-                        "metrik", "değer", "senaryo", alan_adi="değer",
-                        baslik="Genel metrikler",
-                    ),
-                    width="stretch",
-                )
-            a, b = st.columns(2)
-            with a:
-                k = _coklu_kirilim(secilenler, "boyut_bandi_recall", vs.BANT_ADI)
-                if not k.empty:
-                    st.altair_chart(
-                        grafik.gruplu_bar(k, "grup", "recall", "seri",
-                                          yatay=True, alan_adi="recall",
-                                          baslik="Nesne boyutuna göre recall"),
-                        width="stretch",
-                    )
-            with b:
-                k = _coklu_kirilim(secilenler, "kaynak_recall")
-                if not k.empty:
-                    st.altair_chart(
-                        grafik.gruplu_bar(k, "grup", "recall", "seri",
-                                          yatay=True, alan_adi="recall",
-                                          baslik="Veri kaynağına göre recall"),
-                        width="stretch",
-                    )
-            ap = _coklu_sinif_ap(secilenler)
-            if not ap.empty:
-                st.altair_chart(
-                    grafik.gruplu_bar(ap, "sınıf", "AP50", "seri", yatay=True,
-                                      alan_adi="AP50",
-                                      baslik="Sınıf bazlı AP50"),
-                    width="stretch",
-                )
-                stil.yorum(
-                    "UAP ve UAI sırasıyla 15 ve 17 bbox ile ölçülüyor; bu iki "
-                    "sınıftaki farklar tek tek nesnelere aşırı duyarlıdır."
-                )
-
-    with gurultu:
-        st.markdown(
-            "Gri kuşak, hiçbir bozulma içermeyen koşular arasında gözlenen "
-            "yayılımdır. Kuşağın içinde kalan bir nokta, saf rastgelelikten "
-            "ayırt edilemez. Yalnızca eşiği hesaplanabilen bozulma senaryoları "
-            "çizilir; kontrol koşuları ölçüm aracıdır, ölçüm nesnesi değil."
-        )
-        metrik = st.radio("Metrik", ["mAP50", "precision", "recall"],
-                          horizontal=True)
-        band = _band_verisi(sonuclar, metrik)
+            stil.yorum(
+                "Y ekseni sıfırdan başlar; kırpılmış bir eksen küçük farkları "
+                "olduklarından dramatik gösterirdi."
+            )
+    with b:
+        band = _fark_bandi_verisi(gozlem)
         if band.empty:
-            st.info("Bu metrik için eşiği hesaplanabilen senaryo yok.")
+            st.info(
+                "Bu ölçekte kontrol koşusu yok, gürültü eşiği "
+                "hesaplanamıyor — fark ölçülebiliyor ama rastgelelikten "
+                "ayrılamıyor."
+            )
         else:
-            st.altair_chart(grafik.gurultu_bandi_grafigi(band), width="stretch")
+            st.altair_chart(
+                grafik.gurultu_bandi_grafigi(band, senaryo="metrik"),
+                width="stretch",
+            )
             stil.yorum(
-                "Dolu mavi kareler bandı aşıyor; içi açık turuncu daireler "
-                "bandın içinde — o metrikte bozulma kanıtı yok. Ayrım hem "
-                "renk hem şekille verilir."
+                "Gri kuşak, hiçbir bozulma içermeyen koşular arasında "
+                "gözlenen yayılım. Kuşağın içindeki bir nokta saf "
+                "rastgelelikten ayırt edilemez."
             )
 
-        st.markdown("---")
-        st.markdown("### Gürültü tabanı ölçülünce ne değişti")
-        buyume, zayiflayan, n = _esik_buyumesi(sonuclar)
-        st.markdown(
-            f"İlk ölçüm tek bir kontrol koşusuna dayanıyordu ve gürültüyü "
-            f"ciddi biçimde **küçük** gösteriyordu. {n} kontrol koşusuna "
-            "çıkıldığında eşikler büyüdü:"
-        )
-        st.dataframe(buyume, hide_index=True, width="stretch")
+    tur = sg.yildiz_turu(senaryo)
+    if tur:
+        st.markdown(f"### {sg.BASLIK.get(tur, 'Kırılım')}")
+        cizim, notu = sg.ciz(senaryo, tur)
+        if cizim is None:
+            st.info(notu)
+        else:
+            st.altair_chart(cizim, width="stretch")
+            stil.yorum(notu)
 
-        st.markdown(f"#### Geri çekilen {len(zayiflayan)} iddia")
-        st.markdown(
-            "Aynı ölçüm, aynı koşular — yalnızca karşılaştırma eşiği değişti. "
-            "Metodolojinin kendini düzelttiği yer burasıdır."
-        )
-        st.dataframe(zayiflayan, hide_index=True, width="stretch")
-        stil.yorum(
-            "Bu iki tablo elle yazılmaz; defterden türetilir. Yeni bir kontrol "
-            "koşusu eklendiğinde eşikler ve geri çekilen iddialar "
-            "kendiliğinden güncellenir. Genel örüntü: recall'a dayanan "
-            "iddialar en kırılgan olanlar."
-        )
+    st.markdown("### Görsel kanıt: aynı kare, iki model")
+    _gorsel_kanit(senaryo)
 
-        st.markdown("### Alt grup gürültü bandı")
-        st.markdown(
-            "Genel metriklerin yanında her kırılım grubunun kendi bandı var. "
-            "Bu yalnızca küçük örneklem sorunu değil: `termal` grubu 858 bbox "
-            "taşır ama bandı `hituav`ın (2.165 bbox) bandının on katından "
-            "fazladır; bazı gruplar gerçekten oynaktır."
-        )
-        st.dataframe(_gurultu_tablosu(), hide_index=True, width="stretch")
+    st.markdown("---")
+    guc = o["kanit_gucu"]
+    stil.kutu(
+        stil.guc_rozeti(guc["seviye"]) + " &nbsp;"
+        + _sonuc_cumlesi(senaryo, gozlem, "")
+    )
 
-    with checkpoint:
-        st.markdown("### Checkpoint seçimi bir kör nokta")
-        st.dataframe(_checkpoint_ciftleri(sonuclar), hide_index=True,
-                     width="stretch")
-        stil.yorum(
-            "Her satır kendi checkpoint ailesinin referansıyla karşılaştırılır. "
-            "last.pt ailesinde henüz kontrol koşusu yok, bu yüzden o "
-            "satırlarda eşik hesaplanamıyor — fark ölçülebiliyor ama "
-            "gürültüden ayrılamıyor."
-        )
-        taban, dususler = _best_last_dususu(sonuclar)
-        if taban is not None:
-            # "Tabandan sert" olcutu: dusus, tabani mAP50 gurultu esigi kadar
-            # asiyorsa. Elle secilmis bir sayi degil, olculmus esik.
-            esik = _grup_esikleri("D1")["mAP50"] or 0.0
-            sert = [f"{a} ({d:+.4f})" for a, d in dususler if d < taban - esik]
-            yakin = [f"{a} ({d:+.4f})" for a, d in dususler if d >= taban - esik]
-            stil.kutu(
-                "<b>Dikkat — son checkpoint düşüşünün de bir tabanı var.</b> "
-                "Sağlıklı referansın kendisi best.pt'den last.pt'ye geçerken "
-                f"<b>{taban:+.4f}</b> düşüyor. Bu yüzden her last.pt düşüşü "
-                "bozulma işareti değildir. Tabanı mAP50 gürültü eşiği "
-                f"({esik:.4f}) kadar aşmayanlar: {', '.join(yakin) or 'yok'}. "
-                f"Belirgin ayrışanlar: {', '.join(sert) or 'yok'}."
-            )
+    with st.expander("Deney ayrıntıları (parametreler, ham metrikler, sınırlamalar)"):
+        _ayrintilar(senaryo, o, gozlem)
 
-        st.markdown("### Erken durdurma noktası da seed'e bağlı")
-        st.dataframe(_erken_durdurma(sonuclar), hide_index=True, width="stretch")
-        stil.yorum(
-            "Aynı veri, aynı protokol: eğitim süresi koşudan koşuya değişiyor. "
-            "Gürültü yalnızca son metrikte değil sürecin kendisinde de var."
-        )
+    with st.expander("Deney defteri — bütün koşular"):
+        _deney_defteri(sonuclar)
+
+
+def _ayrintilar(senaryo: str, o: dict, gozlem: dict) -> None:
+    from data_loader import evidence_for
+
+    a, b = st.columns(2)
+    with a:
+        stil.ust_baslik("ne değiştirildi")
+        d = o["ne_degisti"]
+        satir = f"<b>Tür:</b> {d.get('tur') or '—'}<br>" + _ne_degisti(o)
+        if d.get("veri_surumu"):
+            satir += f"<br><b>Veri sürümü:</b> <code>{d['veri_surumu']}</code>"
+        stil.kutu(satir)
+    with b:
+        stil.ust_baslik("referansla ortak olan")
+        stil.kutu("<br>".join(o["ne_sabit_kaldi"]))
+
+    if o["beklenen_etki"]:
+        stil.ust_baslik("deneyden önce ne bekleniyordu")
+        stil.kutu(" ".join(str(o["beklenen_etki"]).split()))
+
+    st.markdown("**Karşılaştırma tablosu**")
+    satirlar = []
+    for ad, d in gozlem["metrikler"].items():
+        ref, deger, fark = d["referans"], d["deger"], d["fark"]
+        satirlar.append({
+            "metrik": ad,
+            "sağlıklı referans": ref,
+            "senaryo": deger,
+            # "mutlak fark" YANLIS bir baslikti: gosterilen degerler
+            # negatif olabiliyor, mutlak fark ise negatif olamaz.
+            "fark (senaryo − referans)": fark,
+            "göreli değişim (%)": (None if not ref or fark is None
+                                   else round(100 * fark / ref, 2)),
+            "gürültü eşiği": d["gurultu_esigi"],
+            "karar": {True: "eşiği aşıyor", False: "gürültü içinde"}.get(
+                d["asiyor"], "eşik yok"),
+        })
+    st.dataframe(pd.DataFrame(satirlar), hide_index=True, width="stretch")
+
+    if not gozlem["asan_metrikler"] and gozlem["kontrol_kosu_sayisi"]:
+        st.markdown("**Fark neden görülmemiş olabilir?**")
+        for baslik, metin in GORULMEME_NEDENLERI:
+            st.markdown(f"- **{baslik}** — {metin}")
+
+    st.markdown("**Sınırlamalar**")
+    for s in o["sinirlamalar"]:
+        st.markdown(f"- {s}")
+
+    with st.expander("Ham metrik dosyası (JSON)"):
+        st.json(evidence_for(senaryo))
+
+
+# Fark GORULMEDIGINDE olasi nedenler. Her madde bu projede GERCEKTEN
+# gozlenmis bir mekanizmadir, spekulasyon degil.
+GORULMEME_NEDENLERI = [
+    ("Modelin önceden öğrenilmiş özellikleri",
+     "Eğitim verisindeki kayıp, önceki temsili silmeye yetmemiş olabilir. "
+     "D1'in main_model kurgusunda etkisiz, yolo26n kurgusunda güçlü çıkması "
+     "bunun doğrudan kanıtıdır."),
+    ("Veri fazlalığı — bozulma soğuruluyor",
+     "D3 (nadir sınıflar) güçlü etki üretirken D3b (bol örnekli taşıt/insan) "
+     "aynı karışıklığı büyük ölçüde soğurdu."),
+    ("Bozulma yalnızca belirli bir alt grupta görünüyor",
+     "D4'te <16 px bandının recall'ı yarıdan fazla düşerken toplam mAP50 "
+     "farkı küçük kaldı."),
+    ("Ölçüm seed gürültüsünün içinde kalıyor",
+     "Fark gerçek olabilir ama bozulmasız koşular arasında da görülen "
+     "büyüklükte olabilir; D6b tam bu nedenle bulgu olmaktan çıktı."),
+    ("Checkpoint seçimi problemi gizliyor",
+     "En iyi checkpoint sağlıklı görünürken son checkpoint arızayı gösterir "
+     "(E1 ve D5)."),
+    ("Nadir sınıfta örnek sayısı yetersiz",
+     "UAP (15 bbox) ve UAI (17 bbox) üzerinde 'etki yok' sonucu da 'etki var' "
+     "sonucu kadar belirsizdir."),
+    ("Deney hipotezi test etmeye yetmiyor",
+     "E3'te öğrenme oranı 100 kat yükseltildiğinde kararsızlık değil tam "
+     "ıraksama üretildi ve hipotez hiç test edilemedi; E3b bu yüzden 10 katla "
+     "tekrarlandı."),
+]

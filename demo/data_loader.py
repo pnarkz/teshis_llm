@@ -306,17 +306,68 @@ def ajan_kosu_haritasi() -> dict[str, str]:
 
 
 @_onbellek
+def kontrol_tekrarlari() -> dict[str, dict]:
+    """`reports/ajan_denemesi/kontrol_tekrarlari/` altindaki ayri kayitlar.
+
+    GERCEK BOSLUK: `kosu_12` (C2 seed13) ve `kosu_13` (C2 seed21) ana
+    denemeden SONRA kontrol kosusu olarak eklendi. Ajan cevaplari uretildi
+    ve diske yazildi - ama ayri dosyalarda durdugu icin demo "kayitli cevap
+    yok" diyordu. Kayitlar kayip degildi, bagli degildi.
+
+    `kosu_01` ve `kosu_11` icin buradaki kayit bir TEKRAR'dir (ana denemede
+    de cevaplari var) ve ana cevabin yerine gecmez; tekrarlanabilirlik
+    sinyali tasir, dolayisiyla ayri gosterilir.
+    """
+    dizin = ROOT / "reports/ajan_denemesi/kontrol_tekrarlari"
+    if not dizin.is_dir():
+        return {}
+    kayitlar: dict[str, dict] = {}
+    for cevap_yolu in sorted(dizin.glob("*_tekrar*.json")):
+        if cevap_yolu.name.endswith("_arac.json"):
+            continue
+        ham = read_json(cevap_yolu)
+        cevap = ham[0] if isinstance(ham, list) and ham else ham
+        if not isinstance(cevap, dict) or not cevap.get("run_id"):
+            continue
+        arac = read_json(cevap_yolu.with_name(
+            cevap_yolu.stem + "_arac.json"))
+        kosu_id = cevap["run_id"]
+        kayitlar.setdefault(kosu_id, []).append({
+            "cevap": cevap,
+            "arac_cagrilari": (arac.get(kosu_id) or {}).get("arac_cagrilari", []),
+            "dosya": cevap_yolu.name,
+        })
+    return kayitlar
+
+
+@_onbellek
 def ajan_kaydi() -> dict:
     """Tamamlanmis denemenin cevaplari, arac kaydi ve puanlari."""
     cevaplar = ajan_cevaplari()
     kayit = read_json(ROOT / "reports/ajan_denemesi/ajan_arac_kaydi.json")
     puan = llm_score()
+    tekrarlar = kontrol_tekrarlari()
     return {
         "cevaplar": {c.get("run_id"): c for c in cevaplar},
         "arac_kaydi": kayit,
         "puanlar": {r["run_id"]: r for r in puan.get("runs", [])},
         "ozet": {k: v for k, v in puan.items() if k != "runs"},
+        # Kontrol tekrarlari ANA DENEMEYE KARISTIRILMAZ: puan ortalamalari
+        # ana denemenin 11 kosusundan hesaplanir. Ayri tutulmalari, "ajan
+        # 13 kosuda %X" gibi iki farkli deneyi birlestiren bir sayi
+        # uretilmesini onler.
+        "tekrarlar": tekrarlar,
     }
+
+
+def ajan_kaydi_var_mi(kosu_id: str) -> str:
+    """'ana' | 'tekrar' | 'yok' - secicideki rozet bunu soyler."""
+    kayit = ajan_kaydi()
+    if kosu_id in (kayit.get("cevaplar") or {}):
+        return "ana"
+    if kosu_id in (kayit.get("tekrarlar") or {}):
+        return "tekrar"
+    return "yok"
 
 
 @_onbellek
