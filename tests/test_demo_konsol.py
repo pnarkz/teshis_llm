@@ -9,6 +9,7 @@ calisir: python -m pip install -r requirements-demo.txt
 """
 
 import csv
+import re
 from pathlib import Path
 
 import pytest
@@ -75,7 +76,11 @@ def test_her_bolum_render_ediliyor(bolum: str):
 
 @pytest.mark.parametrize("senaryo", _senaryolar())
 def test_her_senaryo_render_ediliyor(senaryo: str):
-    """24 kosunun tamami; biri bile cokerse sunumda o kosu acilamaz."""
+    """Defterdeki her kosu; biri bile cokerse sunumda o kosu acilamaz.
+
+    Sayi BILEREK yazilmaz - eskiden "24 kosu" diyordu ve defter buyudukce
+    geride kaldi. Liste defterden gelir.
+    """
     app = _bolum("Senaryolar")
     app.selectbox[0].set_value(senaryo).run()
     assert not _sorunlar(app), f"{senaryo}: {_sorunlar(app)}"
@@ -121,25 +126,43 @@ def test_karsilastirma_tablolari_turetiliyor():
 
     cift = _checkpoint_ciftleri(sonuclar)
     assert len(cift) >= 6, "checkpoint cifti tablosu eksik"
-    adlar = set(cift["kosu"])
+    adlar = set(cift["koşu"])
     assert "v00_saglikli best.pt" in adlar and "v00_saglikli last.pt" in adlar, (
         "Saglikli referansin checkpoint cifti tabloda yok; last.pt dususunun "
         "tabani gorunmezse her dusus bozulma sanilir"
     )
 
 
-def test_checkpoint_notundaki_sayilar_tablodan_geliyor():
-    """Tablonun altindaki yorum, tablonun kendi degerleriyle uyusmali."""
+def test_checkpoint_notunda_elle_yazilmis_sayi_kalmadi():
+    """Tablonun altindaki yorum, sayilari TABLODAN almalidir.
+
+    Onceki surumde bu kutuda dort tane elle yazilmis fark vardi ve tablo
+    kendi referansina gecince onunla celiskiye dustu (D4 icin -0.0329
+    yaziyordu, dogrusu -0.0105 idi). Simdi kutu turetiliyor; test bunun
+    geriye donmedigini korur.
+    """
+    kaynak = (ROOT / "demo/bolumler/karsilastirma.py").read_text(encoding="utf-8")
+    kutu = kaynak[kaynak.index("son checkpoint düşüşünün"):]
+    kutu = kutu[: kutu.index("    )")]
+    elle = re.findall(r"(?<![:.\d])[-−]?0\.\d{3,}", kutu)
+    assert not elle, f"Kutuda elle yazilmis sayi kalmis: {elle}"
+
+
+def test_checkpoint_dususu_kendi_referansina_gore():
+    """Her checkpoint satiri KENDI ailesinin referansiyla karsilastirilmali.
+
+    Onceden last.pt satirlari best.pt referansiyla tartiliyordu; bu yuzden
+    saglikli referansin kendi last.pt'si bile "bozulmus" gorunuyordu.
+    """
     import sys
 
     sys.path.insert(0, str(ROOT / "demo"))
     from bolumler.karsilastirma import _checkpoint_ciftleri
     from data_loader import load_results
 
-    df = _checkpoint_ciftleri(load_results()).set_index("kosu")
-    kaynak = (ROOT / "demo/bolumler/karsilastirma.py").read_text(encoding="utf-8")
-    for kosu in ("v00_saglikli last.pt", "D5 last.pt", "E1 last.pt"):
-        deger = df.loc[kosu, "Δ v00"]
-        assert f"{deger:.4f}" in kaynak, (
-            f"{kosu} icin yorumdaki sayi ({deger:.4f}) tabloyla uyusmuyor"
-        )
+    df = _checkpoint_ciftleri(load_results()).set_index("koşu")
+    assert df.loc["v00_saglikli last.pt", "referansı"] == "v00_saglikli last_pt"
+    assert df.loc["v00_saglikli best.pt", "referansı"] == "v00_saglikli"
+    # Referansin kendisi her iki ailede de sifir fark gostermeli.
+    assert abs(df.loc["v00_saglikli last.pt", "Δ kendi referansına"]) < 1e-9
+    assert abs(df.loc["v00_saglikli best.pt", "Δ kendi referansına"]) < 1e-9

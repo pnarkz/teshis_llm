@@ -25,7 +25,7 @@ METRIK_ADI = {
     "precision": "precision",
     "recall": "recall",
 }
-GUC_ETIKET = {"guclu": "güçlü", "zayif": "zayıf", "gurultu icinde": "gürültü içinde"}
+# Etiketler stil.SEVIYE'den gelir; iki yerde yazilan bir kural er gec ayrisir.
 
 
 def _etki_verisi(sonuclar: pd.DataFrame) -> pd.DataFrame:
@@ -34,15 +34,24 @@ def _etki_verisi(sonuclar: pd.DataFrame) -> pd.DataFrame:
     Ham fark yerine **orana** bakılır: küçük bir grupta büyük görünen bir
     fark, o grubun doğal yayılımı içinde olabilir.
     """
+    from teshis.degerlendirme.karsilastirilabilirlik import bozulmasiz_mi
+
     satirlar = []
     for _, r in sonuclar.iterrows():
         senaryo = str(r["scenario"])
+        # Bozulmasiz kosular haritaya GIRMEZ. Girdiklerinde - ki bir sure
+        # girdiler - saglikli referans ve kontrol kosulari "etki" gosteren
+        # renkli hucreler olarak cikiyordu. Kontrol kosusunun band orani,
+        # kendi bandindan cikarilmis olmasinin bir yan urunudur; bozulma
+        # olcusu degildir.
+        if bozulmasiz_mi(senaryo):
+            continue
         g = ne_gozlendi(senaryo)
         if not g:
             continue
         for metrik, d in g["metrikler"].items():
             esik = d["gurultu_esigi"]
-            if not esik:
+            if not esik or d["fark"] is None:
                 continue
             satirlar.append({
                 "senaryo": senaryo,
@@ -55,16 +64,38 @@ def _etki_verisi(sonuclar: pd.DataFrame) -> pd.DataFrame:
 
 
 def _guc_dagilimi(sonuclar: pd.DataFrame) -> pd.DataFrame:
+    """Yalnizca DERECELENDIRILEBILEN kosularin dagilimi.
+
+    Kontrol kosulari, referanslar, eslenik olcumler ve esigi olmayan kosular
+    bu dagilima girmez - girseydi "8 guclu bulgu" sayisi, hicbir bozulma
+    icermeyen kosularla sisirilirdi.
+    """
     sayim: dict[str, int] = {}
     for _, r in sonuclar.iterrows():
         seviye = kanit_gucu(str(r["scenario"]))["seviye"]
-        if seviye != "olcum yok":
+        if seviye in stil.DERECELENDIRILEN:
             sayim[seviye] = sayim.get(seviye, 0) + 1
-    sira = ["guclu", "zayif", "gurultu icinde"]
     return pd.DataFrame(
-        {"koşu": [sayim.get(s, 0) for s in sira]},
-        index=[GUC_ETIKET[s] for s in sira],
+        {"koşu": [sayim.get(s, 0) for s in stil.DERECELENDIRILEN]},
+        index=[stil.seviye_adi(s) for s in stil.DERECELENDIRILEN],
     )
+
+
+def _derecelendirilemeyen(sonuclar: pd.DataFrame) -> pd.DataFrame:
+    """Derecelendirilmeyen kosular ve NEDEN derecelendirilmedikleri."""
+    satirlar = []
+    for _, r in sonuclar.iterrows():
+        ad = str(r["scenario"])
+        g = kanit_gucu(ad)
+        if g["seviye"] in stil.DERECELENDIRILEN:
+            continue
+        o = ne_gozlendi(ad)
+        satirlar.append({
+            "koşu": ad,
+            "durum": stil.seviye_adi(g["seviye"]),
+            "referansı": o.get("referans_senaryo") or "—",
+        })
+    return pd.DataFrame(satirlar)
 
 
 def _kontrol_sayisi(sonuclar: pd.DataFrame) -> int:
@@ -92,6 +123,34 @@ def _ajan_skorlari(ajan: dict) -> dict[str, float]:
         "sinir": sum(k["limitation_score"] for k in kosular) / n,
         "rubrik": ajan.get("ozet", {}).get("mean_score"),
     }
+
+
+def _e1_metni() -> str:
+    """E1'in checkpoint korlugunu, sayilari defterden alarak anlatir.
+
+    Sayilar elle yaziliydi ve biri (-0.088) ESKI karsilastirma kuralindan
+    kalmaydi: E1'in son checkpoint'i v00'in EN IYI checkpoint'iyle
+    kiyaslanmisti. Iki farkli seyi tek sayida topluyordu - asiri uyum ve
+    checkpoint degisimi. Dogru okuma, her kosunun kendi best->last dususunu
+    saglikli referansin kendi dususuyle karsilastirmaktir.
+    """
+    deger = {str(r["scenario"]): float(r["mAP50"])
+             for _, r in load_results().iterrows()}
+    try:
+        e1_best, e1_last = deger["E1"], deger["E1 last_pt"]
+        v00_best, v00_last = deger["v00_saglikli"], deger["v00_saglikli last_pt"]
+    except KeyError:                       # defter eksikse metni sayisiz ver
+        return ("E1'de 200 epoch süren aşırı uyum, en iyi checkpoint ile "
+                "raporlandığında görünmüyor; yalnızca eğitim eğrisinde ve son "
+                "checkpoint'te ortaya çıkıyor.")
+    return (
+        "E1'de 200 epoch süren ders kitabı niteliğinde bir aşırı uyum elde "
+        f"edildi. En iyi checkpoint ile raporlandığında model sağlıklı "
+        f"görünüyor (mAP50 farkı {e1_best - v00_best:+.3f}). Arıza son "
+        f"checkpoint'te ortaya çıkıyor: E1 best'ten last'a {e1_last - e1_best:+.3f} "
+        f"düşerken sağlıklı referans yalnızca {v00_last - v00_best:+.3f} düşüyor. "
+        "Yani düşüşün kendisi değil, tabandan ne kadar ayrıldığı anlamlı."
+    )
 
 
 def goster() -> None:
@@ -128,7 +187,7 @@ def goster() -> None:
     if not etki.empty:
         st.altair_chart(
             stil.etki_haritasi(etki, x="metrik", y="senaryo", deger="band oranı"),
-            use_container_width=True,
+            width="stretch",
         )
         stil.yorum(
             "Koyu hücreler bandın belirgin üzerinde; açık hücreler gürültüden "
@@ -139,6 +198,14 @@ def goster() -> None:
     with e:
         stil.ust_baslik("kanıt gücü dağılımı")
         st.bar_chart(_guc_dagilimi(sonuclar), height=200)
+        derece_disi = _derecelendirilemeyen(sonuclar)
+        stil.yorum(
+            f"Yalnızca kendi ölçeğinde referansı VE gürültü eşiği olan "
+            f"{int(_guc_dagilimi(sonuclar)['koşu'].sum())} koşu derecelendirilir. "
+            f"Kalan {len(derece_disi)} koşu aşağıda, nedeniyle birlikte."
+        )
+        with st.expander("Derecelendirilmeyen koşular"):
+            st.dataframe(derece_disi, hide_index=True, width="stretch")
     with f:
         stil.ust_baslik("üç ana bulgu")
         for baslik, metin in (
@@ -147,10 +214,7 @@ def goster() -> None:
              "dokunmuyor; etiket bozulmaları precision'ı da bozuyor. Hangi "
              "metriğin bozulduğu arızanın türünü söylüyor."),
             ("Standart raporlama bir arızayı tamamen gizleyebiliyor",
-             "E1'de 200 epoch süren ders kitabı niteliğinde bir aşırı uyum elde "
-             "edildi. En iyi checkpoint ile raporlandığında model sağlıklı "
-             "görünüyor (mAP50 farkı −0.001); arıza yalnızca eğitim eğrisinde "
-             "ve son checkpoint'te görülüyor (−0.088)."),
+             _e1_metni()),
             ("Gürültü ölçülmeden \"etki\" denemez",
              "Aynı veri ve protokolle, yalnızca rastgelelik tohumu "
              "değiştirilerek eğitilen dört model arasında bile belirgin fark "

@@ -86,11 +86,31 @@ def fark_metni(deger: float, fark: float, basamak: int = 4) -> str:
     return f"{deger:.{basamak}f}  ({fark:+.{basamak}f})"
 
 
+# Kanit seviyesi -> (ekranda gorunen ad, rozet turu).
+# Derecelendirilen uc seviye ile derecelendirilmeyen bes seviye BILEREK
+# ayri tutulur: bir kontrol kosusunu "guclu" diye etiketlemek, projenin
+# olcmeye calistigi hatanin ta kendisidir.
+SEVIYE = {
+    "guclu": ("güçlü", "olumlu"),
+    "zayif": ("zayıf", "uyari"),
+    "gurultu icinde": ("gürültü içinde", "uyari"),
+    "kontrol kosusu": ("kontrol koşusu", "notr"),
+    "referans": ("referans", "notr"),
+    "eslenik olcum": ("eşlenik ölçüm", "notr"),
+    "esik yok": ("eşik yok", "uyari"),
+    "karsilastirilamaz": ("karşılaştırılamaz", "uyari"),
+    "olcum yok": ("ölçüm yok", "notr"),
+}
+DERECELENDIRILEN = ("guclu", "zayif", "gurultu icinde")
+
+
+def seviye_adi(seviye: str) -> str:
+    return SEVIYE.get(seviye, (seviye, "notr"))[0]
+
+
 def guc_rozeti(seviye: str) -> str:
-    tur = {"guclu": "olumlu", "zayif": "uyari", "gurultu icinde": "uyari"}.get(
-        seviye, "notr"
-    )
-    return rozet(seviye, tur)
+    ad, tur = SEVIYE.get(seviye, (seviye, "notr"))
+    return rozet(ad, tur)
 
 
 # --- Grafik yardimcilari ----------------------------------------------------
@@ -148,15 +168,36 @@ def gurultu_bandi_grafigi(veri, senaryo: str = "senaryo", fark: str = "fark",
             x2="band_ust:Q",
         )
     )
+    # Ayrim YALNIZCA renge birakilmaz: renk korlugu olan bir izleyici mavi ile
+    # turuncuyu ayirt edemeyebilir. Sekil ikinci bir kanal olarak eklenir -
+    # esigi asanlar dolu kare, asmayanlar ici bos daire.
     noktalar = (
         alt.Chart(veri)
-        .mark_point(size=90, filled=True)
+        .mark_point(size=110, filled=True, strokeWidth=1.8)
         .encode(
             y=alt.Y(f"{senaryo}:N", title=None, sort=None),
             x=alt.X(f"{fark}:Q"),
             color=alt.Color(
                 "asiyor:N",
-                title=None,
+                title="eşiği aşıyor",
+                scale=alt.Scale(domain=["evet", "hayir"], range=[VURGU, UYARI]),
+                legend=alt.Legend(labelExpr="datum.label == 'evet' ? 'evet' : 'hayır'"),
+            ),
+            shape=alt.Shape(
+                "asiyor:N",
+                title="eşiği aşıyor",
+                scale=alt.Scale(domain=["evet", "hayir"], range=["square", "circle"]),
+                legend=alt.Legend(labelExpr="datum.label == 'evet' ? 'evet' : 'hayır'"),
+            ),
+            # Bandin ICINDE kalan noktalar acik dolgulu ama CIZGILI kalir.
+            # Ilk denemede dolgu 0.15'e dusuruldu ve o uc nokta gri kusagin
+            # icinde gorunmez oldu - "gurultu icinde" olan senaryolar
+            # ekrandan silinmis gibi duruyordu.
+            fillOpacity=alt.condition(
+                "datum.asiyor == 'evet'", alt.value(1.0), alt.value(0.35)
+            ),
+            stroke=alt.Color(
+                "asiyor:N", legend=None,
                 scale=alt.Scale(domain=["evet", "hayir"], range=[VURGU, UYARI]),
             ),
             tooltip=list(veri.columns),

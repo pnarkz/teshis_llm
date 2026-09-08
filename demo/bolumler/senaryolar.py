@@ -2,8 +2,13 @@
 
 Sayfanin yapisi bilerek bir arastirma raporunun kisa ozeti gibidir:
 
-    Ne olcuyor? -> Ne degistirildi? -> Ne sabit kaldi? -> Beklenen etki
-    -> Ne gozlendi? -> Kanit ne kadar guclu? -> Sinirlama
+    Ne olcuyor? -> Ne degistirildi? -> Referansla ortak olan ne? ->
+    Beklenen etki -> Ne gozlendi? -> Kanit ne kadar guclu? -> Sinirlama
+
+"Referansla ortak olan" basligi bilerek boyle: sayfa bir donem "ne sabit
+kaldi" diyip degerlendirme setini SABIT val_diagnostic yaziyordu, oysa D6a
+kasitli olarak sizintili kumede olculur. Basligi karsilastirmaya baglamak
+hem dogru hem de neyin neye gore olculdugunu ekranda gorunur kiliyor.
 
 Icerigin bes bileseninden dordu turetilir (teshis/degerlendirme/senaryo_ozeti);
 elle yazilan tek alan senaryonun ne olctugudur.
@@ -27,15 +32,22 @@ from teshis.degerlendirme.senaryo_ozeti import ozet
 
 
 def _metrik_tablosu(gozlem: dict) -> pd.DataFrame:
+    """Metrik tablosu; referans sutunu KENDI referansinin adini tasir.
+
+    Baslik "referans (v00)" diye sabit yaziliydi. Referans artik kosudan
+    kosuya degisiyor - `D1n`'inki v00n, `D4 last_pt`'ninki v00'in last.pt'si.
+    Sabit baslik, yanlis bir karsilastirma yapildigi izlenimi verirdi.
+    """
+    ref_ad = gozlem.get("referans_senaryo") or "referans yok"
     satirlar = []
     for ad, d in gozlem["metrikler"].items():
         satirlar.append({
             "metrik": ad,
-            "deger": d["deger"],
-            "referans (v00)": d["referans"],
+            "değer": d["deger"],
+            f"referans ({ref_ad})": d["referans"],
             "fark": d["fark"],
-            "gurultu esigi": d["gurultu_esigi"],
-            "esigi asiyor": "evet" if d["asiyor"] else "hayir",
+            "gürültü eşiği": d["gurultu_esigi"],
+            "eşiği aşıyor": {True: "evet", False: "hayır"}.get(d["asiyor"], "—"),
         })
     return pd.DataFrame(satirlar)
 
@@ -76,7 +88,7 @@ def goster() -> None:
     adlar = sonuclar["scenario"].tolist()
 
     st.title("Senaryolar")
-    senaryo = st.selectbox("Kosu", adlar, index=adlar.index("D4") if "D4" in adlar else 0)
+    senaryo = st.selectbox("Koşu", adlar, index=adlar.index("D4") if "D4" in adlar else 0)
     o = ozet(senaryo)
 
     st.markdown("## Deney özeti")
@@ -95,7 +107,7 @@ def goster() -> None:
             satir += f"<b>Veri surumu:</b> <code>{d['veri_surumu']}</code>"
         stil.kutu(satir)
     with b:
-        stil.ust_baslik("ne sabit kaldı")
+        stil.ust_baslik("referansla ortak olan")
         stil.kutu("<br>".join(o["ne_sabit_kaldi"]))
 
     if o["beklenen_etki"]:
@@ -105,14 +117,31 @@ def goster() -> None:
     st.markdown("## Ne gözlendi")
     gozlem = o["ne_gozlendi"]
     if gozlem:
+        # Karsilastirmanin KIMLIGI once gelir: hangi kosuyla, hangi olcekte.
+        # Bu satir olmadan asagidaki fark sutunu neyin farki oldugunu
+        # soylemiyordu ve saglikli kosular "bozulmus" gorunuyordu.
+        kimlik = gozlem.get("kimlik") or {}
+        stil.ust_baslik("karşılaştırma ölçeği")
+        stil.kutu(
+            f"<b>Aday:</b> {senaryo} &nbsp;→&nbsp; "
+            f"<b>Referans:</b> {gozlem.get('referans_senaryo') or '— yok —'}<br>"
+            f"<b>Model:</b> {kimlik.get('model', '?')} · "
+            f"<b>Küme:</b> {kimlik.get('degerlendirme_seti', '?')} · "
+            f"<b>imgsz:</b> {kimlik.get('imgsz_eval', '?')} · "
+            f"<b>Checkpoint:</b> {kimlik.get('checkpoint', '?')}.pt<br>"
+            f"<span class='yorum'>{gozlem.get('karsilastirma_aciklamasi', '')}</span>"
+        )
         st.dataframe(_metrik_tablosu(gozlem), hide_index=True, width="stretch")
         guc = o["kanit_gucu"]
         st.markdown(stil.guc_rozeti(guc["seviye"]) + " " + guc["aciklama"],
                     unsafe_allow_html=True)
+        n = gozlem["kontrol_kosu_sayisi"]
         stil.yorum(
-            f"Gurultu esigi {gozlem['kontrol_kosu_sayisi']} kontrol kosusundan "
-            "hesaplandı. Esigin altında kalan bir fark, saf rastgelelikten "
-            "ayirt edilemez."
+            f"Gürültü eşiği {n} kontrol koşusundan hesaplandı. Eşiğin altında "
+            "kalan bir fark, saf rastgelelikten ayırt edilemez."
+            if n else
+            "Bu ölçekte kontrol koşusu yok, bu yüzden gürültü eşiği "
+            "hesaplanamıyor; başka bir ölçeğin eşiği ödünç alınamaz."
         )
 
     kosu_id = _kosu_id(senaryo)
@@ -127,9 +156,9 @@ def goster() -> None:
             stil.ust_baslik("nesne boyutu")
             st.dataframe(boyut_df, hide_index=True, width="stretch")
         stil.yorum(
-            "'band orani' = |fark| / o grubun gürültü bandi. 1'in altindaki "
-            "bir oran, farkin bozulmasiz koşular arasında da goruldugu "
-            "anlamina gelir."
+            "'band oranı' = |fark| / o grubun gürültü bandı. 1'in altındaki "
+            "bir oran, farkın bozulmasız koşular arasında da görüldüğü "
+            "anlamına gelir."
         )
 
     egri = training_curve(sonuclar[sonuclar["scenario"] == senaryo].iloc[0])
@@ -140,8 +169,8 @@ def goster() -> None:
         if sutunlar:
             st.line_chart(egri.set_index("epoch")[sutunlar], height=240)
             stil.yorum(
-                "Train ve val kaybi arasindaki farkin acilmasi asiri uyum "
-                "imzasidir; metrikler sessizken egri konusabilir."
+                "Train ve val kaybı arasındaki farkın açılması aşırı uyum "
+                "imzasıdır; metrikler sessizken eğri konuşabilir."
             )
 
     gorseller = images_for(senaryo)
