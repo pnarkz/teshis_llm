@@ -7,7 +7,9 @@ olmayan bir dosyayi arar. Test, referanslarin kod tabaniyla birlikte
 guncellenmesini zorunlu kilar.
 """
 
+import functools
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -15,15 +17,41 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 BELGELER = sorted([*ROOT.glob("*.md"), *(ROOT / "docs").glob("*.md")])
 
-# Metin icinde yol gibi gorunen ama dosya olmayan kaliplar.
+# Metin icinde yol gibi gorunen ama hicbir zaman dosya olmayan kaliplar.
 YOKSAY = re.compile(
     r"^(dataset|termal_teshis|runs|\.\.\.|C:|/kaggle|https?:)"
-    r"|\.(jpg|png|pt|onnx)$"          # ornek gorseller/agirliklar (gitignore'da)
-    r"|^(experiments|veri_surumleri)/"  # uretilen kosu ciktilari (gitignore'da)
     # Ultralytics results.csv sutun adlari yol gibi gorunur ama dosya degil:
     # `train/box_loss`, `val/cls_loss`, `metrics/mAP50(B)`, `lr/pg0`.
     r"|^(train|val|metrics|lr)/"
 )
+
+
+@functools.lru_cache(maxsize=1)
+def _git_disi_kontrolu():
+    """Bir yolun .gitignore kapsaminda olup olmadigini soyleyen fonksiyon.
+
+    GERCEK HATA: bu testin yoksayma listesi bir donem `experiments/`,
+    `veri_surumleri/`, `*.pt`, `*.jpg` gibi kaliplari ELLE tasiyordu - yani
+    .gitignore'un bir KOPYASIYDI. Taze bir klonda test kirildi, cunku
+    `val_diagnostic/manifest.json` listede yoktu ama Git disiydi.
+
+    Ayni kural iki yerde yasarsa biri geride kalir. Tek kaynak .gitignore
+    olmali; onu da en dogru okuyan Git'in kendisidir.
+    """
+    try:
+        subprocess.run(["git", "rev-parse"], cwd=ROOT, check=True,
+                       capture_output=True)
+    except (OSError, subprocess.CalledProcessError):
+        return lambda _yol: False        # Git yoksa hicbir sey yoksayilmaz
+
+    def disi(yol: str) -> bool:
+        sonuc = subprocess.run(
+            ["git", "check-ignore", "-q", "--no-index", yol],
+            cwd=ROOT, capture_output=True,
+        )
+        return sonuc.returncode == 0
+
+    return disi
 
 # Kod bloklari ve satir ici kod icindeki yol adaylari.
 YOL_KALIBI = re.compile(r"`([A-Za-z0-9_./-]+/[A-Za-z0-9_./-]+)`")
@@ -33,7 +61,9 @@ MD_LINK = re.compile(r"\]\(([^)#]+\.md)\)")
 def _yol_adaylari(metin: str) -> set[str]:
     adaylar = set(YOL_KALIBI.findall(metin))
     adaylar |= set(MD_LINK.findall(metin))
-    return {a for a in adaylar if not YOKSAY.search(a)}
+    git_disi = _git_disi_kontrolu()
+    return {a for a in adaylar
+            if not YOKSAY.search(a) and not git_disi(a)}
 
 
 @pytest.mark.parametrize("belge", BELGELER, ids=lambda p: p.name)

@@ -81,18 +81,66 @@ Ayrintilar ve sayilar icin: **[docs/BULGULAR.md](docs/BULGULAR.md)**
 
 ## Hizli baslangic
 
-```bash
-python -m pip install -r requirements-dev.txt
-python -m pytest tests/ -q
-```
-
-Demo konsolu:
+### Sunum konsolu (baska bir makinede de calisir)
 
 ```bash
-streamlit run demo/app.py
+git clone https://github.com/pnarkz/teshis_llm.git
+cd teshis_llm
+python -m pip install -r requirements-demo.txt
+python -m streamlit run demo/app.py
 ```
 
-Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
+Konsol **yalnizca depoyla gelen olcum ciktilarini okur**; egitim veya test
+calistirmaz. Model agirliklari (`*.pt`), kilitli tani seti
+(`val_diagnostic/`) ve tam gorsel arsivi (`reports/` altinda 233 MB) Git
+disidir - taze bir klonda bunlar bulunmaz ve BULUNMAK ZORUNDA DEGILDIR:
+
+| Eksik olan | Konsol ne yapar |
+|---|---|
+| `val_diagnostic/` | Etiketli ornek galerisi `demo/assets/ornekler` altindaki tasinabilir alt kumeyi kullanir ve bunu ekranda yazar |
+| `reports/**/images` | Hata galerisi `demo/assets/sunum_gorselleri` altindaki kucultulmus seti kullanir ve bunu ekranda yazar |
+| `val_batch*.jpg` | "Ornek tahminler" bolumu kendini atlar |
+| `*.pt` agirliklari | Hicbir sey; konsol model calistirmaz |
+
+Kenar cubugundaki **Sistem durumu** paneli hangi ciktinin bulundugunu tek
+bakista soyler.
+
+### Canli ajan (istege bagli)
+
+```bash
+python -m pip install "google-genai>=1.0"
+```
+
+`GEMINI_API_KEY` bir **ortam degiskeni** olarak tanimlanir; hicbir zaman
+depoya yazilmaz. PowerShell'de:
+
+```powershell
+$env:GEMINI_API_KEY = "..."
+```
+
+Ajan bolumu anahtarsiz da calisir - kayitli kosu modu varsayilandir ve API
+harcamaz. Canli mod secildiginde once bir on kontrol calisir ve hangi
+kosulun eksik oldugunu yazar.
+
+### Egitim ve olcum (GPU gerekir)
+
+```bash
+python -m pip install -e ".[egitim]"
+cp config.example.yaml config.local.yaml   # kendi veri yollarinizi yazin
+```
+
+`config.local.yaml` Git disidir; yollar goreli yazilabilir ve proje kokune
+gore cozulur.
+
+### Testler
+
+```bash
+python -m pip install -r requirements-dev.txt -r requirements-demo.txt
+python -m pytest -q
+```
+
+Taze bir klonda da gecer: kilitli tani setine baglı testler otomatik olarak
+atlanir.
 
 ## Durum
 
