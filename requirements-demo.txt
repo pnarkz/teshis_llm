@@ -10,3 +10,8 @@ altair>=5.0
 # sanal ortamda sunum yapilacaksa bu satir gereklidir.
 google-genai>=1.0
 PyYAML>=6.0
+
+# Etiketli ornek galerisi kutulari CALISMA ZAMANINDA cizer; onceden
+# cizilmis PNG saklamak yerine etiket dosyasindan cizmek, gosterilen
+# kutunun gercekten olculen etiket oldugunu garanti eder.
+Pillow>=10.0

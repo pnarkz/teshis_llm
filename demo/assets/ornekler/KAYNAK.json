@@ -1,0 +1,7 @@
+{
+  "amac": "Sunum icin tasinabilir ornek alt kumesi",
+  "kaynak": "val_diagnostic (kilitli tani seti)",
+  "secim": "sinif basina en fazla 3 goruntu",
+  "not": "Bu bir ALT KUMEDIR; metrikler her zaman tam kilitli set uzerinde olculur. Galeri yalnizca gorsel ornekleme icindir.",
+  "goruntu": 12
+}

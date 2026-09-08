@@ -58,3 +58,8 @@ veri_surumleri/*/labels/
 
 # Kisiye ozel yol yapilandirmasi; ortak config.yaml temiz kalir.
 config.local.yaml
+
+# demo/assets/ornekler: sunum icin tasinabilir kucuk ornek seti. val_diagnostic
+# Git disi oldugu icin taze bir klonda galeri bos kalirdi; bu alt kume
+# (sinif basina 3 goruntu) depoyla birlikte gelir.
+!demo/assets/ornekler/**
