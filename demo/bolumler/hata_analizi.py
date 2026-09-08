@@ -24,7 +24,7 @@ import streamlit as st
 
 import gorseller
 import stil
-from data_loader import error_galleries, images_for
+from data_loader import error_galleries, gorsel_coz, gorsel_kaynagi, images_for
 
 SIRALAMA = {
     "toplam hata skoru": "score",
@@ -103,6 +103,20 @@ def goster() -> None:
         "koşunun en sorunlu kareleri sıralanır ve mümkün olduğunda **sağlıklı "
         "modelin aynı kareyi nasıl gördüğü** yanına konur."
     )
+
+    gorsel_durumu = gorsel_kaynagi()
+    if gorsel_durumu == "sunum_seti":
+        st.info(
+            "Tam görsel arşivi (`reports/`, 233 MB) bu makinede yok; depoyla "
+            "birlikte gelen **küçültülmüş sunum seti** kullanılıyor. Her "
+            "galeriden dört sıralama ölçütünün ilk 8'i mevcut. Ölçümler "
+            "hiçbir zaman bu görsellerden üretilmez."
+        )
+    elif gorsel_durumu == "yok":
+        st.warning(
+            "Hiçbir hata galerisi görseli bulunamadı. Taşınabilir seti "
+            "üretmek için: `python scripts/sunum_gorselleri_hazirla.py`"
+        )
 
     galeriler = error_galleries()
     if not galeriler:
@@ -198,15 +212,15 @@ def goster() -> None:
         yol = kayit.get("image")
         if not yol:
             continue
-        tam = (klasor / yol) if klasor else None
+        tam = gorsel_coz(klasor / yol) if klasor else None
         eslesen = saglikli.get(kayit.get("source"))
         st.markdown("---")
         if eslesen and saglikli_klasor:
             a, b = st.columns(2)
             with a:
                 stil.ust_baslik("sağlıklı referans modeli")
-                s_yol = saglikli_klasor / eslesen["image"]
-                if s_yol.is_file():
+                s_yol = gorsel_coz(saglikli_klasor / eslesen["image"])
+                if s_yol is not None:
                     st.image(str(s_yol), width="stretch")
                 else:
                     st.info("Sağlıklı modelin bu karesi bulunamadı.")
@@ -217,7 +231,7 @@ def goster() -> None:
                 )
             with b:
                 stil.ust_baslik(f"{senaryo} koşusu")
-                if tam and tam.is_file():
+                if tam is not None:
                     st.image(str(tam), width="stretch")
                 else:
                     st.warning(f"Görsel dosyası bulunamadı: `{yol}`")
@@ -228,7 +242,7 @@ def goster() -> None:
                 )
         else:
             stil.ust_baslik(f"{senaryo} koşusu")
-            if tam and tam.is_file():
+            if tam is not None:
                 st.image(str(tam), width="stretch")
             else:
                 st.warning(f"Görsel dosyası bulunamadı: `{yol}`")

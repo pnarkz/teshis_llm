@@ -31,6 +31,43 @@ def _onbellek(fn):
     return st.cache_data(show_spinner=False)(fn)
 
 
+# --- Gorsel cozumleme ------------------------------------------------------
+#
+# `reports/` altindaki gorseller 233 MB tutar ve Git disidir. Taze bir klonda
+# bunlar bulunmaz; o durumda konsolun Hata Analizi bolumu tamamen bos kalirdi.
+# `scripts/sunum_gorselleri_hazirla.py` kucultulmus bir ALT KUME uretir ve
+# ayni goreli yol duzeniyle demo/assets/sunum_gorselleri altina koyar.
+#
+# Ayna duzeni bilerek birebir: burada baska bir eslestirme kurali yok,
+# yalnizca "reports/" onekini degistir. Iki farkli adlandirma kurali olsaydi
+# biri er gec digerinden ayrisirdi.
+
+SUNUM_GORSELLERI = ROOT / "demo/assets/sunum_gorselleri"
+
+
+def gorsel_coz(yol: Path | None) -> Path | None:
+    """Orijinal yol yoksa tasinabilir sunum setindeki kopyayi dondurur."""
+    if yol is None:
+        return None
+    if yol.is_file():
+        return yol
+    try:
+        goreli = yol.relative_to(ROOT / "reports")
+    except ValueError:
+        return None
+    yedek = SUNUM_GORSELLERI / goreli
+    return yedek if yedek.is_file() else None
+
+
+def gorsel_kaynagi() -> str:
+    """'tam' | 'sunum_seti' | 'yok' - arayuz hangi setin kullanildigini yazar."""
+    if any((ROOT / "reports").glob("hata_galerisi_*/images/*.jpg")):
+        return "tam"
+    if SUNUM_GORSELLERI.is_dir() and any(SUNUM_GORSELLERI.rglob("*.jpg")):
+        return "sunum_seti"
+    return "yok"
+
+
 def read_json(path: Path) -> dict:
     if not path.is_file():
         return {}
@@ -90,24 +127,31 @@ def evidence_for(scenario: str) -> dict:
 
 def images_for(scenario: str) -> list[Path]:
     klasor = rapor_klasoru(scenario)
-    folder = klasor / "gorseller" if klasor else None
-    if not folder or not folder.is_dir():
+    if klasor is None:
         return []
-    return [folder / name for name in ("confusion_matrix.png", "confusion_matrix_normalized.png") if (folder / name).is_file()]
+    folder = klasor / "gorseller"
+    adaylar = (folder / name for name in
+               ("confusion_matrix.png", "confusion_matrix_normalized.png"))
+    return [y for y in (gorsel_coz(a) for a in adaylar) if y is not None]
 
 
 def examples_for(scenario: str) -> list[Path]:
-    """val_batch etiket/tahmin ciftlerini (etiket, tahmin) sirasinda dondurur."""
+    """val_batch etiket/tahmin ciftlerini (etiket, tahmin) sirasinda dondurur.
+
+    Bu izgaralar tasinabilir sunum setine GIRMEZ (tek baslarina 101 MB);
+    taze bir klonda liste bos doner ve cagiran bolum kendini atlar.
+    """
     klasor = rapor_klasoru(scenario)
     folder = klasor / "gorseller" if klasor else None
-    if not folder or not folder.is_dir():
+    if folder is None:
         return []
     names = (
         "val_batch0_labels.jpg", "val_batch0_pred.jpg",
         "val_batch1_labels.jpg", "val_batch1_pred.jpg",
         "val_batch2_labels.jpg", "val_batch2_pred.jpg",
     )
-    return [folder / name for name in names if (folder / name).is_file()]
+    return [y for y in (gorsel_coz(folder / name) for name in names)
+            if y is not None]
 
 
 CURVE_FILES = (

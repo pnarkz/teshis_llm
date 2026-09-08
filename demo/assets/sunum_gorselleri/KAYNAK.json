@@ -1,0 +1,10 @@
+{
+  "amac": "Sunum icin tasinabilir gorsel seti",
+  "kaynak": "reports/ (Git disi, 233 MB)",
+  "not": "Bu bir ALT KUMEDIR ve KUCULTULMUSTUR. Olcumler hicbir zaman bu gorsellerden uretilmez; goruntuler yalnizca inceleme icindir. Yeniden uretmek icin: python scripts/sunum_gorselleri_hazirla.py",
+  "galeri": 26,
+  "kare": 532,
+  "confusion_matrix": 33,
+  "boyut_mb": 28.2,
+  "olcut": "siralama olcutu basina ilk 8, en fazla 1100 px kenar"
+}
