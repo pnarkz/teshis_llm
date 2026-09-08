@@ -29,14 +29,25 @@ Sinif sozlesmesi degismez: `0 tasit`, `1 insan`, `2 UAP`, `3 UAI`.
 ## Yontem ozeti
 
 1. **Saglikli referans (v00):** veri hic bozulmadan, senaryolarla ayni
-   protokolde egitilir. Tum karsilastirmalar buna gore yapilir.
-2. **Tek degisken:** her senaryoda yalnizca bir veri arizasi uygulanir;
+   protokolde egitilir.
+2. **Karsilastirilabilirlik:** bir fark ancak aday ile referans **dort kimlik
+   alaninda da** ayni ise bozulmaya atfedilebilir — baslangic modeli,
+   degerlendirme kumesi, cikarim cozunurlugu, checkpoint. Her olcegin kendi
+   referansi ve kendi gurultu esigi vardir; baska olcegin esigi odunc
+   alinmaz (`teshis/degerlendirme/karsilastirilabilirlik.py`).
+3. **Tek degisken:** her senaryoda yalnizca bir veri arizasi uygulanir;
    egitim protokolu (`senaryolar/egitim_protokolu.yaml`) sabittir.
-3. **Kilitli olcum seti:** tum kosular ayni `val_diagnostic` setinde olculur
-   (1.056 goruntu, 4.014 bbox). Test seti final asamaya kadar kullanilmaz.
-4. **Kirilimli okuma:** toplam mAP bazi bozulmalari tamamen gizler; sinif,
+4. **Kilitli olcum seti:** kosular `val_diagnostic` setinde olculur
+   (1.056 goruntu, 4.014 bbox). Tek istisna D6a'dir: sizintinin olcumu ne
+   kadar iyimser yaptigini gostermek icin **kasitli olarak** sizintili kume
+   uzerinde degerlendirilir ve bu yuzden digerleriyle ayni tabloda okunmaz.
+   Test seti final asamaya kadar kullanilmaz.
+5. **Gurultu tabani:** hicbir sey bozulmadan, yalnizca seed degistirilerek
+   egitilen kontrol kosulari arasindaki yayilim olculur. Bu bandin altinda
+   kalan bir fark, buyuklugu ne olursa olsun rastgelelikten ayirt edilemez.
+6. **Kirilimli okuma:** toplam mAP bazi bozulmalari tamamen gizler; sinif,
    nesne boyutu ve veri kaynagi kirilimlariyla birlikte okunur.
-5. **Kor teshis:** ajan senaryo adlarini gormez, yalnizca anonim `kosu_NN`
+7. **Kor teshis:** ajan senaryo adlarini gormez, yalnizca anonim `kosu_NN`
    metriklerini arac cagirarak okur.
 
 ## Tamamlanan senaryolar
@@ -59,7 +70,10 @@ Ayrintilar ve sayilar icin: **[docs/BULGULAR.md](docs/BULGULAR.md)**
 
 1. **Karsilastirma tabani yanlissa tum sonuclar yanlistir.** Fine-tune
    edilmemis bir modele gore olcum yapmak, bozulma etkisi ile fine-tune
-   etkisini birbirine karistirir (Bakim Gunlugu 2026-08-26).
+   etkisini birbirine karistirir (Bakim Gunlugu 2026-08-26). Ayni hata daha
+   sinsi bir bicimde tekrarladi: farkli checkpoint veya farkli baslangic
+   modeliyle uretilmis **saglikli** kosular tek bir referansla tartilinca
+   "guclu bozulma kaniti" gorundu (2026-09-07).
 2. **Toplam mAP yalan soyleyebilir.** D3b, D4 ve D5'in tamami toplam
    metriklerde gorunmez; yalnizca dogru kirilimla ortaya cikar.
 3. **Olcum setinin temizligi ve cesitliligi metodolojinin merkezindedir.**
@@ -100,12 +114,21 @@ Diger komutlar: **[docs/CALISTIRMA.md](docs/CALISTIRMA.md)**
 - **Yapilmadi:** Asama 2 (calisma zamani servisi), final test kosusu.
 
 - **Sartname boslugu:** Gurultu tabani uc kontrol kosusuna cikarildi ve
-  **bes iddia zayifladi**; D6b artik hicbir metrikte gurultuyu asmiyor.
-  Ajanin yanlis pozitif orani hala dar bir kanita dayaniyor (2 kontrol,
-  Wilson [0.000, 0.658]); seed 13 ve 21 ajana verilmeyi bekliyor.
-  Kanit sozlesmesi (`kanit.json`) 24/24 kosuda TAM. Yayimlanmis guven
+  **yedi iddia zayifladi**; D6b artik hicbir metrikte gurultuyu asmiyor.
+  (Bu sayi artik elle yazilmiyor: demonun karsilastirma sayfasi defterden
+  turetir. Onceden "bes" yaziyordu ve E1 ile E2 atlanmisti.)
+  Kanit sozlesmesi (`kanit.json`) 26/26 kosuda TAM. Yayimlanmis guven
   araliklari sartnamedeki tabakali bootstrap yerine Wilson ile hesaplandi
   (~1.5 kat dar). Ayrinti: [docs/BULGULAR.md](docs/BULGULAR.md)
   'Sartnameye Uyum Denetimi'.
+
+- **Karsilastirilabilirlik (2026-09-07):** Demo butun kosulari tek bir
+  referansla (`v00_saglikli`) karsilastiriyordu ve bu, hicbir bozulma
+  icermeyen kosulari "guclu bozulma kaniti" olarak etiketliyordu
+  (`v00_saglikli last_pt`, `v00n`). Artik her kosu yalnizca KENDI
+  olcegindeki referansla karsilastirilir - ayni baslangic modeli,
+  degerlendirme kumesi, cozunurluk ve checkpoint
+  (`teshis/degerlendirme/karsilastirilabilirlik.py`). Ayni filtre ajan
+  araclarinda zaten vardi; kural iki yerde yasayinca biri geride kaldi.
 
 Guncel ayrinti: [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md)

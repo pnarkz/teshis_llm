@@ -42,6 +42,9 @@ demo/
 dosyalardan gelir (`teshis/degerlendirme/senaryo_ozeti.py`); elle yazılan tek
 alan senaryonun ne ölçtüğüdür (`senaryolar/anlatim.yaml`). Ekran, bulgunun ne
 kadar sağlam olduğunu kendisi söyler: *güçlü* / *zayıf* / *gürültü içinde*.
+Bu üç derece **yalnızca** kendi ölçeğinde hem referansı hem gürültü eşiği
+olan koşulara verilir; diğerleri *kontrol koşusu*, *referans*, *eşlenik
+ölçüm*, *eşik yok* veya *karşılaştırılamaz* olarak işaretlenir.
 
 Önceki sürümde bu bilgi `app.py` içinde 24 girdilik elle tutulan bir sözlükte
 duruyordu ve geride kalıyordu: D6a, D6b, v00n ve D1n eklendiğinde demo onları
@@ -54,7 +57,17 @@ API harcamaz, her zaman çalışır ve **daha denetlenebilirdir** — ajanın g�
 kanıt yerelde yeniden üretilir, çünkü araçlar deterministiktir.
 
 **Sınırlar birinci sınıf içeriktir.** "Neyi henüz söyleyemiyoruz" gizlenmez;
-gürültü tabanı ölçüldükten sonra beş iddianın geri çekildiği açıkça yazar.
+gürültü tabanı ölçüldükten sonra geri çekilen iddialar açıkça yazar. O sayı
+da elle tutulmuyor: karşılaştırma sayfası hem eşik büyümesi tablosunu hem
+zayıflayan iddialar listesini defterden türetir. Elle yazıldığı dönemde
+"beş" diyordu ve E1 ile E2 atlanmıştı.
+
+**Karşılaştırma ölçeği görünürdür.** Her koşu yalnızca dört kimlik alanı
+(başlangıç modeli, değerlendirme kümesi, çıkarım çözünürlüğü, checkpoint)
+kendisiyle aynı olan sağlıklı referansla karşılaştırılır
+(`teshis/degerlendirme/karsilastirilabilirlik.py`). Tek referans kullanıldığı
+dönemde `v00_saglikli last_pt` — hiçbir bozulma içermeyen bir koşu — "güçlü
+bozulma kanıtı" olarak etiketleniyordu.
 
 ## Görsel dil
 

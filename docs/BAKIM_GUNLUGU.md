@@ -9,6 +9,107 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-09-07 — Karsilastirilabilirlik: saglikli kosular "guclu bozulma" gorunuyordu
+
+**Hata.** Demo katmani butun kosulari tek bir referansla (`v00_saglikli`)
+karsilastiriyordu. Sonuc, projenin kendi metodolojisiyle celisen bir yanlis
+pozitif:
+
+| Kosu | Icinde bozulma | Eski etiket |
+|---|---|---|
+| `v00_saglikli last_pt` | yok, yalnizca checkpoint farkli | **guclu** (3 metrik) |
+| `v00n` | yok, saglikli yolo26n referansi | **guclu** (4 metrik) |
+| `D6a` | var ama baska kumede olculdu | guclu |
+| `D2b final_best` | var ama baska baslangic modeli | guclu |
+
+Ayni filtre ajan araclarinda (`teshis/ajan/araclar.py::ajana_uygun_mu`) zaten
+vardi. Kural iki yerde yasiyordu ve biri geride kaldi - bu projede
+tekrarlayan oruntunun aynisi.
+
+**Duzeltme.** `teshis/degerlendirme/karsilastirilabilirlik.py` tek kaynak
+olarak eklendi. Bir fark ancak aday ile referans dort kimlik alaninda da ayni
+ise bozulmaya atfedilebilir: baslangic modeli, degerlendirme kumesi, cikarim
+cozunurlugu, checkpoint. Her olcegin kendi referansi ve kendi esigi vardir;
+baska olcegin esigi odunc alinmaz.
+
+Uc yeni durum tanimlandi:
+
+- **eslenik olcum** — ayni agirlik dosyasi, tek degisen cikarim ayari
+  (E4: 512 px; D6a: sizintili kume). Egitim rastgeleligi devrede degildir,
+  fark tamamen o ayarindir.
+- **esik yok** — referansi var ama o olcekte kontrol kosusu yok (last.pt
+  ailesinin tamami, D1n).
+- **karsilastirilamaz** — o olcekte saglikli referans hic yok
+  (D2b final_best). Aciklama, eksik olan olcumu adiyla soyler.
+
+Ayrica **kontrol kosulari artik derecelendirilmiyor**. Kendi bandindan
+cikarilinca (leave-one-out) kalan iki gozlemin araligi daraliyor ve kontrol
+"uc deger" gorunuyordu: `C2 seed21` bu sekilde "guclu" cikti. Kontrol kosusu
+olcum aracidir, olcum nesnesi degil. Ekran bunu gizlemiyor - "ayni olcutle
+tartilsaydi su metriklerde esigi asardi" diye yaziyor, cunku olcutun
+oynakligi bulgunun kendisi.
+
+Sonuc: 26 kosunun 12'si derecelendiriliyor, 14'u derecelendirilmiyor ve
+nedeni ekranda yaziyor.
+
+**Ayni turdan bulunan digerleri.**
+
+- `ne_sabit_kaldi()` degerlendirme setini SABIT "val_diagnostic (kilitli, hic
+  degismez)" yaziyordu; D6a kasitli olarak sizintili kumede olculur. Sayfa
+  kendi kendisiyle celisiyordu ve **eski test tam da bu celiskiyi
+  dogruluyordu** (her ozette "val_diagnostic" ariyordu).
+- Karsilastirma sayfasindaki "esik buyumesi" ve "zayiflayan bes iddia"
+  tablolari elle yazilmisti. Turetilince **bes degil yedi** cikti: E1 ve E2
+  atlanmis. README ve SUNUM.md guncellendi.
+- Checkpoint kutusundaki dort elle yazilmis fark, tablo kendi referansina
+  gecince onunla celisti (D4 icin -0.0329 yaziyordu, kendi best.pt'sine gore
+  dogrusu -0.0105). Kutu artik turetiliyor; `tests/test_demo_konsol.py`
+  kutuda elle yazilmis sayi kalmadigini kontrol ediyor.
+- `senaryolar/anlatim.yaml` icinde `E3` **iki kez** tanimliydi; YAML sessizce
+  sonuncuyu aliyor, ilk tanim hicbir yerde gorunmuyordu.
+- `senaryolar/egitim_protokolu.yaml` hala "D1 yeniden kosulmali" diyordu;
+  D1 2026-08-25'te zaten yeniden kosulmustu.
+- README "kanit sozlesmesi 24/24" diyordu; dogrusu 26/26.
+
+**Ajan kayitlari.** Eski kayitlar yalnizca cagri ADLARINI tasiyor, arac
+cevaplarini degil. Demo ise ciktilari bugun yeniden uretip "ajanin gordugu
+kanit tam olarak budur" diyordu. Kirilim araclarina sonradan gurultu bandi
+alanlari eklendigi icin bu **yanlis**. Artik kayitta cevap varsa "kayittan,
+birebir", yoksa "yaklasik yeniden uretim" diye isaretleniyor. Yeni kayitlara
+`arac_surumu` parmak izi (arac kaynak dosyalarinin hash'i) yaziliyor.
+
+**Kor kimlik guvencesi.** `kosu_NN` takma adlari defter sirasindan turetilir.
+Defter yeniden siralanirsa butun adlar kayar ve demo "gercegi goster"
+ekraninda **yanlis senaryo adi** acar - hicbir hata vermeden.
+`tests/test_ajan_kimlik_kaymasi.py` kaydedilmis cevap anahtarinin bugunku
+haritayla ayni seyi soyledigini dogruluyor.
+
+**Arayuz dili.** Onceki dil testi sabit bir isaret-kelime listesine
+dayaniyordu ve KISMEN cevrilmis cumleleri kaciriyordu ("saglikli bir referans
+egitilir" - Turkce karakter var, ama "egitilir" cevrilmemis). Test artik
+sozlugu kendisi kuruyor: dosyalardaki dogru yazilmis Turkce kelimelerin ASCII
+karsiliklarini cikarip ayni metinlerde ariyor. Bu yontemle 59 satir bulundu
+(27'si tasarim sayfasinda) ve cevrildi.
+
+**Kurulum ve ortam.** `pyproject.toml` bagimlilik tanimliyor ve ekstralara
+ayiriyor (`demo`, `live-agent`, `egitim`, `test`) - boylece bir sunum
+makinesine kurulum Ultralytics/CUDA indirmiyor. `requirements-demo.txt`
+`google-genai` icermiyordu; temiz bir ortamda canli ajan ImportError
+verecekti. `config.local.yaml` (Git disi) destegi ve goreli yol cozumu
+eklendi, `config.example.yaml` yazildi. Demo konsolu `config.yaml`'i hic
+kullanmiyor; yol yanlis olsa bile sunum calisir.
+
+**Kucuk duzeltmeler.** Kaldirilan `use_container_width` cagrilari
+`width="stretch"` oldu. Gurultu bandi grafiginde ayrim artik yalnizca renkte
+degil, seklde de (dolu kare / ici bos daire). `demo/data_loader.py`
+okumalari `st.cache_data` ile onbellege alindi. Karsilastirma tablosuna
+olcek filtresi eklendi.
+
+**Testler.** `test_karsilastirilabilirlik.py` (10), `test_anlatim.py` (3),
+`test_ajan_kimlik_kaymasi.py` (2), `test_sunum_metni.py` (4) eklendi.
+Merkez guvence su tek cumle: *bozulmasiz bir kosu asla bozulma kaniti olarak
+derecelendirilmez.*
+
 ### 2026-09-02 — Iki hata: `--kosu` sonucu diske yazmiyordu, 503 kota sanildi
 
 **Hata 1: kaybolan API cagrilari.** `teshis/ajan/ajan.py --kosu <id>` sonucu

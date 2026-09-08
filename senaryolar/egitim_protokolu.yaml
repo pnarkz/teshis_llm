@@ -56,13 +56,16 @@ bilinen_sapmalar:
   - kosu: experiments/run_20260817_222323_D1_42
     senaryo: D1
     sapan_alanlar: {lr0: 0.0005, warmup_epochs: 2}
-    durum: duzeltilmedi_yeniden_kosu_onerilir
+    durum: cozuldu_yeniden_kosuldu
+    yerine_gecen_kosu: experiments/run_20260825_223435_D1_42
     not: >
       Bu D1 kosusu bu protokol dosyasi olusturulmadan once, teshis/egitim/kos.py
-      icindeki farkli lr0/warmup_epochs degerleriyle uretildi. results.csv ve
-      README'deki D1 sonuc tablosu bu kosuya aittir. D2a/D2b/D3 ile dogrudan
-      lr0/warmup farkindan bagimsiz bir karsilastirma icin D1'in bu sabit
-      protokolle yeniden kosulmasi (ve raporun guncellenmesi) gerekir.
+      icindeki farkli lr0/warmup_epochs degerleriyle uretildi. 2026-08-25'te
+      ortak protokolle (lr0=0.001, warmup_epochs=3) YENIDEN KOSULDU; defterdeki
+      D1 satiri artik yeni kosuya (run_id d1_v2_20260825) aittir. Eski kosu
+      reports/eski_D1_protokol_sapmali altinda kayit olarak durur ve hicbir
+      iddiaya dayanak degildir. Kayit burada birakiliyor cunku sapmanin
+      kendisi bir bulgudur: genel kaybin cogu protokol artefaktiymis.
 
 kapsam_disi:
   - dosya: teshis/egitim/v3_iyilestirme.py

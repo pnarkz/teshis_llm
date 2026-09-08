@@ -74,8 +74,11 @@ egitilen dort model arasinda belirgin fark cikiyor. Uc kontrol kosusunda
 
 Bu, bircok senaryonun "etkisinden" buyuk. Ilk olcumu tek bir kontrol
 kosusuyla yapmistik ve gurultuyu **4 kat kucuk** gosteriyordu; uc kosuya
-cikinca bes iddia zayifladi ve bir senaryo (D6b) **tamamen bulgu olmaktan
-cikti** — hicbir metrikte rastgelelikten ayirt edilemiyor.
+cikinca **yedi iddia zayifladi** ve bir senaryo (D6b) **tamamen bulgu
+olmaktan cikti** — hicbir metrikte rastgelelikten ayirt edilemiyor.
+
+(Bu sayi bir donem "bes" yaziyordu. Elle sayilmisti ve E1 ile E2 atlanmisti;
+demonun karsilastirma sayfasi artik iki tabloyu da defterden turetiyor.)
 
 Ayrica egitim suresi bile seed'e bagli: ayni protokol 11 ile 30 epoch
 arasinda durdu.
@@ -255,3 +258,38 @@ Projenin bugune kadarki en degerli ciktisi tek bir sayi degil, uc gozlem:
 
 Ve bir durustluk notu: ajanin teshis basarisi hakkinda kesin konusmak icin
 gereken tekrar sayisina **henuz ulasilmadi**.
+
+
+---
+
+## 2.6 Ayni olcekte olmayan seyler karsilastirilmaz
+
+Demonun karsilastirma katmani butun kosulari tek bir referansla
+(`v00_saglikli`) tartiyordu. Bu, projenin kendi metodolojisine aykiriydi ve
+somut bir yanlis pozitif uretti:
+
+    v00_saglikli last_pt  ->  "guclu bozulma kaniti" (uc metrik esigi asiyor)
+
+O kosuda **hicbir bozulma yok**. Tek farki checkpoint secimi. Ayni sekilde
+`v00n` — saglikli bir yolo26n referansi — dort metrikte birden "bozulmus"
+gorunuyordu; cunku farkli bir baslangic modelinin sonucu main_model
+referansiyla kiyaslaniyordu.
+
+Kural artik acik: bir fark ancak aday ile referans **dort kimlik alaninda da**
+ayni ise bozulmaya atfedilebilir — baslangic modeli, degerlendirme kumesi,
+cikarim cozunurlugu, checkpoint. Her olcegin kendi referansi ve kendi
+gurultu esigi vardir; baska bir olcegin esigi odunc alinmaz.
+
+Sonuc olarak 26 kosunun **12'si** derecelendiriliyor; kalan 14'u
+derecelendirilmiyor ve nedeni ekranda yaziyor:
+
+| Durum | Anlami |
+|---|---|
+| kontrol kosusu | Bozulma icermez; olcum aracidir, olcum nesnesi degil |
+| referans | Kendi olceginin tabani; kendisiyle karsilastirilamaz |
+| eslenik olcum | Ayni agirliklar, tek degisen cikarim ayari (E4, D6a) |
+| esik yok | Referansi var ama o olcekte kontrol kosusu yok (last.pt ailesi) |
+| karsilastirilamaz | O olcekte saglikli referans hic yok (D2b final_best) |
+
+> **Ders:** ayni kural iki yerde yasarsa biri geride kalir. Bu filtre ajan
+> araclarinda zaten vardi; demo katmaninda yoktu.
