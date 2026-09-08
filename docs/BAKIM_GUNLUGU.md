@@ -9,6 +9,92 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-09-08 — Konsol yeniden tasarlandi: koyu tema, yedi bolum, veri anlatimi
+
+**Sorun.** Konsol islevseldi ama rapor gibi okunuyordu: kirik beyaz zemin,
+metin ve tablo agirlikli ekranlar. Daha ciddi eksikler de vardi:
+
+- **Veri anlatimi hic yoktu.** Sunumda "veri neye benziyor?" sorusu gelince
+  klasor acmak gerekiyordu.
+- **Saglikli referans modelin kunyesi yoktu.** Butun senaryolarin tabani o
+  modeldir ama ayarlari hicbir yerde gorunmuyordu.
+- **Senaryo sayfasi yuzeyseldi.** "Ne kadar uygulandi", "fark gorulmediyse
+  neden", "ne soylenemez" gibi sorularin cevabi yoktu.
+- **Canli ajan kirilgandi.** Anahtar yok / paket yok / kota bitti / 503
+  durumlari ayni gorunuyordu.
+
+**Yapilanlar.**
+
+*Tema.* Koyu lacivert bir teknik gozlem konsolu. Renk artik SEMANTIK: ayni
+renk her sayfada ayni seyi soyler (referans notr, aday mavi, guclu kanit
+yesil, gurultu icinde amber, kritik kirmizi). Sozlesme `stil.SEVIYE`
+sozlugunde tek yerde durur. `grafik.py` butun grafiklerin tek kaynagi -
+onceden her sayfa kendi eksen/renk/tooltip ayarini yaziyordu ve
+"referans" bir sayfada gri, digerinde maviydi.
+
+*Gezinme.* Yedi bolum: Genel Bakis, Veri ve Saglikli Model, Deney
+Senaryolari, Karsilastirma ve Gurultu, Hata Analizi, LLM Teshis Ajani,
+Sonuclar ve Sinirlamalar. Sira yalnizca bir oneri; adim adim sunum akisi
+BILEREK eklenmedi. Kenar cubuguna sistem durumu paneli eklendi.
+
+*Veri sayfasi (yeni).* Split/sinif/kaynak dagilimlari, goruntu basina
+nesne, saglik taramasi - hepsi `reports/veri_raporu.json` ve
+`val_diagnostic/manifest.json`'dan turetilir. Etiketli ornek galerisinde
+kutular CALISMA ZAMANINDA etiket dosyasindan cizilir. Model kunyesi
+kosunun kendi `args.yaml` dosyasindan okunur; `optimizer: auto` iken beyan
+edilen lr0'in baglayici OLMADIGI uyarisi kunyede gorunur.
+
+*Senaryo sayfasi.* Filtreli kart izgarasi (aile, kanit gucu, checkpoint,
+model) + secilen kosunun bes sekmelik tam analizi: deney kurgusu,
+karsilastirma sablonu (mutlak fark, goreli degisim, esik, karar),
+kirilimlar, gorseller, ajan iliskisi. Fark gorulmediginde olasi nedenler
+ayri bir kutuda - hepsi bu projede GERCEKTEN gozlenmis mekanizmalar.
+"Ne soylenebilir / ne soylenemez" ayrimi her senaryoda var.
+
+*Karsilastirma.* Coklu senaryo secimi (en fazla dort, referanslari otomatik
+eklenir), CSV indirme, "ilk yorum -> duzeltilmis yorum" tablosu.
+
+*Hata analizi.* Ayni kare icin saglikli model ve senaryo modeli yan yana
+(30 kare ortusuyor). Kare basina otomatik aciklama: kac nesne vardi, kaci
+bulundu, kaci kacirildi - GT sayilari kilitli tani setinin etiket
+dosyalarindan okunur, uydurulmaz.
+
+*Canli ajan.* On kontrol (anahtar, paket, model, kosu kimligi, referans
+metrikleri, kirilim dosyalari) ve yedi ayri hata turu. Basarisiz cagri
+uygulamayi cokertmiyor; kayitli moda gecis oneriliyor ve bunun canli sonuc
+OLMADIGI yaziliyor. Model adi ortam degiskeniyle degistirilebiliyor.
+
+**Bu turda bulunan hatalar.**
+
+- Oneri etiketleri ("belirgin bir bozulma...") kosu secicisinde yaziyordu
+  ve senaryo adi acilmadan izleyiciye bozulma olup olmadigini sizdiriyordu.
+  Korluk yalnizca ajan icin degil salondaki herkes icin gecerli olmali.
+- Galeri kaynak grubu icin kendi kuralini yaziyordu ("__ oncesi") ve
+  `frame_008172_...` dosyalarini "bilinmiyor" sayiyordu; olcum katmani
+  onlari tf2026 grubuna koyuyor. Filtre metrik tablolariyla tutmuyordu.
+- Arayuz dili testi yanlis pozitif uretiyordu: vurgu icin buyuk yazilan
+  "KENDİ" ve cumle basindaki "İkisi" katlaninca "kendi"/"ikisi" oluyor ve
+  sozluge giriyordu - sonra her DOGRU "kendi" cevrilmemis sanildi.
+  Sozluk kurulurken 'İ' artik sayilmiyor: 'İ' -> 'I' bir bilgi kaybi degil,
+  buyuk-kucuk harf meselesidir.
+- `val_diagnostic` Git disi oldugu icin taze bir klonda galeri bos
+  kalirdi. `demo/assets/ornekler` altina sinif basina 3 goruntuluk
+  tasinabilir bir alt kume eklendi (dort sinifi da kapsiyor).
+- Streamlit'in uyari kutulari koyu temada okunmuyordu.
+- Referansi olmayan kosularda tablo hucreleri harfi harfine "None"
+  yaziyordu; sayisal tutulunca bos hucre olarak gorunuyor - dogru okuma da
+  budur: deger yok, sifir degil.
+
+**Durustluk notu.** Hata galerisi goruntuleri onceden cizilir ve iki renk
+kullanir (yesil = gercek etiket, kirmizi = tahmin). Istenen TP/FP/FN/dusuk
+IoU renk ayrimi o goruntulerde YOKTUR; olmayan bir sozlesmeyi varmis gibi
+anlatmak yerine gercek sozlesme yazildi ve sayisal ayrim tabloda verildi.
+
+**Testler.** `test_konsol_veri_katmani.py` (15), `test_canli_ajan_guvenligi.py`
+(20), `test_tema_ve_grafik.py` (14) eklendi. `test_demo_konsol.py` bolum
+listesini artik `app.py`'nin kendi sozlugunden turetiyor. Toplam **460
+test geciyor**.
+
 ### 2026-09-07 — Karsilastirilabilirlik: saglikli kosular "guclu bozulma" gorunuyordu
 
 **Hata.** Demo katmani butun kosulari tek bir referansla (`v00_saglikli`)

@@ -210,6 +210,17 @@ def boyut_bantlarini_doldur(kayitlar: list[dict], varsayilan_kenar: int = 640):
     return kayitlar
 
 
+# Tasinabilir setin yaninda duran ust veri. Ekranda GORUNMEZ; dosyaya
+# yazilir, bu yuzden proje icindeki diger ust veri gibi ASCII kalir.
+KAYNAK_USTVERI = {
+    "amac": "Sunum icin tasinabilir ornek alt kumesi",
+    "kaynak": "val_diagnostic (kilitli tani seti)",
+    "not": ("Bu bir ALT KUMEDIR; metrikler her zaman tam kilitli set "
+            "uzerinde olculur. Galeri yalnizca gorsel ornekleme icindir."),
+    "secim_kalibi": "sinif basina en fazla {n} goruntu",
+}
+
+
 def tasinabilir_set_olustur(adet_sinif_basina: int = 3,
                             hedef: Path = YEDEK_KOKU) -> dict[str, Any]:
     """Yerel tani setinden kucuk, tasinabilir bir ornek seti kopyalar.
@@ -248,18 +259,20 @@ def tasinabilir_set_olustur(adet_sinif_basina: int = 3,
             kopyalanan.append(ad)
 
     (hedef / "KAYNAK.json").write_text(
-        json.dumps({
-            "amac": "Sunum icin tasinabilir ornek alt kumesi",
-            "kaynak": "val_diagnostic (kilitli tani seti)",
-            "secim": f"sinif basina en fazla {adet_sinif_basina} goruntu",
-            "not": ("Bu bir ALT KUMEDIR; metrikler her zaman tam kilitli set "
-                    "uzerinde olculur. Galeri yalnizca gorsel ornekleme icindir."),
-            "goruntu": len(kopyalanan),
-        }, ensure_ascii=False, indent=2),
+        json.dumps(
+            {k: v for k, v in KAYNAK_USTVERI.items() if k != "secim_kalibi"}
+            | {"secim": KAYNAK_USTVERI["secim_kalibi"].format(n=adet_sinif_basina),
+               "goruntu": len(kopyalanan)},
+            ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
     return {"durum": "tamam", "kopyalanan": len(kopyalanan), "hedef": str(hedef)}
 
 
 if __name__ == "__main__":
+    # Betik olarak calistirildiginda proje kokunu yola ekle: modul demo/
+    # altinda durur ama teshis paketini kullanir.
+    import sys
+
+    sys.path.insert(0, str(KOK))
     print(tasinabilir_set_olustur())

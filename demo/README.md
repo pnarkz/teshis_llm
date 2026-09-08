@@ -12,9 +12,15 @@ python -m pip install -r requirements-demo.txt
 python -m streamlit run demo/app.py
 ```
 
-Tema `.streamlit/config.toml` içinde **açık** olarak sabitlenmiştir.
-Görünümü izleyicinin işletim sistemi temasına bırakmak sunumda risklidir:
-koyu temada metin renkleri çakışıyor ve içerik neredeyse görünmez oluyordu.
+Tema `.streamlit/config.toml` içinde **koyu** olarak sabitlenmiştir.
+Görünümü izleyicinin işletim sistemi temasına bırakmak sunumda risklidir.
+Renkler `stil.py` içindeki sözleşmeyle birebir aynı tutulur; ayrışırsa
+Streamlit'in kendi bileşenleri (seçici, sekme, tablo) sayfadan kopuk
+görünür. `tests/test_tema_ve_grafik.py` bunu korur.
+
+Sol menüdeki sıra yalnızca bir öneridir. **Adım adım sunum akışı yoktur** —
+"sunumu başlat / ileri / geri" gibi bir sihirbaz eklenmedi; gelen soruya
+göre istenen bölüme doğrudan geçilir.
 
 ## Yapı
 
@@ -24,16 +30,23 @@ değiştirmek diğerlerine dokunmayı gerektirmez.
 
 ```text
 demo/
-  app.py            yalnizca yonlendirme ve stil (~80 satir)
-  stil.py           ortak gorsel dil; renk anlamlari her sayfada ayni
-  data_loader.py    rapor okuma + ajan katmani
+  app.py            yalnizca yonlendirme, tema ve kenar cubugu (~90 satir)
+  stil.py           gorsel dil: renk SOZLESMESI, kart/rozet/KPI bilesenleri
+  grafik.py         butun grafiklerin tek kaynagi (tema, hover, renk)
+  data_loader.py    rapor okuma + ajan katmani (st.cache_data ile onbellekli)
+  veri_seti.py      veri seti ve model kunyesi turetmeleri
+  gorseller.py      etiketli ornek bulma + kutu cizme (+ tasinabilir set)
+  ajan_katmani.py   canli ajan on kontrolu, hata siniflandirmasi
+  sistem_durumu.py  kenar cubugundaki "ne var ne yok" paneli
+  assets/ornekler/  taze bir klonda galeri bos kalmasin diye kucuk ornek seti
   bolumler/
-    genel_bakis.py     proje, durum, uc ana bulgu
-    tasarim.py         kontrollu deney kurgusu + NEYI SOYLEYEMIYORUZ
-    senaryolar.py      kosu basina deney ozeti ve kanit
-    karsilastirma.py   capraz tablo + gurultu tabani
-    hata_analizi.py    siralanmis hata ornekleri
+    genel_bakis.py     proje, surec semasi, etki haritasi, uc ana bulgu
+    veri_ve_model.py   veri seti, etiketli ornekler, saglikli referans model
+    senaryolar.py      filtreli kart izgarasi + kosu basina tam analiz
+    karsilastirma.py   genel tablo, coklu karsilastirma, gurultu, checkpoint
+    hata_analizi.py    saglikli vs senaryo, kare basina otomatik aciklama
     ajan.py            kor teshis: kayitli / canli
+    sonuclar.py        hipotezler, bilimsel sonuclar, sinirlamalar
 ```
 
 ## Üç tasarım kararı

@@ -290,9 +290,7 @@ def goster() -> None:
     if kosu_id in ajan_katmani.ONERILEN_CANLI:
         with st.expander("Sunum notu — bu koşu neden önerildi? (gerçeği açar)"):
             st.markdown(
-                f"**{kosu_id}:** {ajan_katmani.ONERILEN_CANLI[kosu_id]}
-
-"
+                f"**{kosu_id}:** {ajan_katmani.ONERILEN_CANLI[kosu_id]}\n\n"
                 "Bu not yalnızca sunumu yapan içindir ve ajana gönderilen "
                 "istekte yer almaz. Kapalı tutulursa izleyici de ajanla aynı "
                 "bilgiyle başlar."

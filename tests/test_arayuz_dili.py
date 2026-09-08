@@ -39,6 +39,13 @@ HEDEFLER = [p for p in sorted(ROOT.glob("demo/**/*.py"))
 
 TURKCE = re.compile("[çğıöşüÇĞİÖŞÜ]")
 KATLA = str.maketrans("çğıöşüÇĞİÖŞÜ", "cgiosuCGIOSU")
+# Sozluk kurulurken 'İ' SAYILMAZ. Nedeni somut bir yanlis pozitif: vurgu
+# icin buyuk yazilan "KENDİ" ve cumle basindaki "İkisi" katlaninca "kendi"
+# ve "ikisi" oluyor - ikisi de zaten DOGRU yazilmis Turkce kelimeler.
+# Sozluge girince her dogru "kendi" cevrilmemis sanildi. 'İ' -> 'I'
+# donusumu bir bilgi kaybi degil, yalnizca buyuk-kucuk harf meselesidir;
+# 'ş' -> 's' gibi degil.
+AYIRT_EDICI = re.compile("[çğıöşüÇĞÖŞÜ]")
 DIZE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 YER_TUTUCU = re.compile(r"\{[^}]*\}")
 # Kod gibi görünen belirteçler (dosya adı, tanımlayıcı, yol) kapsam dışı.
@@ -47,8 +54,9 @@ KOD_BELIRTECI = re.compile(r"\S*[_./\\]\S*")
 # yakalanmamalı.
 KELIME = re.compile(r"(?<![A-Za-zçğıöşüÇĞİÖŞÜ])([A-Za-z]{4,})(?![A-Za-zçğıöşüÇĞİÖŞÜ])")
 
-# Ajana gönderilen araç açıklamaları ASCII kalır: onlar arayüz değil, prompt.
-MUAF = {("gurultu.py", "BAND_ACIKLAMASI")}
+# Arayüz OLMAYAN metinler: ajana gönderilen araç açıklamaları (onlar prompt)
+# ve dosyaya yazılan üst veri. İkisi de ekranda görünmez.
+MUAF = {("gurultu.py", "BAND_ACIKLAMASI"), ("gorseller.py", "KAYNAK_USTVERI")}
 
 
 def _ui_dizeleri(yol: Path):
@@ -85,7 +93,7 @@ def _sozluk() -> set[str]:
     for yol in HEDEFLER:
         for _, metin in _ui_dizeleri(yol):
             for k in re.findall(r"[A-Za-zçğıöşüÇĞİÖŞÜ]{4,}", metin):
-                if TURKCE.search(k):
+                if AYIRT_EDICI.search(k):
                     kelimeler.add(k.translate(KATLA).lower())
     return kelimeler
 
