@@ -1,12 +1,17 @@
 # Konsol sunumda kullanilacak; gorunumu izleyicinin isletim sistemi temasina
-# birakmak riskli. Acik tema SABITLENIR - koyu temada metin renkleri CSS ile
-# catisiyor ve icerik neredeyse gorunmez hale geliyordu.
+# birakmak riskli - tema SABITLENIR.
+#
+# Once acik tema sabitlenmisti (koyu temada metin renkleri CSS ile catisiyor
+# ve icerik gorunmez oluyordu). Konsol koyu lacivert bir teknik panele
+# donusturuldugunde tema burada da koyuya cevrildi; renkler stil.py'deki
+# sozlesmeyle BIREBIR ayni tutulur, yoksa Streamlit'in kendi bilesenleri
+# (secici, sekme, tablo) sayfadan ayrisir.
 [theme]
-base = "light"
-primaryColor = "#1f4e79"
-backgroundColor = "#fbfaf8"
-secondaryBackgroundColor = "#f4f2ee"
-textColor = "#2b2b2b"
+base = "dark"
+primaryColor = "#4c8dff"
+backgroundColor = "#0b1220"
+secondaryBackgroundColor = "#131c2e"
+textColor = "#e8ecf4"
 font = "sans serif"
 
 [server]

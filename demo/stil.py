@@ -1,59 +1,133 @@
-"""Konsolun ortak gorsel dili ve kucuk gosterim yardimcilari.
+"""Konsolun gorsel dili: renk sozlesmesi, bilesenler, kucuk gosterim yardimcilari.
 
 Tasarim kararlari
 -----------------
-Onceki surum fosforlu terminal estetigi kullaniyordu (koyu zemin, neon yesil,
-buyuk sayaclar). Bu, bir arastirma panelinden cok bir gosteriye benziyordu.
-Yeni dil sakin ve akademik:
+Onceki surum kirik beyaz, rapor gorunumlu bir sayfaydi. Yeni dil koyu
+lacivert bir **teknik gozlem konsolu**: veri one cikar, metin geri ceker.
+Neon, terminal estetigi, animasyon ve emoji yoktur - bu bir arastirma
+paneli, bir gosteri degil.
 
-- kirik beyaz zemin, koyu gri metin
-- TEK vurgu rengi; uyari ve olumlu durum icin ayri iki renk
-- emoji yok, animasyon yok, pazarlama dili yok
-- sayilar her zaman "deger + referansa fark" olarak
-- her grafigin altinda tek cumlelik yorum
+RENK SOZLESMESI (butun sayfalarda AYNI anlam)
+---------------------------------------------
+    REFERANS   sağlıklı referans koşusu - her grafikte aynı nötr gri-mavi
+    ADAY       incelenen koşu - ana vurgu mavisi
+    IKINCIL    ikinci karşılaştırma serisi - camgöbeği
+    GUCLU      gürültü eşiğini birden fazla metrikte aşan kanıt - yeşil
+    UYARI      gürültü içinde kalan / zayıf kanıt - amber
+    KRITIK     ağır bozulma, ıraksama, veri kaybı - kırmızı
+    NOTR       derecelendirilemeyen durum - gri
 
-Renk anlamlari sabittir ve butun sayfalarda ayni kalir:
-    VURGU   incelenen kosu
-    NOTR    referans (v00) - her grafikte ayni renk
-    UYARI   gurultu icinde kalan / zayif kanit
-    OLUMLU  gurultu esigini belirgin asan kanit
+Renk asla tek basina anlam tasimaz: her yerde sekil, ikon veya metin
+ikinci bir kanal olarak eklenir (renk korlugu).
 """
 
 from __future__ import annotations
 
 import streamlit as st
 
-VURGU = "#1f4e79"     # incelenen kosu
-NOTR = "#8a8a8a"      # referans
-UYARI = "#a8611c"     # zayif / gurultu icinde
-OLUMLU = "#2f6b4f"    # guclu kanit
-ZEMIN = "#fbfaf8"
-METIN = "#2b2b2b"
-CIZGI = "#e3e0da"
+# --- Palet -----------------------------------------------------------------
+
+ZEMIN = "#0b1220"          # ana arka plan: lacivert-siyah
+YUZEY = "#131c2e"          # panel yuzeyi
+YUZEY_2 = "#1a2438"        # ikincil yuzey (tablo basligi, hover)
+CIZGI = "#243046"          # ince cerceve
+METIN = "#e8ecf4"          # kirik beyaz
+METIN_SOLUK = "#9aa7bd"    # aciklama grisi
+
+ADAY = "#4c8dff"           # ana vurgu: parlak ama yormayan mavi
+IKINCIL = "#2dd4bf"        # camgobegi
+REFERANS = "#7d8aa3"       # notr gri-mavi: referans serisi
+GUCLU = "#3fb984"          # yesil
+UYARI = "#e0a33e"          # amber
+KRITIK = "#e5544b"         # kirmizi
+NOTR = "#6b7793"
+
+# Kanit seviyesi -> (ekranda gorunen ad, rozet turu, kisa aciklama).
+# Derecelendirilen uc seviye ile derecelendirilmeyen bes seviye BILEREK
+# ayri tutulur: bir kontrol kosusunu "guclu" diye etiketlemek, projenin
+# olcmeye calistigi hatanin ta kendisidir.
+SEVIYE = {
+    "guclu": ("güçlü", "guclu", "Birden fazla metrik gürültü eşiğini aşıyor"),
+    "zayif": ("zayıf", "uyari", "Yalnızca tek metrik eşiği aşıyor"),
+    "gurultu icinde": ("gürültü içinde", "uyari",
+                       "Hiçbir metrik gürültü eşiğini aşmıyor"),
+    "kontrol kosusu": ("kontrol koşusu", "notr",
+                       "Bozulma içermez; gürültü tabanını ölçer"),
+    "referans": ("referans", "referans", "Kendi ölçeğinin sağlıklı tabanı"),
+    "eslenik olcum": ("eşlenik ölçüm", "ikincil",
+                      "Aynı ağırlıklar, tek değişen çıkarım ayarı"),
+    "esik yok": ("eşik yok", "uyari",
+                 "Referansı var ama o ölçekte kontrol koşusu yok"),
+    "karsilastirilamaz": ("karşılaştırılamaz", "kritik",
+                          "O ölçekte sağlıklı referans hiç yok"),
+    "olcum yok": ("ölçüm yok", "notr", "Defterde satırı yok"),
+}
+DERECELENDIRILEN = ("guclu", "zayif", "gurultu icinde")
+
+ROZET_RENGI = {
+    "guclu": GUCLU, "uyari": UYARI, "kritik": KRITIK,
+    "ikincil": IKINCIL, "referans": REFERANS, "notr": NOTR, "aday": ADAY,
+}
 
 CSS = f"""
 <style>
   .stApp {{ background: {ZEMIN}; }}
-  html, body, [class*="css"] {{ color: {METIN}; }}
-  h1, h2, h3 {{ font-weight: 600; letter-spacing: -0.01em; }}
-  h1 {{ font-size: 1.55rem; }}
-  h2 {{ font-size: 1.2rem; margin-top: 1.6rem; }}
-  h3 {{ font-size: 1.02rem; margin-top: 1.1rem; }}
-  hr {{ border: none; border-top: 1px solid {CIZGI}; margin: 1.2rem 0; }}
-  .ust {{ font-size: .78rem; letter-spacing: .08em; text-transform: uppercase;
-          color: #6f6f6f; margin-bottom: .15rem; }}
-  .kutu {{ border: 1px solid {CIZGI}; border-radius: 3px; padding: .7rem .85rem;
-           background: #fff; }}
+  html, body, [class*="css"], p, li, span, label {{ color: {METIN}; }}
+  h1, h2, h3, h4 {{ color: {METIN}; font-weight: 600; letter-spacing: -0.01em; }}
+  h1 {{ font-size: 1.7rem; margin-bottom: .2rem; }}
+  h2 {{ font-size: 1.22rem; margin-top: 1.8rem; }}
+  h3 {{ font-size: 1.02rem; margin-top: 1.2rem; }}
+  hr {{ border: none; border-top: 1px solid {CIZGI}; margin: 1.4rem 0; }}
+  a {{ color: {ADAY}; }}
+  code {{ background: {YUZEY_2}; color: {IKINCIL}; padding: .08rem .3rem;
+          border-radius: 3px; font-size: .86em; }}
+
+  .ust {{ font-size: .74rem; letter-spacing: .1em; text-transform: uppercase;
+          color: {METIN_SOLUK}; margin: .2rem 0 .3rem; }}
+  .kutu {{ border: 1px solid {CIZGI}; border-radius: 8px; padding: .85rem 1rem;
+           background: {YUZEY}; box-shadow: 0 1px 3px rgba(0,0,0,.35); }}
   .kutu p {{ margin: 0; }}
-  .rozet {{ display: inline-block; font-size: .74rem; padding: .12rem .5rem;
-            border-radius: 2px; border: 1px solid; margin-right: .3rem; }}
-  .r-uyari {{ color: {UYARI}; border-color: {UYARI}; background: #fdf6ef; }}
-  .r-olumlu {{ color: {OLUMLU}; border-color: {OLUMLU}; background: #f1f6f3; }}
-  .r-notr {{ color: #5f5f5f; border-color: {CIZGI}; background: #f7f6f4; }}
-  .yorum {{ font-size: .84rem; color: #5f5f5f; margin-top: .3rem; }}
-  .stDataFrame {{ font-size: .87rem; }}
-  section[data-testid="stSidebar"] {{ background: #f4f2ee;
+  .kutu b {{ color: #ffffff; }}
+
+  .kpi {{ border: 1px solid {CIZGI}; border-radius: 8px; padding: .7rem .9rem;
+          background: {YUZEY}; height: 100%; }}
+  .kpi .etiket {{ font-size: .74rem; letter-spacing: .06em;
+                  text-transform: uppercase; color: {METIN_SOLUK}; }}
+  .kpi .deger {{ font-size: 1.55rem; font-weight: 600; line-height: 1.25;
+                 color: #ffffff; }}
+  .kpi .alt {{ font-size: .76rem; color: {METIN_SOLUK}; }}
+
+  .rozet {{ display: inline-block; font-size: .73rem; padding: .14rem .55rem;
+            border-radius: 999px; border: 1px solid; margin: 0 .3rem .25rem 0;
+            white-space: nowrap; }}
+  .yorum {{ font-size: .84rem; color: {METIN_SOLUK}; margin-top: .35rem;
+            line-height: 1.5; }}
+
+  .stDataFrame {{ font-size: .86rem; }}
+  div[data-testid="stDataFrame"] {{ border: 1px solid {CIZGI};
+                                    border-radius: 8px; overflow: hidden; }}
+  section[data-testid="stSidebar"] {{ background: #080d18;
                                       border-right: 1px solid {CIZGI}; }}
+  section[data-testid="stSidebar"] .yorum {{ font-size: .78rem; }}
+  div[data-testid="stExpander"] {{ border: 1px solid {CIZGI};
+                                   border-radius: 8px; background: {YUZEY}; }}
+  div[data-testid="stMetricValue"] {{ color: #ffffff; }}
+  /* Streamlit'in kendi uyari kutulari koyu temada neredeyse okunmuyordu:
+     acik zemin varsayimiyla gelen metin rengi arka planla catisiyor. Renk
+     sozlesmesiyle AYNI renkler kullanilarak yeniden tanimlanir. */
+  div[data-testid="stAlert"] {{ border-radius: 8px; border: 1px solid;
+                                background: {YUZEY}; }}
+  div[data-testid="stAlert"] p, div[data-testid="stAlert"] li,
+  div[data-testid="stAlert"] span, div[data-testid="stAlert"] div {{
+      color: {METIN} !important; }}
+  div[data-testid="stAlert"] code {{ background: {YUZEY_2}; }}
+  div[data-testid="stAlertContentInfo"] {{ border-color: {ADAY}; }}
+  div[data-testid="stAlertContentWarning"] {{ border-color: {UYARI}; }}
+  div[data-testid="stAlertContentSuccess"] {{ border-color: {GUCLU}; }}
+  div[data-testid="stAlertContentError"] {{ border-color: {KRITIK}; }}
+  .stTabs [data-baseweb="tab-list"] {{ gap: .2rem; border-bottom: 1px solid {CIZGI}; }}
+  .stTabs [data-baseweb="tab"] {{ color: {METIN_SOLUK}; }}
+  .stTabs [aria-selected="true"] {{ color: {METIN}; }}
 </style>
 """
 
@@ -62,14 +136,18 @@ def uygula() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
 
 
+# --- Bilesenler -------------------------------------------------------------
+
 def ust_baslik(etiket: str) -> None:
     """Kucuk, buyuk harfli bolum etiketi."""
     st.markdown(f'<div class="ust">{etiket}</div>', unsafe_allow_html=True)
 
 
 def rozet(metin: str, tur: str = "notr") -> str:
-    """Durum rozeti; `tur`: olumlu | uyari | notr."""
-    return f'<span class="rozet r-{tur}">{metin}</span>'
+    """Durum rozeti; `tur` RENK SOZLESMESI anahtarlarindan biri."""
+    renk = ROZET_RENGI.get(tur, NOTR)
+    return (f'<span class="rozet" style="color:{renk};border-color:{renk};'
+            f'background:{renk}1a">{metin}</span>')
 
 
 def kutu(icerik: str) -> None:
@@ -77,136 +155,51 @@ def kutu(icerik: str) -> None:
 
 
 def yorum(metin: str) -> None:
-    """Grafik altina tek cumlelik okuma notu."""
+    """Grafik veya tablo altina okuma notu."""
     st.markdown(f'<div class="yorum">{metin}</div>', unsafe_allow_html=True)
+
+
+def kpi(etiket: str, deger, alt: str = "") -> None:
+    """Tek bir sayi karti. Sayilar HER ZAMAN kaynaktan turetilir."""
+    st.markdown(
+        f'<div class="kpi"><div class="etiket">{etiket}</div>'
+        f'<div class="deger">{deger}</div>'
+        f'<div class="alt">{alt}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def kpi_satiri(kartlar: list[tuple]) -> None:
+    """Yan yana KPI kartlari: [(etiket, deger, alt), ...]"""
+    if not kartlar:
+        return
+    for sutun, kart in zip(st.columns(len(kartlar)), kartlar):
+        with sutun:
+            kpi(kart[0], kart[1], kart[2] if len(kart) > 2 else "")
+
+
+# --- Kanit seviyesi ---------------------------------------------------------
+
+def seviye_adi(seviye: str) -> str:
+    return SEVIYE.get(seviye, (seviye, "notr", ""))[0]
+
+
+def seviye_aciklamasi(seviye: str) -> str:
+    return SEVIYE.get(seviye, (seviye, "notr", ""))[2]
+
+
+def guc_rozeti(seviye: str) -> str:
+    ad, tur, _ = SEVIYE.get(seviye, (seviye, "notr", ""))
+    return rozet(ad, tur)
+
+
+def seviye_rengi(seviye: str) -> str:
+    return ROZET_RENGI.get(SEVIYE.get(seviye, ("", "notr", ""))[1], NOTR)
 
 
 def fark_metni(deger: float, fark: float, basamak: int = 4) -> str:
     """Sayilari her zaman 'deger (referansa fark)' olarak gösterir."""
     return f"{deger:.{basamak}f}  ({fark:+.{basamak}f})"
-
-
-# Kanit seviyesi -> (ekranda gorunen ad, rozet turu).
-# Derecelendirilen uc seviye ile derecelendirilmeyen bes seviye BILEREK
-# ayri tutulur: bir kontrol kosusunu "guclu" diye etiketlemek, projenin
-# olcmeye calistigi hatanin ta kendisidir.
-SEVIYE = {
-    "guclu": ("güçlü", "olumlu"),
-    "zayif": ("zayıf", "uyari"),
-    "gurultu icinde": ("gürültü içinde", "uyari"),
-    "kontrol kosusu": ("kontrol koşusu", "notr"),
-    "referans": ("referans", "notr"),
-    "eslenik olcum": ("eşlenik ölçüm", "notr"),
-    "esik yok": ("eşik yok", "uyari"),
-    "karsilastirilamaz": ("karşılaştırılamaz", "uyari"),
-    "olcum yok": ("ölçüm yok", "notr"),
-}
-DERECELENDIRILEN = ("guclu", "zayif", "gurultu icinde")
-
-
-def seviye_adi(seviye: str) -> str:
-    return SEVIYE.get(seviye, (seviye, "notr"))[0]
-
-
-def guc_rozeti(seviye: str) -> str:
-    ad, tur = SEVIYE.get(seviye, (seviye, "notr"))
-    return rozet(ad, tur)
-
-
-# --- Grafik yardimcilari ----------------------------------------------------
-
-# Etki haritasinda renk olcegi bu degerde KIRPILIR. Kirpmadan cizildiginde
-# birkac uc deger (orn. D5 last_pt'nin band orani ~97) butun olcegi eziyor ve
-# geri kalan hucreler ayni acik tonda gorunuyordu. Kirpma yalnizca RENGI
-# etkiler; gercek oran her zaman tooltip'te ve tablolarda tam degeriyle durur.
-HARITA_RENK_TAVANI = 10.0
-
-
-def etki_haritasi(veri, x: str, y: str, deger: str, baslik: str = ""):
-    """Senaryo x metrik etki haritasi.
-
-    Renk, farkin YONUNU degil BUYUKLUGUNU tasir: gurultu bandina orani.
-    Ham farki renklendirmek yaniltici olurdu - kucuk bir grupta buyuk gorunen
-    fark, o grubun dogal yayilimi icinde olabilir.
-    """
-    import altair as alt
-
-    veri = veri.copy()
-    veri["renk"] = veri[deger].clip(upper=HARITA_RENK_TAVANI)
-    return (
-        alt.Chart(veri)
-        .mark_rect(stroke="#ffffff", strokeWidth=1)
-        .encode(
-            x=alt.X(f"{x}:N", title=None, axis=alt.Axis(labelAngle=0)),
-            y=alt.Y(f"{y}:N", title=None, sort=None),
-            color=alt.Color(
-                "renk:Q",
-                title=f"band oranı (≥{HARITA_RENK_TAVANI:.0f} aynı ton)",
-                scale=alt.Scale(scheme="oranges", domain=[0, HARITA_RENK_TAVANI]),
-            ),
-            tooltip=[c for c in veri.columns if c != "renk"],
-        )
-        .properties(height=max(240, 24 * veri[y].nunique()), title=baslik)
-    )
-
-
-def gurultu_bandi_grafigi(veri, senaryo: str = "senaryo", fark: str = "fark",
-                          band: str = "band"):
-    """Her senaryonun farkini, gurultu bandi kusagiyla birlikte cizer.
-
-    Bandin icinde kalan noktalar gorsel olarak ayrisir; okuyucu "bu fark
-    buyuk mu" sorusunu tabloya bakmadan cevaplar.
-    """
-    import altair as alt
-
-    kusak = (
-        alt.Chart(veri)
-        .mark_area(opacity=0.22, color=NOTR)
-        .encode(
-            y=alt.Y(f"{senaryo}:N", title=None, sort=None),
-            x=alt.X("band_alt:Q", title="referansa fark"),
-            x2="band_ust:Q",
-        )
-    )
-    # Ayrim YALNIZCA renge birakilmaz: renk korlugu olan bir izleyici mavi ile
-    # turuncuyu ayirt edemeyebilir. Sekil ikinci bir kanal olarak eklenir -
-    # esigi asanlar dolu kare, asmayanlar ici bos daire.
-    noktalar = (
-        alt.Chart(veri)
-        .mark_point(size=110, filled=True, strokeWidth=1.8)
-        .encode(
-            y=alt.Y(f"{senaryo}:N", title=None, sort=None),
-            x=alt.X(f"{fark}:Q"),
-            color=alt.Color(
-                "asiyor:N",
-                title="eşiği aşıyor",
-                scale=alt.Scale(domain=["evet", "hayir"], range=[VURGU, UYARI]),
-                legend=alt.Legend(labelExpr="datum.label == 'evet' ? 'evet' : 'hayır'"),
-            ),
-            shape=alt.Shape(
-                "asiyor:N",
-                title="eşiği aşıyor",
-                scale=alt.Scale(domain=["evet", "hayir"], range=["square", "circle"]),
-                legend=alt.Legend(labelExpr="datum.label == 'evet' ? 'evet' : 'hayır'"),
-            ),
-            # Bandin ICINDE kalan noktalar acik dolgulu ama CIZGILI kalir.
-            # Ilk denemede dolgu 0.15'e dusuruldu ve o uc nokta gri kusagin
-            # icinde gorunmez oldu - "gurultu icinde" olan senaryolar
-            # ekrandan silinmis gibi duruyordu.
-            fillOpacity=alt.condition(
-                "datum.asiyor == 'evet'", alt.value(1.0), alt.value(0.35)
-            ),
-            stroke=alt.Color(
-                "asiyor:N", legend=None,
-                scale=alt.Scale(domain=["evet", "hayir"], range=[VURGU, UYARI]),
-            ),
-            tooltip=list(veri.columns),
-        )
-    )
-    sifir = alt.Chart(veri).mark_rule(color="#bbb").encode(x=alt.datum(0))
-    return (kusak + sifir + noktalar).properties(
-        height=max(240, 24 * veri[senaryo].nunique())
-    )
 
 
 def guven_rozeti(deger: str) -> str:
@@ -216,8 +209,29 @@ def guven_rozeti(deger: str) -> str:
     modelin kendi beyanidir. Yarim daire bir gauge, olculmus bir guven
     yuzdesi izlenimi yaratirdi.
     """
-    tur = {"yüksek": "olumlu", "yuksek": "olumlu",
+    tur = {"yüksek": "guclu", "yuksek": "guclu",
            "orta": "notr", "düşük": "uyari", "dusuk": "uyari"}.get(
         str(deger).lower(), "notr"
     )
     return rozet(f"öz-bildirim: {deger}", tur)
+
+
+# --- Grafikler (geriye donuk uyumluluk) -------------------------------------
+#
+# Grafik uretimi grafik.py'ye tasindi; bu iki ad testler ve eski cagrilar
+# icin burada duruyor.
+
+HARITA_RENK_TAVANI = 10.0
+
+
+def etki_haritasi(veri, x: str, y: str, deger: str, baslik: str = ""):
+    from grafik import etki_haritasi as _f
+
+    return _f(veri, x, y, deger, baslik)
+
+
+def gurultu_bandi_grafigi(veri, senaryo: str = "senaryo", fark: str = "fark",
+                          band: str = "band"):
+    from grafik import gurultu_bandi_grafigi as _f
+
+    return _f(veri, senaryo, fark)
