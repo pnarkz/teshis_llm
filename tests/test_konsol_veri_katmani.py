@@ -202,3 +202,83 @@ def test_defterdeki_her_kosunun_kimligi_var():
     with (ROOT / "results.csv").open(encoding="utf-8") as f:
         for satir in csv.DictReader(f):
             assert kimlik(satir["scenario"]) is not None, satir["scenario"]
+
+
+# --- Taze klon davranisi ----------------------------------------------------
+
+def test_tani_seti_manifest_olmadan_da_dogru_sayilari_veriyor():
+    """`val_diagnostic/` Git disidir; taze bir klonda manifest bulunmaz.
+
+    GERCEK HATA: o durumda konsol "Kilitli tanı seti: 0 — 0 bbox" yaziyordu,
+    yani setin BOS oldugu izlenimini veriyordu. Sayilar aslinda depoyla
+    gelen olcum dosyalarindan yeniden kurulabiliyor.
+    """
+    yeniden = vs._tani_seti_yeniden_kur()
+    assert yeniden, "kunye yeniden kurulamadi"
+    assert yeniden["goruntu_sayisi"] == 1056
+    assert yeniden["_yeniden_kuruldu"] is True
+
+    from teshis.degerlendirme.bootstrap import VAL_DIAGNOSTIC_BBOX_N
+
+    assert yeniden["bbox_sayisi"] == sum(VAL_DIAGNOSTIC_BBOX_N.values())
+    assert yeniden["sinif_bbox"] == VAL_DIAGNOSTIC_BBOX_N
+
+
+def test_yeniden_kurulan_kunye_manifestle_ayni(tani):
+    """Yeniden kurulan degerler gercek manifestle CAKISMAMALI.
+
+    Bu makinede ikisi de var; ayrisirlarsa taze klonda gosterilen sayilar
+    burada gosterilenlerden farkli olurdu.
+    """
+    yeniden = vs._tani_seti_yeniden_kur()
+    assert yeniden["goruntu_sayisi"] == tani["goruntu_sayisi"]
+    assert yeniden["bbox_sayisi"] == tani["bbox_sayisi"]
+    assert yeniden["sinif_bbox"] == tani["sinif_bbox"]
+    assert set(yeniden["kaynak_grubu"]) == set(tani["kaynak_grubu"])
+    for grup, d in tani["kaynak_grubu"].items():
+        assert yeniden["kaynak_grubu"][grup]["goruntu"] == d["goruntu"], grup
+
+
+def test_bilinmeyen_deger_uydurulmuyor():
+    """Kaynak grubu basina bbox hicbir izlenen dosyada tam durmuyor."""
+    yeniden = vs._tani_seti_yeniden_kur()
+    for grup, d in yeniden["kaynak_grubu"].items():
+        assert d["bbox"] is None, f"{grup}: uydurulmus bbox sayisi"
+
+
+def test_sunum_gorsel_seti_depoda_var():
+    """Taze bir klonda Hata Analizi bos kalmamali."""
+    import sys as _sys
+
+    _sys.path.insert(0, str(ROOT / "demo"))
+    from data_loader import SUNUM_GORSELLERI
+
+    assert SUNUM_GORSELLERI.is_dir(), (
+        "Sunum gorsel seti yok. Uretmek icin: "
+        "python scripts/sunum_gorselleri_hazirla.py"
+    )
+    kareler = list(SUNUM_GORSELLERI.rglob("*.jpg"))
+    assert len(kareler) > 300, len(kareler)
+    # Windows'un 260 karakterlik yol siniri klonu kirmisti.
+    for kare in kareler:
+        goreli = kare.relative_to(ROOT)
+        assert len(str(goreli)) < 120, f"yol cok uzun: {goreli}"
+
+
+def test_gorsel_cozumleyici_aynayi_buluyor():
+    """Orijinal gorsel yoksa ayna kopyasi bulunmali."""
+    import json as _json
+    import sys as _sys
+
+    _sys.path.insert(0, str(ROOT / "demo"))
+    from data_loader import _ayna_yolu
+
+    manifest = ROOT / "reports/hata_galerisi_D4/gallery.json"
+    if not manifest.is_file():
+        pytest.skip("D4 galerisi yok")
+    kayitlar = _json.loads(manifest.read_text(encoding="utf-8"))
+    bulunan = sum(
+        1 for k in kayitlar
+        if k.get("image") and _ayna_yolu(Path("hata_galerisi_D4") / k["image"]).is_file()
+    )
+    assert bulunan >= 8, f"aynada yalnizca {bulunan} kare var"

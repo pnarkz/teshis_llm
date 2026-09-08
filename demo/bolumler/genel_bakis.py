@@ -131,7 +131,9 @@ def _ajan_skorlari(ajan: dict) -> dict[str, float]:
 # --- Surec semasi -----------------------------------------------------------
 
 _ADIMLAR = [
-    ("Termal veri", "1.056 görüntü, 4.014 bbox<br>kilitli tanı seti"),
+    # Ilk adimin alt metni tani setinden TURETILIR; buradaki deger yalnizca
+    # kunye hic okunamazsa gorunur ve sayi icermez.
+    ("Termal veri", "kilitli tanı seti"),
     ("Kontrollü arıza", "veri veya eğitim ayarında<br>her seferinde TEK değişken"),
     ("YOLO eğitimi /<br>değerlendirmesi", "sabit protokol<br>aynı seed, aynı çözünürlük"),
     ("Genel + kırılımlı<br>metrikler", "sınıf, nesne boyutu,<br>veri kaynağı"),
@@ -143,10 +145,10 @@ _ADIMLAR = [
 def _surec_semasi(tani: dict) -> str:
     """Uctan uca akis - SVG degil, HTML kutular: tema degisince birlikte doner."""
     adimlar = list(_ADIMLAR)
-    if tani:
+    if tani.get("goruntu_sayisi"):
         adimlar[0] = (
             "Termal veri",
-            f"{tani.get('goruntu_sayisi', 0):,}".replace(",", ".")
+            f"{tani['goruntu_sayisi']:,}".replace(",", ".")
             + " görüntü, "
             + f"{tani.get('bbox_sayisi', 0):,}".replace(",", ".")
             + " bbox<br>kilitli tanı seti",
@@ -201,8 +203,10 @@ def goster() -> None:
         ("Değerlendirme koşusu", olculebilir, "defterde kayıtlı"),
         ("Kontrol koşusu", _kontrol_sayisi(sonuclar), "yalnızca seed farklı"),
         ("Kilitli tanı seti",
-         f"{tani.get('goruntu_sayisi', 0):,}".replace(",", "."),
-         f"{tani.get('bbox_sayisi', 0):,} bbox".replace(",", ".")),
+         f"{tani['goruntu_sayisi']:,}".replace(",", ".")
+         if tani.get("goruntu_sayisi") else "kayıtta yok",
+         f"{tani.get('bbox_sayisi', 0):,} bbox".replace(",", ".")
+         if tani.get("bbox_sayisi") else "künye okunamadı"),
         ("Hata galerisi", len(error_galleries()), "koşu başına örnek incelemesi"),
         ("Ajan denemesi", len(ajan.get("cevaplar") or {}), "kör teşhis koşusu"),
         ("Test seti kullanımı", "YOK", "final aşamasına kadar yasak"),

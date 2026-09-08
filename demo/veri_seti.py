@@ -19,6 +19,7 @@ olmalidir.
 from __future__ import annotations
 
 import csv
+import functools
 import json
 from pathlib import Path
 from typing import Any
@@ -57,8 +58,54 @@ def veri_raporu() -> dict:
 
 
 def tani_seti() -> dict:
-    """Kilitli degerlendirme setinin kunyesi."""
-    return _oku(VAL_MANIFEST)
+    """Kilitli degerlendirme setinin kunyesi.
+
+    Manifest (`val_diagnostic/manifest.json`) Git DISIDIR: kilitli set
+    orijinal veri setinden turetilir ve depoya girmez. Taze bir klonda
+    dosya yoktur ve konsol "kilitli tanı seti: 0" yaziyordu - bu, setin bos
+    oldugu izlenimini verir ve YANLISTIR.
+
+    Bu durumda kunye, depoyla gelen OLCUM dosyalarindan yeniden kurulur:
+
+    | Alan | Kaynak |
+    |---|---|
+    | goruntu sayisi | reports/kirilim/<v00>.json (`goruntu`) |
+    | kaynak grubu goruntuleri | ayni dosya (`goruntu_kayitlari`) |
+    | sinif basina bbox | teshis/degerlendirme/bootstrap.py |
+
+    Kaynak grubu basina bbox sayisi hicbir izlenen dosyada tam olarak
+    durmuyor; UYDURULMAZ, None birakilir ve arayuz "kayıtta yok" yazar.
+    """
+    manifest = _oku(VAL_MANIFEST)
+    if manifest:
+        return manifest
+    return _tani_seti_yeniden_kur()
+
+
+@functools.lru_cache(maxsize=1)
+def _tani_seti_yeniden_kur() -> dict:
+    from teshis.degerlendirme.bootstrap import VAL_DIAGNOSTIC_BBOX_N
+
+    satir = _defter().get("v00_saglikli") or {}
+    kirilim_yolu = KOK / f"reports/kirilim/{satir.get('run_id')}.json"
+    kirilim = _oku(kirilim_yolu)
+    if not kirilim:
+        return {}
+
+    kaynaklar: dict[str, dict] = {}
+    for kayit in kirilim.get("goruntu_kayitlari") or []:
+        grup = kaynaklar.setdefault(kayit.get("kaynak", "bilinmeyen"),
+                                    {"goruntu": 0, "bbox": None})
+        grup["goruntu"] += 1
+
+    return {
+        "goruntu_sayisi": kirilim.get("goruntu"),
+        "bbox_sayisi": sum(VAL_DIAGNOSTIC_BBOX_N.values()),
+        "sinif_bbox": dict(VAL_DIAGNOSTIC_BBOX_N),
+        "kaynak_grubu": kaynaklar,
+        "_yeniden_kuruldu": True,
+        "_kaynak": kirilim_yolu.name,
+    }
 
 
 def split_dagilimi() -> list[dict[str, Any]]:

@@ -37,8 +37,11 @@ def _veri_seti_sekmesi() -> None:
          "train + val + test"),
         ("Toplam bbox", f"{toplam.get('bbox', 0):,}".replace(",", "."),
          "etiketlenmiş nesne"),
-        ("Kilitli tanı seti", f"{tani.get('goruntu_sayisi', 0):,}".replace(",", "."),
-         f"{tani.get('bbox_sayisi', 0):,} bbox".replace(",", ".")),
+        ("Kilitli tanı seti",
+         f"{tani['goruntu_sayisi']:,}".replace(",", ".")
+         if tani.get("goruntu_sayisi") else "kayıtta yok",
+         f"{tani.get('bbox_sayisi', 0):,} bbox".replace(",", ".")
+         if tani.get("bbox_sayisi") else "künye okunamadı"),
         ("Veri kaynağı", len(rapor.get("kaynak_toplam") or {}),
          "ayrı görüntü kaynağı"),
     ])
@@ -47,6 +50,16 @@ def _veri_seti_sekmesi() -> None:
         "bölümünden türetilmiştir; kaynak tekilliği ve split ayrıklığı "
         "gözetilerek seçilmiş, sonra kilitlenmiştir."
     )
+    if tani.get("_yeniden_kuruldu"):
+        st.info(
+            "Kilitli tanı setinin künyesi (`val_diagnostic/manifest.json`) bu "
+            "makinede yok — o dizin Git dışıdır. Sayılar depoyla gelen ölçüm "
+            f"dosyalarından yeniden kuruldu: görüntü sayısı "
+            f"`reports/kirilim/{tani.get('_kaynak')}`, sınıf başına bbox "
+            "`teshis/degerlendirme/bootstrap.py`. Kaynak grubu başına bbox "
+            "sayısı hiçbir izlenen dosyada tam durmuyor; uydurulmadı, boş "
+            "bırakıldı."
+        )
 
     st.markdown("### Bölüm dağılımı")
     bolumler = pd.DataFrame(vs.split_dagilimi())
