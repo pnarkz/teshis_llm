@@ -21,26 +21,61 @@ AppTest = streamlit_testing.AppTest
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "demo" / "app.py"
-BOLUMLER = [
-    "Genel Bakış", "Deney Tasarımı ve Sınırlar", "Senaryolar",
-    "Karşılaştırma ve Gürültü", "Hata Analizi", "Ajan",
-]
+def _bolum_adlari() -> list[str]:
+    """Bolum listesi app.py'nin KENDI sozlugunden gelir.
+
+    Liste burada elle yazilirken bir bolum eklendiginde test onu hic
+    denemiyordu; adi degistiginde de sessizce eski adi ariyordu. Kaynak
+    tektir: demo/app.py icindeki BOLUMLER.
+    """
+    import re
+
+    kaynak = (ROOT / "demo/app.py").read_text(encoding="utf-8")
+    govde = kaynak[kaynak.index("BOLUMLER = {"):kaynak.index("}", kaynak.index("BOLUMLER = {"))]
+    return re.findall(r'"([^"]+)":', govde)
+
+
+BOLUMLER = _bolum_adlari()
+
+
+def _bolum_adi(parca: str) -> str:
+    """Bolum adini PARCASINDAN bulur; ad degisince test kirilmasin."""
+    return next(b for b in BOLUMLER if parca.lower() in b.lower())
 
 
 def _senaryolar() -> list[str]:
-    """Demonun acilir listesinde GERCEKTEN gorunen kosular.
+    """Senaryolar sayfasinin acilir listesinde GERCEKTEN gorunen kosular.
 
-    results.csv'yi okumak yetmiyordu: demo veri katmani ayrica bir "Baseline"
-    satiri ekliyor (fine-tune edilmemis model). Listeyi demonun kendi
-    kaynagindan almak, acilir listede secilebilen her secenegin test
-    edilmesini garanti eder.
+    results.csv'yi okumak yetmiyor ve fazlasini da veriyor: demo veri
+    katmani bir "Baseline" satiri ekler (fine-tune edilmemis model), ama o
+    satirin defterde karsiligi yoktur - dolayisiyla bir olcegi, referansi ve
+    esigi de yoktur. Senaryo kartlarina girmez; "Veri ve Saglikli Model"
+    sayfasinda fine-tune etkisi olarak gosterilir.
+
+    Listeyi sayfanin KENDI kaynagindan almak, secilebilen her secenegin
+    test edilmesini garanti eder.
     """
     import sys
 
     sys.path.insert(0, str(ROOT / "demo"))
+    from bolumler.senaryolar import _kosu_ozetleri
     from data_loader import load_results
 
-    return load_results()["scenario"].tolist()
+    return _kosu_ozetleri(load_results())["senaryo"].tolist()
+
+
+def test_baseline_senaryo_kartlarina_girmiyor():
+    """Fine-tune edilmemis model bir DENEY degildir.
+
+    Defterde satiri olmadigi icin olcegi, referansi ve gurultu esigi yoktur;
+    senaryo listesinde gorunse "karsilastirilamaz" diye durur ve deney gibi
+    okunurdu. Yeri "Veri ve Saglikli Model" sayfasidir.
+    """
+    assert "Baseline" not in _senaryolar()
+    kaynak = (ROOT / "demo/bolumler/veri_ve_model.py").read_text(encoding="utf-8")
+    assert "Baseline" in kaynak, (
+        "Baseline hicbir yerde gosterilmiyor; fine-tune etkisi kayboldu"
+    )
 
 
 def _sorunlar(app) -> list[str]:
@@ -81,15 +116,18 @@ def test_her_senaryo_render_ediliyor(senaryo: str):
     Sayi BILEREK yazilmaz - eskiden "24 kosu" diyordu ve defter buyudukce
     geride kaldi. Liste defterden gelir.
     """
-    app = _bolum("Senaryolar")
-    app.selectbox[0].set_value(senaryo).run()
+    app = _bolum(_bolum_adi("Senaryo"))
+    # Senaryo secicisi sayfadaki TEK selectbox degil; filtreler de var.
+    # Adiyla bulunur, sirasiyla degil - filtre eklenince sira kayar.
+    secici = next(s for s in app.selectbox if "Ayrıntılı" in (s.label or ""))
+    secici.set_value(senaryo).run()
     assert not _sorunlar(app), f"{senaryo}: {_sorunlar(app)}"
 
 
 def test_ajan_bolumu_kayitli_modda_api_gerektirmiyor(monkeypatch):
     """Kayitli mod anahtarsiz calismali; sunumun guvenli yolu budur."""
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    app = _bolum("Ajan")
+    app = _bolum(_bolum_adi("Ajan"))
     assert not _sorunlar(app), _sorunlar(app)
 
 
