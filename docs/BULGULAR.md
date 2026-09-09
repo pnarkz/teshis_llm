@@ -17,24 +17,80 @@ Projenin sorusu: *"Bir LLM, termal tespit modelindeki bozulmayi yeterli
 kanitla teshis edebilir mi?"*
 
 **Su anki durustluk sinirimiz: bu soruyu cevaplayacak orneklem yok.** Elde
-1 model, kosu basina 1 ornek, 11 kosu ve yalnizca 2 saf kontrol var.
-Olculen skor (`mean_score` 0.833) bir NOKTA TAHMINIDIR; guven araligi
-hesaplanamaz cunku tekrar yok.
+1 model, 1 veri seti var. 2026-09-09 deneyiyle kosu basina 3 tekrar geldi
+(13 kosu, 39 gozlem) - artik "tekrar yok" demiyoruz, ama 13 kosu ve tek bir
+model hala bir kiyaslama olcusu degil. Eski ana denemenin skoru
+(`mean_score` 0.833) 11 kosuda, tekrarsiz, farkli araclarla olculmustu ve
+yeni deneyle BIRLESTIRILMEZ.
+
+**2026-09-09 tekrarli deneyi (`20260909T120445Z__a15487c9`) - rol bazli:**
+
+| Rol | Kosu | Gozlem | Kati puan | Tespit-farkindalikli |
+|---|---|---|---|---|
+| Saglikli referans | 1 | 3 | 1.000 | 1.000 |
+| Kontrol (yalnizca seed farkli) | 3 | 9 | 1.000 | 1.000 |
+| Bozulma senaryosu | 9 | 27 | 0.389 | 0.722 |
+
+Bu uc satir TOPLANMAZ. Kontroller "uyduruyor mu", bozulma senaryolari
+"nedeni bulabiliyor mu" sorusunu olcer; tek bir ortalama ikisini de
+yaniltir.
+
+Bu oranlar da birer **NOKTA TAHMINDIR**. Tekrar artik var (kosu basina 3),
+ama tekrarlar ayni kosunun ayni modelle yeniden sorulmasidir: model
+kararliligini olcerler, senaryo evrenindeki belirsizligi degil. 9 bozulma
+senaryosu ve tek bir model uzerinden hesaplanan 0.389, bu senaryolarin
+disina genellenemez.
+
+**Tekrar varyansi sifir.** 13 kosunun 13'u de uc tekrarinda ayni hukmu
+verdi. Sozel ifade her seferinde farkli ("kucuk_nesne_tespit_kaybi" /
+"Cok kucuk nesnelerde belirgin duyarlilik kaybi"), hukum ayni. Yani eski
+denemenin tekrarsiz olmasi, en azindan bu model ve bu araclarla,
+sonuclarini orneklem gurultusune actigi anlamina gelmiyordu.
 
 Cevaplayabildigimiz daha dar bir soru var ve cevabi degerli:
 
 > **Ajan, bozulma yokken sorun UYDURUYOR mu?**
-> Dort saf kontrolun **birinde uydurdu**: kosu_12 (C2 seed 13) icin
-> "kaynak_d grubunda belirgin recall kaybi" dedi, guveni "yuksek" idi.
-> Oran **1/4 = 0.250**, Wilson %95 araligi **[0.046, 0.699]**.
+> **Eski deneme (band bilgisi olmayan araclarla):** dort saf kontrolun
+> birinde uydurdu — kosu_12 (C2 seed 13) icin "kaynak_d grubunda belirgin
+> recall kaybi" dedi, guveni "yuksek" idi. Oran **1/4**, Wilson %95
+> araligi **[0.046, 0.699]**.
 >
 > Ajan halusinasyon gormedi: rakamlar dogruydu ve her iki istatistik testi
 > de farki anlamli buluyordu. Sorun karsilastirma tabanindaydi — o alt
 > grubun saglikli kosular arasindaki yayilimi zaten **0.1321**. Ayrinti:
 > "Ilk Yanlis Pozitif" bolumu.
+>
+> **Yeni deney (band bilgisi araclara eklendikten sonra):** uc kontrol
+> kosusunun dokuz gozleminde de uydurmadi. **9/9**, Wilson %95 araligi
+> **[0.701, 1.000]**. kosu_12 dahil, uc tekrarinda da "saglikli" dedi.
+>
+> Bu bir "ajan gelisti" bulgusu DEGILDIR ve oyle sunulmamalidir. Ajanin
+> gordugu kanit degisti: `araclar.py` artik her alt grup farkina
+> `gurultu_bandi`, `band_orani` ve `band_yorumu` ekliyor. Yani bulgu
+> sudur: **yanlis pozitifi onleyen sey modelin kendisi degil, ona gurultu
+> tabanini gostermek.** Bu, projenin kendi ana tezinin ajan tarafindaki
+> karsiligidir. Iki oran farkli araclarla olculdugu icin birbirinin
+> tekrari sayilmaz ve tek bir oranda birlestirilemez.
 
-Baskin hata turu yine de uydurmak degil, **yanlis neden atfetmek** (D2a,
-D3b) ve **kacirmak** (D5). Ayrinti: "Ajan bir teshis sistemi olarak" bolumu.
+Baskin hata turu yine de uydurmak degil, **yanlis neden atfetmek** ve
+**kacirmak**. Yeni deneyde bu ikisi net ayrilıyor:
+
+- **Belirtiyi neden sanmak (D2a, 0.0 - uc tekrarda da):** model "0-16 px
+  bandinda ve kaynak_a grubunda belirgin recall kaybi" dedi. Alintiladigi
+  uc sayi da dogru. Ama bu bozulmanin KENDISI degil, IZI; uygulanan
+  bozulma lokalizasyon etiket gurultusuydu.
+- **Kacirmak (D5, 0.0 - uc tekrarda da):** "belirgin_bozulma_yok". Kaynak
+  alani kaymasini hic gormedi.
+- **Iz birakmayan bozulmalar (D1, D3b, D6b):** kati puan 0.0, tespit-
+  farkindalikli puan 1.0. Bu kosularda bozulma kilitli tani setinde
+  anlamli iz birakmiyor; ajanin "anlamli degisim yok" demesi gordugu
+  kanitla tutarli tek okuma. Ayrinti: `puanlama.py::TESPIT_EDILEMEYEN`.
+- **Ayni bozulma, farkli baslangic modeli:** D2b'de kismi puan (0.5,
+  precision/recall dengesizligini dogru tarif etti ama nedeni
+  adlandiramadi), D2b final_best'te tam puan (1.0). Ayni bozulma, farkli
+  kanit gorunurlugu.
+
+Ayrinti: "Ajan bir teshis sistemi olarak" bolumu.
 
 ## Senaryolarin durumu
 

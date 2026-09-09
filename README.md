@@ -213,4 +213,20 @@ atlanir.
   basari oraninda birlestirilmez. Yeni deneyler `reports/ajan_deneyleri/`
   altindadir ve eski `reports/ajan_denemesi/` sonuclariyla karistirilmaz.
 
+- **Ilk tekrarli ajan deneyi (2026-09-09):** 13 kosu x 3 tekrar = 39
+  gozlem, deney kimligi `20260909T120445Z__a15487c9`. Rol bazli, birlestirilmeden:
+  saglikli referans 1.000 (n=3), kontrol 1.000 (n=9), bozulma senaryosu
+  kati 0.389 / tespit-farkindalikli 0.722 (n=27).
+
+  Iki bulgu one cikiyor. Birincisi: **13 kosunun 13'u de uc tekrarinda ayni
+  hukmu verdi** - sozel ifade degisiyor, hukum degismiyor. Ikincisi:
+  kontrol kosularinda 9/9, Wilson %95 [0.701, 1.000]. Eski denemede dort
+  kontrolun birinde uydurmustu (kosu_12). Bu bir "model gelisti" bulgusu
+  degil: araclar artik her alt grup farkina gurultu bandini ekliyor, yani
+  yanlis pozitifi onleyen sey ona **gurultu tabanini gostermek**. Bu, ana
+  tezin ajan tarafindaki karsiligi.
+
+  Deney eski `reports/ajan_denemesi` sonuclariyla BIRLESTIRILMEZ; ikisi
+  farkli araclarla olculdu. Konsolun ajan sayfasi ikisini ayri gosterir.
+
 Guncel ayrinti: [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md)

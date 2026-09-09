@@ -108,13 +108,20 @@ def test_ozet_kac_kontrolden_hesaplandigini_soyluyor(ozet, satirlar):
 
 
 def test_ozet_orneklem_sinirini_acikca_soyluyor(ozet):
-    """Skor tek basina verilmemeli; n=1 sinirinin ozette yazili olmasi sart.
+    """Skor tek basina verilmemeli; orneklem sinirinin ozette yazili olmasi sart.
 
     Bir mentorun ilk sorusu "guven araligi ne" olur. Ozet bu soruyu
     okuyucudan once sormali.
+
+    Onceden bu test "tekrar yok" ifadesini ariyordu. 2026-09-09 deneyiyle
+    kosu basina 3 tekrar geldi, yani o ifade artik DOGRU DEGIL. Testin
+    amaci ifadeyi degil GUVENCEYI korumakti: ozet, kac tekrar oldugunu ve
+    skorun bir nokta tahmin oldugunu soylemeli.
     """
-    for ifade in ("NOKTA TAHMIN", "tekrar yok"):
-        assert ifade.lower() in ozet.lower(), f"Ozette '{ifade}' gecmiyor"
+    assert "nokta tahmin" in ozet.lower(), "Ozette 'NOKTA TAHMIN' gecmiyor"
+    assert re.search(r"tekrar yok|(\d+|bir|iki|uc)\s+tekrar", ozet.lower()), (
+        "Ozet kac tekrar oldugunu (veya olmadigini) soylemiyor"
+    )
     assert re.search(r"\[0\.\d{3},\s*0\.\d{3}\]", ozet), (
         "Yanlis pozitif oraninin Wilson araligi ozette yazili olmali"
     )
