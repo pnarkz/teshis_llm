@@ -38,6 +38,9 @@ reports/**/*.jpeg
 reports/**/*.png
 reports/**/*.html
 !reports/**/*.json
+# Kuru calistirma bir deney degil, provadir: API'ye gidilmez, teshis
+# uretilmez. Repoya deney gibi girmemesi icin ayri onekle disarida.
+reports/ajan_deneyleri/KURU__*/
 !reports/**/*.csv
 
 # veri_surumleri/: manifest.json, data.yaml ve kucuk liste dosyalari izlenir;

@@ -143,7 +143,14 @@ reports/
                                 altindadir; D6a ve E4 gibi yeniden
                                 degerlendirmeler baskasinin dizinini ezmesin diye
                                 buraya yazilir.
-  ajan_denemesi/                LLM paketi, cevap, puan
+  ajan_denemesi/                Ilk (ana) LLM denemesi: paket, cevap, puan.
+                                Tek seferlik; uretim ustverisi tutmaz.
+  ajan_deneyleri/               Yeni duzen. Her deney kendi degismez
+                                kimligiyle (<UTC>__<git sha>) ayri bir alt
+                                klasorde: deney.json (plan + ustveri),
+                                gozlemler/ (arac snapshot'lari dahil),
+                                degerlendirme/ (cevap anahtari, puan).
+                                Eski deneme sonuclariyla BIRLESTIRILMEZ.
   ajan_denemesi_arsiv_4kosu/    Kirilim araclari eklenmeden onceki deneme
   model_secimi/                 Adil model karsilastirmasi (kullanilan)
   model_secimi_ilk_adil_degil/  Ilk karsilastirma; imgsz farkli oldugu icin adil degil

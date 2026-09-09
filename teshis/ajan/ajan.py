@@ -214,6 +214,18 @@ def _istek_gonder(client, model: str, contents, config, deneme: int = 4):
     raise son_hata  # pragma: no cover - dongu her zaman doner veya firlatir
 
 
+# Son cagrinin HAM model cevabi. Deney kaydedicisi (scripts/ajan_deney.py)
+# ham metni ayristirilmis cevaptan ayri saklamak icin buradan okur.
+# Fonksiyon imzasini degistirmemek icin modul duzeyinde tutulur; mevcut
+# cagiranlar (testler dahil) etkilenmez.
+_son_ham: list[dict[str, Any]] = []
+
+
+def son_ham_cevap() -> dict[str, Any] | None:
+    """En son uretilen cevabin ham metni ve bitis nedeni."""
+    return _son_ham[-1] if _son_ham else None
+
+
 def teshis_uret(
     kosu_id: str,
     model: str = "gemini-3.6-flash",
@@ -252,6 +264,7 @@ def teshis_uret(
         )
     ]
     arac_kaydi: list[dict[str, Any]] = []
+    _son_ham.clear()
 
     for tur in range(1, max_tur + 1):
         response = _istek_gonder(client, model, contents, config)
@@ -264,8 +277,15 @@ def teshis_uret(
         cagrilar = [p.function_call for p in parcalar if getattr(p, "function_call", None)]
 
         if not cagrilar:
-            cevap = json_ayikla(response.text or "")
+            ham = response.text or ""
+            cevap = json_ayikla(ham)
             cevap["run_id"] = kosu_id
+            # HAM cevap ayri saklanir. Ayristirilmis sozluk, modelin ne
+            # dedigini degil bizim ondan ne cikarabildigimizi gosterir;
+            # ayristirma kurali degisirse eski kayittan yeniden uretmek
+            # ancak ham metin elde olursa mumkun olur.
+            _son_ham.append({"tur": tur, "ham": ham,
+                             "bitis_nedeni": str(getattr(aday, "finish_reason", ""))})
             return cevap, arac_kaydi
 
         yanit_parcalari = []
