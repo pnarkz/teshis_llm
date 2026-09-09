@@ -152,7 +152,30 @@ def _normalize(metin: Any) -> str:
     "bozulma_tespit_edilmedi" dedi - bizim analizimize gore DOGRU cevap - ama
     kalip "bozulma yok" aradigi icin sifir aldi.
     """
-    return re.sub(r"[_\-]+", " ", str(metin)).lower().strip()
+    return _turkce_katla(re.sub(r"[_\-]+", " ", str(metin))).strip()
+
+
+# Turkce harfler ASCII karsiliklarina katlanir.
+#
+# Kaliplar ASCII yazili ("kucuk|boyut|..."), model ise dogal Turkce
+# yaziyor ("kucuk" degil "kucuk"). Gercek deneyde ayni teshisin iki
+# yazimi zit puan aldi: D4 icin "kucuk nesne tespit kaybi" 1.0,
+# "Cok kucuk nesnelerde belirgin duyarlilik (recall) kaybi" 0.0 -
+# ikisi de ayni seyi soyluyordu. Olcut, modelin diakritik kullanip
+# kullanmamasina bagli olamaz.
+#
+# Buyuk 'I' ile 'İ' ayrimi onemli: Python'da "İ".lower() bir birlesik
+# nokta birakir, bu yuzden kucultmeden ONCE katlanir.
+_TR_KATLAMA = str.maketrans({
+    "ç": "c", "Ç": "c", "ğ": "g", "Ğ": "g", "ı": "i", "I": "i",
+    "İ": "i", "i": "i", "ö": "o", "Ö": "o", "ş": "s", "Ş": "s",
+    "ü": "u", "Ü": "u", "â": "a", "Â": "a", "î": "i", "Î": "i",
+    "û": "u", "Û": "u",
+})
+
+
+def _turkce_katla(metin: str) -> str:
+    return metin.translate(_TR_KATLAMA).lower()
 
 
 def metin_ozeti(cevap: dict[str, Any]) -> str:

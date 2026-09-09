@@ -154,3 +154,49 @@ def test_normallestirme_yanlis_cevabi_dogru_yapmaz():
     """Normallestirme yalnizca ayirici karakterleri duzeltmeli; anlam eklememeli."""
     assert puanlama.teshis_puani("anlamli_degisim_yok",
                                  {"diagnosis": "tamamen_alakasiz_bir_aciklama"})[0] == 0.0
+
+
+def test_diakritik_puani_degistirmiyor():
+    """Ayni teshisin iki yazimi ayni puani almali.
+
+    Gercek deneyde (20260909T120445Z__a15487c9, kosu_08) oldu: D4 icin
+    "kucuk_nesne_tespit_kaybi" 1.0 alirken "Cok kucuk nesnelerde belirgin
+    duyarlilik (recall) kaybi" 0.0 aldi - ikisi de ayni seyi soyluyordu.
+    Kaliplar ASCII yazili, model ise dogal Turkce yaziyor. Olcut, modelin
+    diakritik kullanip kullanmamasina bagli olamaz.
+    """
+    esdeger = [
+        ("kucuk_nesne_sinyal_kaybi",
+         "Çok küçük nesnelerde (0-16 px) belirgin duyarlılık kaybı",
+         "kucuk_nesne_tespit_kaybi"),
+        ("kaynak_alani_kaymasi", "Kaynak alanı kayması", "kaynak alani kaymasi"),
+        ("tasit_insan_sinif_karisikligi",
+         "Taşıt ve insan sınıfları karışıyor", "tasit insan karisikligi"),
+    ]
+    for beklenen, turkce, ascii_hali in esdeger:
+        tr = puanlama.teshis_puani(beklenen, {"diagnosis": turkce})
+        asc = puanlama.teshis_puani(beklenen, {"diagnosis": ascii_hali})
+        assert tr[0] == asc[0], (
+            f"{beklenen}: '{turkce}' -> {tr[0]} ama '{ascii_hali}' -> {asc[0]}")
+
+
+def test_diakritik_katlamasi_yanlis_cevabi_dogru_yapmiyor():
+    """Katlama esik dusurmemeli: alakasiz bir cevap hala 0 almali.
+
+    Gercek deneyde D2a ve D5 icin model BELIRTIYI tarif etti, nedeni
+    adlandirmadi; katlama sonrasi da 0.0 kalmalari bunun bir olcum
+    hatasi degil gercek bir isabetsizlik oldugunu gosterir.
+    """
+    d2a = ("Çok küçük nesne boyut bandında (0-16 px) ve kaynak_a veri "
+           "grubunda belirgin recall kaybı")
+    assert puanlama.teshis_puani(
+        "lokalizasyon_etiket_gurultusu", {"diagnosis": d2a})[0] == 0.0
+    assert puanlama.teshis_puani(
+        "kaynak_alani_kaymasi", {"diagnosis": "belirgin_bozulma_yok"})[0] == 0.0
+
+
+def test_buyuk_I_harfi_birlesik_nokta_birakmiyor():
+    """'İ'.lower() Python'da birlesik nokta birakir; katlama ONCE yapilmali."""
+    assert "\u0307" not in puanlama._normalize("İYİLEŞME")
+    assert puanlama._normalize("İYİLEŞME") == "iyilesme"
+    assert puanlama._normalize("KÜÇÜK_NESNE") == "kucuk nesne"
