@@ -323,7 +323,12 @@ def kontrol_tekrarlari() -> dict[str, dict]:
         return {}
     kayitlar: dict[str, dict] = {}
     for cevap_yolu in sorted(dizin.glob("*_tekrar*.json")):
-        if cevap_yolu.name.endswith("_arac.json"):
+        # `_arac.json`: arac cagri kaydi, cevap degil.
+        # `_onceki*.json`: betigin ARSIVLEDIGI eski cevap. Uzerine yazmak
+        # yerine yana tasiniyor (kanit kaybini onlemek icin) ama guncel
+        # cevapmis gibi okunursa ayni kosu iki kez sayilir ve gecersiz
+        # kilinmis bir cevap ekrana geri gelir.
+        if cevap_yolu.name.endswith("_arac.json") or "_onceki" in cevap_yolu.name:
             continue
         ham = read_json(cevap_yolu)
         cevap = ham[0] if isinstance(ham, list) and ham else ham

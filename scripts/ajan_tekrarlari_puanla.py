@@ -35,7 +35,9 @@ def _cevaplari_topla() -> list[dict]:
     """Her tekrar dosyasindan cevabi okur; dosya adini kayit olarak tasir."""
     cevaplar = []
     for yol in sorted(TEKRAR_DIZINI.glob("*_tekrar*.json")):
-        if yol.name.endswith("_arac.json") or yol.name.startswith("llm_score"):
+        # `_onceki*`: arsivlenmis, gecersiz kilinmis cevap - puanlanmaz.
+        if (yol.name.endswith("_arac.json") or yol.name.startswith("llm_score")
+                or "_onceki" in yol.name):
             continue
         ham = json.loads(yol.read_text(encoding="utf-8"))
         cevap = ham[0] if isinstance(ham, list) and ham else ham

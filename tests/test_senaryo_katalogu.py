@@ -343,3 +343,15 @@ def test_tekrar_puanlari_yalnizca_tekrari_olan_kosulari_kapsiyor():
     from data_loader import kontrol_tekrarlari
 
     assert {r["run_id"] for r in puan["runs"]} == set(kontrol_tekrarlari())
+
+
+def test_arsivlenmis_cevaplar_guncel_sayilmiyor():
+    """Betik uzerine yazmak yerine eski cevabi `_onceki1.json` diye yana
+    tasir (kanit kaybini onlemek icin). Okuyucu `*_tekrar*.json` deseniyle
+    tariyordu ve arsiv dosyalari da bu desene uyuyor: gecersiz kilinmis bir
+    cevap guncelmis gibi okunur ve ayni kosu iki kez sayilirdi."""
+    from data_loader import kontrol_tekrarlari
+
+    for kosu_id, kayitlar in kontrol_tekrarlari().items():
+        for k in kayitlar:
+            assert "_onceki" not in k["dosya"], f"{kosu_id}: {k['dosya']}"
