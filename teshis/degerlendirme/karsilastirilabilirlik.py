@@ -225,3 +225,39 @@ def esikler(senaryo: str) -> dict[str, float | None]:
         m: max(abs(float(_defter()[c][m]) - float(r[m])) for c in kontroller)
         for m in METRIKLER
     }
+
+
+# --- Arayuz metinleri: TEK KAYNAK -------------------------------------------
+#
+# Ayni karar mantigini farkli sayfalarda ayri metinlerle tekrar etmek, bu
+# projede tekrarlayan hata oruntusudur. Eslenik olcum aciklamasi uc ayri
+# yerde ayri cumlelerle yazilmisti ve biri geride kaldi: sonuc cumlesi
+# duzeltildikten sonra bos gurultu bandi kutusu hala "rastgelelikten
+# ayrilamiyor" diyordu.
+
+def gurultu_esigi_gecerli_mi(senaryo: str) -> bool:
+    """Bu kosuda gurultu esigi UYGULANABILIR mi?
+
+    Eslenik olcumde uygulanamaz: model dosyasi birebir ayni, egitim
+    rastgeleligi hic devrede degil. "Kontrol kosusu yok" demek de yanlistir -
+    aranan bir kontrol yoktur.
+    """
+    return karsilastirma(senaryo)["tur"] != "eslenik"
+
+
+def esik_yoklugu_aciklamasi(senaryo: str) -> str:
+    """Esik neden yok? Eslenik olcum ile gercek eksiklik AYRI seylerdir."""
+    karsi = karsilastirma(senaryo)
+    if karsi["tur"] == "eslenik":
+        return (
+            f"{senaryo} ile {karsi['referans']} <b>aynı ağırlık dosyasını</b> "
+            "kullanır; eğitim rastgeleliği devrede değildir. Bu yüzden "
+            "gürültü eşiği uygulanmaz: ölçülen fark tamamen değişen çıkarım "
+            "ayarının veya değerlendirme kümesinin etkisidir."
+        )
+    if karsi["tur"] == "yok":
+        return karsi["aciklama"]
+    return (
+        "Bu ölçekte kontrol koşusu yok: fark ölçülebiliyor ama gürültüden "
+        "ayrılamıyor. Başka bir ölçeğin eşiği ödünç alınamaz."
+    )

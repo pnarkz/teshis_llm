@@ -69,16 +69,22 @@ def _hipotez_tablosu(sonuclar: pd.DataFrame) -> pd.DataFrame:
             hukum, tur = "Eşik yok", "uyari"
             gozlenen = "bu ölçekte kontrol koşusu yok"
         elif not e:
-            hukum, tur = "Desteklenmedi (gürültü içinde)", "kritik"
+            hukum, tur = "Gürültüyü aşan etki yok", "kritik"
             gozlenen = "hiçbir etki gürültü eşiğini aşmıyor"
         elif e["fark"] > 0:
             # Bozulma bekleniyordu, olculen etki ARTIS yonunde.
-            hukum, tur = "Beklenmedik yön (artış)", "uyari"
+            hukum, tur = "Beklenmedik yönde etki (yükseliş)", "uyari"
             gozlenen = f"{e['alan']} {e['fark']:+.4f} (yükseliş)"
         else:
             asan = gozlem.get("asan_metrikler") or []
             guclu = len(asan) >= 2 or (e.get("kirilim") and e["oran"] >= 5)
-            hukum = "Desteklendi" if guclu else "Kısmen desteklendi"
+            # ETIKET HESAPLANANI ANLATIR, hipotez hukmu VERMEZ. "Desteklendi"
+            # demek, beklentinin metnini denetledigimizi ima ederdi - oysa
+            # denetlemiyoruz. D2a'nin beklentisi "mAP50-95 mAP50'den daha
+            # fazla duser"; kucuk nesne recall dususu bu beklentiyi tek
+            # basina dogrulamaz ama eski etiket "Desteklendi" yaziyordu.
+            hukum = ("Eşiği aşan düşüş (birden fazla metrik)" if guclu
+                     else "Eşiği aşan düşüş (tek metrik)")
             tur = "guclu" if guclu else "uyari"
             gozlenen = f"{e['alan']} {e['fark']:+.4f}"
 
@@ -288,20 +294,22 @@ def goster() -> None:
                 st.write("")
 
     st.markdown("---")
-    st.markdown("## Hipotezler ve hükümler")
+    st.markdown("## Beklentiler ve ölçülen etki")
     tablo = _hipotez_tablosu(sonuclar)
     if not tablo.empty:
         sayim = tablo["hüküm"].value_counts()
         stil.kpi_satiri([
-            ("Desteklendi", int(sayim.get("Desteklendi", 0)),
-             "düşüş yönünde, eşiği aşan etki"),
-            ("Kısmen", int(sayim.get("Kısmen desteklendi", 0)),
-             "tek metrik, düşüş yönünde"),
+            ("Eşiği aşan düşüş",
+             int(sayim.get("Eşiği aşan düşüş (birden fazla metrik)", 0)),
+             "birden fazla metrikte"),
+            ("Tek metrikte düşüş",
+             int(sayim.get("Eşiği aşan düşüş (tek metrik)", 0)),
+             "yalnızca bir metrikte"),
             ("Beklenmedik yön",
-             int(sayim.get("Beklenmedik yön (artış)", 0)),
+             int(sayim.get("Beklenmedik yönde etki (yükseliş)", 0)),
              "etki var ama yükseliş yönünde"),
-            ("Desteklenmedi",
-             int(sayim.get("Desteklenmedi (gürültü içinde)", 0)),
+            ("Gürültüyü aşan etki yok",
+             int(sayim.get("Gürültüyü aşan etki yok", 0)),
              "hiçbir etki eşiği aşmıyor"),
             ("Değerlendirilemeyen",
              int(sayim.get("Ölçülemedi", 0)) + int(sayim.get("Eşlenik ölçüm", 0))
@@ -311,18 +319,21 @@ def goster() -> None:
         st.dataframe(tablo.drop(columns=["_tur"]), hide_index=True,
                      width="stretch", height=460)
         stil.kutu(
-            "<b>Bu tablo bir hipotez testi değildir.</b> Beklenti sütunu "
-            "serbest metindir (\"insan recall ve AP belirgin düşer\") ve "
-            "makine tarafından ayrıştırılamaz; hangi <i>sınıfın</i> hangi "
-            "<i>metriğinin</i> düşmesi beklendiği otomatik olarak "
-            "denetlenmez. Hüküm yalnızca şunu söyler: ölçülen etki gürültü "
-            "eşiğini aşıyor mu ve <b>hangi yönde</b>."
-            '<div class="yorum" style="margin-top:.5rem">İlk sürüm yalnızca '
-            "\"eşiği aşan metrik var mı\" diye bakıyordu ve D1'de saçma bir "
-            "sonuç veriyordu: beklenti \"insan recall düşer\" iken tablo, "
-            "genel mAP50-95'in <b>artması</b> üzerinden \"kısmen "
-            "desteklendi\" yazıyordu. Bir metriğin yükselmesi, düşüşü "
-            "öngören bir hipotezi desteklemez.</div>"
+            "<b>Bu tablo bir hipotez testi değildir ve öyle olduğunu iddia "
+            "etmez.</b> Beklenti sütunu serbest metindir (\"mAP50-95 "
+            "mAP50'den daha fazla düşer\") ve makine tarafından "
+            "ayrıştırılamaz; hangi <i>sınıfın</i> hangi <i>metriğinin</i> ne "
+            "kadar düşmesi beklendiği otomatik denetlenmez. Bu yüzden hüküm "
+            "sütunu yalnızca <b>ölçülen şeyi</b> adlandırır: etki gürültü "
+            "eşiğini aşıyor mu, kaç metrikte ve hangi yönde. Beklentiyle "
+            "eşleşip eşleşmediğine okuyucu karar verir — iki sütun yan yana."
+            '<div class="yorum" style="margin-top:.5rem">Önceki iki sürüm de '
+            "yanlıştı. İlki yalnızca \"eşiği aşan metrik var mı\" diye "
+            "bakıyordu ve D1'de beklenti \"insan recall düşer\" iken genel "
+            "mAP50-95'in <b>artması</b> üzerinden \"kısmen desteklendi\" "
+            "yazıyordu. İkincisi yönü düzeltti ama hâlâ \"Desteklendi\" "
+            "diyordu — herhangi bir metrikteki düşüş, senaryonun kendi "
+            "beklentisini doğrulamaz.</div>"
         )
 
     with st.expander("Derecelendirilmeyen koşular ve nedenleri"):
