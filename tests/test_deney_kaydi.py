@@ -373,3 +373,22 @@ def test_gecici_sunucu_hatasi_yeniden_deneniyor(monkeypatch):
 
     assert ajan_modulu._istek_gonder(SahteClient(), "m", [], None) == "cevap"
     assert cagri["n"] == 3, "gecici hata yeniden denenmedi"
+
+
+def test_devam_tek_basina_calistir_istemiyor():
+    """--devam zaten 'calistir'in bir bicimidir.
+
+    Ayrica --calistir istemek, yarida kalmis bir deneyi surdurmeyi gereksiz
+    yere zorlastiriyordu: kullanici --devam veriyor, betik "--calistir verin"
+    diyor. Eksik --deney ise mevcut deney kimliklerini listelemeli.
+    """
+    import subprocess
+
+    sonuc = subprocess.run(
+        [sys.executable, "scripts/ajan_deney.py", "--devam", "--tekrar", "3"],
+        cwd=ROOT, capture_output=True, text=True)
+    hata = sonuc.stderr
+    assert "--calistir verin" not in hata, (
+        "--devam hala --calistir istiyor")
+    assert "--devam icin --deney" in hata
+    assert "Mevcut deneyler:" in hata

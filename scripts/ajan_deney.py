@@ -359,8 +359,21 @@ def main() -> None:
         print(json.dumps(plan, ensure_ascii=False, indent=2))
         return
 
+    # --devam zaten "calistir"in bir bicimidir; ayrica --calistir istemek
+    # yarida kalmis bir deneyi surdurmeyi gereksiz yere zorlastiriyordu.
+    if args.devam and not args.kuru_calistirma:
+        args.calistir = True
     if not (args.kuru_calistirma or args.calistir):
-        a.error("--plan, --kuru-calistirma veya --calistir verin")
+        a.error("--plan, --kuru-calistirma, --calistir veya --devam verin")
+    if args.devam and not args.deney:
+        a.error(
+            "--devam icin --deney <kimlik> gerekir. Mevcut deneyler:\n  "
+            + "\n  ".join(sorted(
+                d.name for d in DENEYLER.glob("*")
+                if (d / "deney.json").is_file()
+                and not d.name.startswith("KURU__")
+            ) or ["(yok)"])
+        )
 
     dizin = deneyi_yurut(args.deney, plan, model,
                          kuru=args.kuru_calistirma, devam=args.devam)
