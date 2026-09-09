@@ -500,6 +500,30 @@ def test_karisik_uretim_kosulu_uyari_veriyor(tmp_path):
     assert sonuc["uretim_kosullari"]["git_commit"] == ["aaa"]
 
 
+def test_depo_ilerlemesi_uyari_degil_not(tmp_path):
+    """git_commit degismesi gozlemleri kiyaslanamaz YAPMAZ.
+
+    Gercek kosuda oldu: deney surerken kosucunun yeniden deneme mantigi ve
+    puanlama ciktisi degisti, uc farkli commit'te gozlem uretildi. Ama
+    ajanin gordugu taraf - model ve arac katmani parmak izi - hic
+    degismedi. Bunu "gozlemler ayni kosulda uretilmemis" diye raporlamak
+    olandan agir bir sey soylemek olur; gizlemek ise izlenebilirligi
+    bozar. Ayri bir NOT olarak yazilir.
+    """
+    ilk = _gozlem("kosu_04__g01.json", "kosu_04", ozet="a")
+    ikinci = _gozlem("kosu_04__g02.json", "kosu_04", ozet="b", sira=2)
+    ilk.update(model="gemini-3.6-flash", arac_surumu="91f5", git_commit="a15487c9ee")
+    ikinci.update(model="gemini-3.6-flash", arac_surumu="91f5", git_commit="15ede45500")
+    sonuc = puanla_modulu.puanla(_deney_kur(tmp_path, [ilk, ikinci], ANAHTAR))
+
+    assert sonuc["tek_parca_mi"] is True, (
+        "ajanin gordugu kosullar degismedi; deney tek parca sayilmali")
+    assert "_uyari" not in sonuc
+    assert "git_commit" in sonuc["_baglam_notu"]
+    assert "DEGISMEDI" in sonuc["_baglam_notu"]
+    assert sonuc["uretim_kosullari"]["git_commit"] == ["15ede45500", "a15487c9ee"]
+
+
 def test_ayni_kosulda_uretilen_deney_uyari_vermiyor(tmp_path):
     ilk = _gozlem("kosu_04__g01.json", "kosu_04", ozet="a")
     ikinci = _gozlem("kosu_04__g02.json", "kosu_04", ozet="b", sira=2)

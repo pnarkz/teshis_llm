@@ -123,18 +123,32 @@ def puanla(dizin: Path) -> dict[str, Any]:
         satir["gizli_senaryo"] = gizli.get("gizli_senaryo")
         satirlar.append(satir)
 
-    # Deney TEK PARCA mi: butun gozlemler ayni model, ayni arac surumu ve
-    # ayni kod haliyle mi uretildi?
+    # Deney TEK PARCA mi?
     #
     # Bir deney gunlere yayilabilir (kota), farkli bir hesapla surdurulebilir,
-    # arada kod degisebilir. API anahtari onemli degil - model, arac katmani
-    # ve commit onemli. Bunlar karisirsa gozlemler ayni kosulda uretilmemis
-    # olur ve tek bir oran altinda toplanamaz. Sessiz kalmak yerine yazilir.
+    # arada depo ilerleyebilir. Hangi alanin degistigi onemlidir; hepsi ayni
+    # agirlikta degil:
+    #
+    # BELIRLEYICI - ajanin gordugu kosullar. Model ve arac katmani parmak izi
+    #   (arac_surumu) degisirse gozlemler farkli kosulda uretilmistir ve tek
+    #   bir oran altinda toplanamaz. Gercek uyari budur.
+    # BAGLAM - deponun o anki hali. git_commit, ajanin gormedigi kodu da
+    #   kapsar: kosucunun yeniden deneme mantigi, puanlama ciktisi, testler.
+    #   Deney surerken bunlar degisebilir ve bu, gozlemleri kiyaslanamaz
+    #   YAPMAZ. Yine de kaydedilir ve yazilir - sessizce yutulmaz.
+    #
+    # API anahtari hicbir kategoriye girmez: kaydedilmez ve bilimsel bir
+    # degisken degildir.
+    BELIRLEYICI = ("model", "arac_surumu")
+    BAGLAM = ("git_commit",)
     uretim = {
         alan: sorted({str(k.get(alan)) for k in gecerli})
-        for alan in ("model", "arac_surumu", "git_commit")
+        for alan in BELIRLEYICI + BAGLAM
     }
-    karisik = {a: v for a, v in uretim.items() if len(v) > 1}
+    karisik = {a: v for a, v in uretim.items()
+               if a in BELIRLEYICI and len(v) > 1}
+    baglam_degisti = {a: v for a, v in uretim.items()
+                      if a in BAGLAM and len(v) > 1}
 
     sonuc: dict[str, Any] = {
         "gozlem": len(satirlar),
@@ -177,11 +191,21 @@ def puanla(dizin: Path) -> dict[str, Any]:
     )
     if karisik:
         sonuc["_uyari"] = (
-            "Gozlemler ayni kosulda uretilmemis; su alanlar deney icinde "
-            "degisiyor: "
+            "Gozlemler ayni kosulda uretilmemis; ajanin gordugu su alanlar "
+            "deney icinde degisiyor: "
             + "; ".join(f"{a} -> {', '.join(v)}" for a, v in karisik.items())
             + ". Bu gozlemler tek bir oran altinda toplanmadan once "
               "hangisinin hangi kosulda uretildigi belirtilmelidir."
+        )
+    if baglam_degisti:
+        sonuc["_baglam_notu"] = (
+            "Deney surerken depo ilerledi: "
+            + "; ".join(f"{a} -> {len(v)} farkli deger ({', '.join(x[:8] for x in v)})"
+                        for a, v in baglam_degisti.items())
+            + ". Ajanin gordugu kosullar (model, arac_surumu) DEGISMEDI, bu "
+              "yuzden gozlemler kiyaslanabilir. Degisen kod ajanin gormedigi "
+              "taraftir; hangi gozlemin hangi commit'te uretildigi her kayitta "
+              "yazili."
         )
     return sonuc
 
@@ -213,6 +237,8 @@ def main() -> None:
               f"tespit-farkindalikli={d['tespit_farkindalikli']}")
     if sonuc.get("_uyari"):
         print(f"\nUYARI: {sonuc['_uyari']}\n")
+    if sonuc.get("_baglam_notu"):
+        print(f"\nNOT: {sonuc['_baglam_notu']}\n")
     for d in sonuc.get("dislanan", [])[:6]:
         print(f"  DISLANDI {d['dosya']}: {d['neden']}")
 
