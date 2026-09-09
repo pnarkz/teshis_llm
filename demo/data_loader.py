@@ -376,6 +376,69 @@ def ajan_kaydi() -> dict:
     }
 
 
+@_onbellek
+def ajan_deneyi() -> dict | None:
+    """En yeni TAMAMLANMIS ajan deneyi (reports/ajan_deneyleri/).
+
+    Eski ana denemeden (`ajan_kaydi`) tamamen AYRIDIR ve onunla asla
+    birlestirilmez: farkli kod hali, ustverisiz, arac cevabi snapshot'i
+    olmayan bir kayitla yeni deneyin sayilarini tek bir orana toplamak
+    ikisini de yaniltir.
+
+    Kuru provalar (KURU__ onekli) atlanir - prova deney degildir. Deney
+    veya puan dosyasi yoksa None doner: taze bir klonda ya da deney
+    kosulmadan once sayfa bos panel gostermek yerine bolumu hic acmaz.
+    """
+    kok = ROOT / "reports/ajan_deneyleri"
+    if not kok.is_dir():
+        return None
+    adaylar = sorted(d for d in kok.glob("*")
+                     if (d / "degerlendirme/puan.json").is_file()
+                     and not d.name.startswith("KURU__"))
+    if not adaylar:
+        return None
+    dizin = adaylar[-1]
+    puan = read_json(dizin / "degerlendirme/puan.json")
+    if not puan.get("runs"):
+        return None
+    ustveri = read_json(dizin / "deney.json")
+    plan = ustveri.get("plan") or {}
+    return {
+        "deney_id": dizin.name,
+        "ustveri": ustveri,
+        "puan": puan,
+        "beklenen_gozlem": plan.get("toplam_gozlem"),
+        "tam_mi": len(puan["runs"]) == plan.get("toplam_gozlem"),
+    }
+
+
+def ajan_deneyi_kosu_bazli() -> list[dict]:
+    """Kosu basina: gizli senaryo, rol ve TEKRARLARIN puan listesi.
+
+    Tekrarlar ortalanmaz. Uc tekrarin ayni hukmu verip vermedigi bu
+    deneyin asil sorusu; ortalama alinirsa o bilgi kaybolur.
+    """
+    deney = ajan_deneyi()
+    if not deney:
+        return []
+    gruplar: dict[str, dict] = {}
+    for satir in deney["puan"]["runs"]:
+        g = gruplar.setdefault(satir["run_id"], {
+            "kosu_id": satir["run_id"],
+            "senaryo": satir.get("gizli_senaryo"),
+            "rol": satir.get("gizli_rol"),
+            "beklenen": satir.get("expected"),
+            "kati": [], "tespit": [], "cevaplar": [],
+        })
+        g["kati"].append(satir["diagnosis_score"])
+        g["tespit"].append(satir["diagnosis_score_tespit"])
+        g["cevaplar"].append(satir.get("model_diagnosis", ""))
+    for g in gruplar.values():
+        g["tekrar"] = len(g["kati"])
+        g["hukum_tutarli"] = len(set(g["kati"])) == 1
+    return [gruplar[k] for k in sorted(gruplar)]
+
+
 def referans_galerisi(kosu: str) -> tuple[str | None, dict]:
     """Bir kosunun KENDI referansinin hata galerisi.
 

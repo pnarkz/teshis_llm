@@ -564,3 +564,73 @@ def test_ozet_iki_puani_da_yaziyor(tmp_path, monkeypatch, capsys):
     cikti = capsys.readouterr().out
     assert "kati=0.0" in cikti
     assert "tespit-farkindalikli=1.0" in cikti
+
+
+# --- Konsol: yeni deney eski denemeye karismadan gorunuyor mu ---------------
+
+def test_konsol_yeni_deneyi_ayri_gosteriyor():
+    """Panel yeni deneyi gosterir ama eski denemeyle BIRLESTIRMEZ."""
+    sys.path.insert(0, str(ROOT / "demo"))
+    from data_loader import ajan_deneyi, ajan_kaydi
+
+    deney = ajan_deneyi()
+    if deney is None:
+        pytest.skip("henuz calistirilmis bir deney yok")
+
+    eski = ajan_kaydi()
+    assert len(eski["cevaplar"]) == 11, "eski deneme degismis"
+    # Iki kaynak ayri: yeni deneyin gozlem sayisi eskiye eklenmemis.
+    assert deney["puan"]["gozlem"] != len(eski["cevaplar"])
+    assert "rol_bazli" in deney["puan"], "rol bazli rapor yok"
+    # Tek bir birlesik oran URETILMEMELI.
+    assert "mean_score" not in deney["puan"], (
+        "yeni deney tek bir birlesik orana indirgenmis")
+
+
+def test_konsol_tekrarlari_ortalamadan_gosteriyor():
+    """Tekrarlarin ayni hukmu verip vermedigi kaybolmamali."""
+    sys.path.insert(0, str(ROOT / "demo"))
+    from data_loader import ajan_deneyi_kosu_bazli
+
+    kosular = ajan_deneyi_kosu_bazli()
+    if not kosular:
+        pytest.skip("henuz calistirilmis bir deney yok")
+    for k in kosular:
+        assert isinstance(k["kati"], list) and k["kati"], k["kosu_id"]
+        assert len(k["kati"]) == k["tekrar"]
+        assert k["hukum_tutarli"] == (len(set(k["kati"])) == 1)
+    # Gizli rol ve senaryo degerlendirme tarafinda; panel bunlari GOSTERIR
+    # (izleyici icin), ama gozlem dosyalarinda bulunmaz.
+    assert all(k["rol"] and k["senaryo"] for k in kosular)
+
+
+def test_deney_yoksa_panel_acilmiyor(tmp_path, monkeypatch):
+    """Taze klonda veya deney kosulmadan once bos panel gosterilmemeli."""
+    sys.path.insert(0, str(ROOT / "demo"))
+    import data_loader
+
+    monkeypatch.setattr(data_loader, "ROOT", tmp_path)
+    data_loader.ajan_deneyi.clear()
+    try:
+        assert data_loader.ajan_deneyi() is None
+        assert data_loader.ajan_deneyi_kosu_bazli() == []
+    finally:
+        data_loader.ajan_deneyi.clear()
+
+
+def test_kuru_prova_konsolda_deney_gibi_gorunmuyor(tmp_path, monkeypatch):
+    """KURU__ klasoru puan dosyasi tasisa bile deney sayilmamali."""
+    sys.path.insert(0, str(ROOT / "demo"))
+    import data_loader
+
+    kok = tmp_path / "reports/ajan_deneyleri/KURU__20260101T000000Z__aaaa"
+    (kok / "degerlendirme").mkdir(parents=True)
+    (kok / "deney.json").write_text("{}", encoding="utf-8")
+    (kok / "degerlendirme/puan.json").write_text(
+        json.dumps({"runs": [{"run_id": "kosu_01"}]}), encoding="utf-8")
+    monkeypatch.setattr(data_loader, "ROOT", tmp_path)
+    data_loader.ajan_deneyi.clear()
+    try:
+        assert data_loader.ajan_deneyi() is None, "prova deney sayildi"
+    finally:
+        data_loader.ajan_deneyi.clear()

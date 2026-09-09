@@ -28,6 +28,8 @@ import ajan_katmani
 import stil
 from data_loader import (
     ajan_araclarini_calistir,
+    ajan_deneyi,
+    ajan_deneyi_kosu_bazli,
     ajan_kaydi,
     ajan_kaydi_var_mi,
     ajan_kosu_haritasi,
@@ -260,6 +262,94 @@ def _canli_calistir(kosu_id: str) -> dict | None:
     return {"cevap": cevap, "kayit": kayit, "sure": sure}
 
 
+def _tekrarli_deney_paneli() -> None:
+    """Tekrarli, tam ustverili deneyin sonuclari.
+
+    Asagidaki "kayitli koşu" akisindan AYRI bir deneydir ve onunla
+    birlestirilmez: eski deneme farkli bir kod haliyle, ustverisiz ve arac
+    cevabi saklanmadan uretildi. Iki deneyi tek bir basari oraninda toplamak
+    ikisini de yaniltir.
+    """
+    deney = ajan_deneyi()
+    if not deney:
+        return
+
+    puan = deney["puan"]
+    tam = deney["tam_mi"]
+    baslik = ("Tekrarlı deney — tamamlandı" if tam
+              else "Tekrarlı deney — DEVAM EDİYOR")
+    with st.expander(f"{baslik}  ·  {len(puan['runs'])}"
+                     f"/{deney['beklenen_gozlem']} gözlem", expanded=True):
+        if not tam:
+            st.warning(
+                "Bu deney henüz tamamlanmadı. Aşağıdaki oranlar eksik "
+                "gözlemle hesaplanmıştır ve nihai değildir."
+            )
+        st.markdown(
+            "Bu, **aşağıdaki kayıtlı denemeden ayrı** bir deneydir; ikisi "
+            "birleştirilmez. Her gözlem model, araç sürümü, Git commit'i, "
+            "ham cevap ve **her araç çağrısının cevabının anlık kaydını** "
+            "taşır — eski denemede araç cevapları hiç saklanmamıştı."
+        )
+
+        rol_adi = {"saglikli_referans": "Sağlıklı referans",
+                   "kontrol": "Kontrol (yalnızca seed farklı)",
+                   "bozulma_senaryosu": "Bozulma senaryosu"}
+        st.dataframe(pd.DataFrame([
+            {"Rol": rol_adi.get(rol, rol), "Koşu": d["kosu"],
+             "Gözlem": d["gozlem"], "Katı puan": d["dogru_teshis"],
+             "Tespit-farkındalıklı": d["tespit_farkindalikli"]}
+            for rol, d in (puan.get("rol_bazli") or {}).items()
+        ]), hide_index=True, width="stretch")
+        st.caption(
+            "Oranlar rol bazlı verilir ve TOPLANMAZ: kontrol koşuları "
+            "\"sorun uyduruyor mu\", bozulma senaryoları \"nedeni "
+            "bulabiliyor mu\" sorusunu ölçer. Tek bir ortalama ikisini de "
+            "yanıltır. Katı puan uygulanan bozulmanın adını arar; "
+            "tespit-farkındalıklı puan, bozulmanın kilitli tanı setinde "
+            "anlamlı iz bırakmadığı koşularda (D1, D3b, D6b) "
+            "\"anlamlı değişim yok\" cevabını da doğru sayar."
+        )
+
+        kosular = ajan_deneyi_kosu_bazli()
+        degisken = [k for k in kosular if not k["hukum_tutarli"]]
+        tekrar = kosular[0]["tekrar"] if kosular else 0
+        if kosular and not degisken:
+            st.success(
+                f"Tekrar tutarlılığı: {len(kosular)} koşunun tamamı "
+                f"{tekrar} tekrarında da **aynı** hükmü verdi. Sözel ifade "
+                "değişiyor, hüküm değişmiyor."
+            )
+        elif degisken:
+            st.info(
+                f"{len(degisken)}/{len(kosular)} koşuda tekrarlar farklı "
+                "hüküm verdi: "
+                + ", ".join(f"{k['kosu_id']} ({k['senaryo']}) {k['kati']}"
+                            for k in degisken)
+            )
+
+        with st.expander("Koşu bazlı puanlar (tekrarlar ortalanmadan)"):
+            st.dataframe(pd.DataFrame([
+                {"Koşu": k["kosu_id"], "Senaryo": k["senaryo"],
+                 "Rol": rol_adi.get(k["rol"], k["rol"]),
+                 "Beklenen": k["beklenen"],
+                 "Katı (tekrarlar)": str(k["kati"]),
+                 "Tespit-farkındalıklı": str(k["tespit"])}
+                for k in kosular
+            ]), hide_index=True, width="stretch")
+
+        ust = deney["ustveri"]
+        st.caption(
+            f"Deney kimliği: `{deney['deney_id']}` · model: "
+            f"`{ust.get('model')}` · üretim: "
+            f"`{ust.get('uretim_parametreleri', {}).get('automatic_function_calling')}`"
+        )
+        if puan.get("_baglam_notu"):
+            st.caption(puan["_baglam_notu"])
+        if puan.get("_uyari"):
+            st.warning(puan["_uyari"])
+
+
 def goster() -> None:
     st.title("LLM Teşhis Ajanı")
     st.markdown(
@@ -267,6 +357,11 @@ def goster() -> None:
         "koşunun hangi senaryo olduğunu bilmez. Teşhisini kendi seçtiği "
         "kanıtla üretir."
     )
+
+    # Once TEKRARLI deneyin sonucu, sonra tek tek kosu incelemesi. Panel
+    # kendi basligini tasir ve deney yoksa (taze klon, henuz kosulmamis)
+    # hic acilmaz.
+    _tekrarli_deney_paneli()
 
     kayit = ajan_kaydi()
     harita = ajan_kosu_haritasi()
