@@ -623,17 +623,35 @@ def _kontrol_tekrarlari_ozeti(kayit: dict) -> None:
         )
 
 
+def _ajan_skorlari(kayit: dict) -> dict[str, float]:
+    """Rubrik ortalamasini bilesenlerine ayirir.
+
+    Tek sayi vermek yaniltici: kanit ve sinirlama bilesenleri her kosuda tam
+    puan aliyor, dolayisiyla ortalama teshis dogrulugundan cok daha yuksek
+    cikiyor.
+
+    Genel Bakis'ta bunun birebir kopyasi duruyordu; artik tek yerde.
+    """
+    puanlar = list(kayit.get("puanlar", {}).values())
+    if not puanlar:
+        return {}
+    n = len(puanlar)
+    return {
+        "teshis": sum(p["diagnosis_score"] for p in puanlar) / n,
+        "teshis_tespit": sum(p["diagnosis_score_tespit"] for p in puanlar) / n,
+        "kanit": sum(p["evidence_score"] for p in puanlar) / n,
+        "sinir": sum(p["limitation_score"] for p in puanlar) / n,
+        "rubrik": kayit.get("ozet", {}).get("mean_score"),
+    }
+
+
 def _denemenin_butunu(kayit: dict) -> None:
     st.markdown("### Denemenin bütünü")
-    puanlar = list(kayit["puanlar"].values())
-    if not puanlar:
+    skor = _ajan_skorlari(kayit)
+    if not skor:
         return
-    n = len(puanlar)
-    teshis = sum(p["diagnosis_score"] for p in puanlar) / n
-    tespit = sum(p["diagnosis_score_tespit"] for p in puanlar) / n
-    kanit = sum(p["evidence_score"] for p in puanlar) / n
-    sinir = sum(p["limitation_score"] for p in puanlar) / n
-    rubrik = kayit["ozet"].get("mean_score")
+    teshis, tespit = skor["teshis"], skor["teshis_tespit"]
+    kanit, sinir, rubrik = skor["kanit"], skor["sinir"], skor["rubrik"]
 
     a, b, c = st.columns(3)
     with a:

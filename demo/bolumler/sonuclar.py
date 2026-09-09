@@ -102,6 +102,27 @@ def _hipotez_tablosu(sonuclar: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(satirlar)
 
 
+def _guc_dagilimi(sonuclar: pd.DataFrame) -> pd.DataFrame:
+    """Yalnizca DERECELENDIRILEBILEN kosularin kanit gucu dagilimi.
+
+    Kontrol kosulari, referanslar, eslenik olcumler ve esigi olmayan kosular
+    bu dagilima girmez - girseydi "guclu bulgu" sayisi, hicbir bozulma
+    icermeyen kosularla sisirilirdi.
+
+    Genel Bakis'tan tasindi: giris ekraninda kanit gucu dagilimi, izleyici
+    daha "kanit gucu" kavramini duymadan gosteriliyordu.
+    """
+    sayim: dict[str, int] = {}
+    for _, r in sonuclar.iterrows():
+        seviye = kanit_gucu(str(r["scenario"]))["seviye"]
+        if seviye in DERECELENDIRILEN:
+            sayim[seviye] = sayim.get(seviye, 0) + 1
+    return pd.DataFrame(
+        {"koşu": [sayim.get(s, 0) for s in DERECELENDIRILEN]},
+        index=[stil.seviye_adi(s) for s in DERECELENDIRILEN],
+    )
+
+
 def _derecelendirilemeyenler(sonuclar: pd.DataFrame) -> pd.DataFrame:
     satirlar = []
     for _, r in sonuclar.iterrows():
@@ -336,9 +357,20 @@ def goster() -> None:
             "beklentisini doğrulamaz.</div>"
         )
 
-    with st.expander("Derecelendirilmeyen koşular ve nedenleri"):
-        st.dataframe(_derecelendirilemeyenler(sonuclar), hide_index=True,
-                     width="stretch")
+    dagilim = _guc_dagilimi(sonuclar)
+    derece_disi = _derecelendirilemeyenler(sonuclar)
+    a, b = st.columns([2, 3])
+    with a:
+        stil.ust_baslik("kanıt gücü dağılımı")
+        st.bar_chart(dagilim, height=200, color=stil.ADAY)
+    with b:
+        stil.ust_baslik("derecelendirilmeyen koşular")
+        st.dataframe(derece_disi, hide_index=True, width="stretch")
+        stil.yorum(
+            f"Yalnızca kendi ölçeğinde referansı VE gürültü eşiği olan "
+            f"{int(dagilim['koşu'].sum())} koşu derecelendirilir; "
+            f"kalan {len(derece_disi)} koşu nedeniyle birlikte yanda."
+        )
 
     st.markdown("---")
     st.markdown("## Neyi HENÜZ söyleyemiyoruz")

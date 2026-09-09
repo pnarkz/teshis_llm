@@ -25,6 +25,7 @@ Sunumda kod bulmak icin: **[Kod haritasi — senaryo, uygulama ve sonuc](docs/KO
 | [docs/CALISTIRMA.md](docs/CALISTIRMA.md) | Kurulum ve komutlar (yerel + Kaggle). |
 | [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md) | Kronolojik degisiklik kaydi; her duzeltmenin gerekcesi. |
 | [docs/SUNUM.md](docs/SUNUM.md) | Teknik olmayan anlatim ve mentor sunumu. |
+| [docs/SUNUM_SENARYOSU.md](docs/SUNUM_SENARYOSU.md) | Konsolu sayfa sayfa gezerken ne gosterilecek ve ne soylenecek. |
 
 ---
 

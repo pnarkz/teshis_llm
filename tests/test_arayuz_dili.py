@@ -123,7 +123,8 @@ def test_sozluk_anahtarlari_ascii_kaldi():
     import sys
 
     sys.path.insert(0, str(ROOT / "demo"))
-    from bolumler.genel_bakis import _ajan_skorlari, _guc_dagilimi
+    from bolumler.ajan import _ajan_skorlari
+    from bolumler.sonuclar import _guc_dagilimi
     from data_loader import ajan_kaydi, load_results
 
     skor = _ajan_skorlari(ajan_kaydi())

@@ -1,13 +1,24 @@
-"""Genel Bakis: proje ne soruyor, nasil calisiyor, ne buldu.
+"""Genel Bakis: sunumun ilk dakikasi.
 
-Sayfa uzun bir README gibi degil, bir gozlem panosu gibi kurgulanmistir:
-once ucten dorde sayi, sonra sistemin uctan uca sureci, sonra etki haritasi.
+Bu sayfanin isi izleyiciyi UC seye hazirlamak: hangi soru soruluyor, sistem
+nasil calisiyor, ve neden onemli. Bunun otesindeki her sey baska bir sayfaya
+aittir.
 
-Skorlarin adlandirilmasina ozellikle dikkat edilir. `mean_score` bir rubrik
-ortalamasidir ve iki bileseni (kanit, sinirlama) her kosuda tam puan aldigi
-icin yuksek gorunur. Tek basina verilirse "ajan senaryolarin %83'unu dogru
-bildi" diye okunur; gercek teshis dogrulugu %50'dir. Bu yuzden ayristirilarak
-gosterilir.
+Onceki hali bir rapor gibi kurgulanmisti: alti gosterge, alti adimli sema,
+butun kosularin etki haritasi, kanit gucu dagilimi, derecelendirilmeyenler
+tablosu ve uc ajan skoru - hepsi ayni gorsel agirlikta. Ilk grafige varmadan
+once epey okuma gerekiyordu ve izleyici neye bakacagini bilemiyordu.
+
+Simdi tek bir ana grafik var ve o grafik projenin iki iddiasini birden
+tasiyor: kirilim gizli kaybi acar, ve bir fark ancak gurultuyu asarsa etkidir.
+
+Sayfa iki olcekte okunur: once TEK bir ornek (D4, kirilim + gurultu bandi),
+sonra BUTUN kosularin etki haritasi. Ozelden genele; harita tek basina
+birakilsaydi izleyici neye bakacagini bilemezdi.
+
+Tasinanlar: kanit gucu dagilimi -> Sonuclar, ajan puanlama olcutleri ->
+Ajan. Uc "ana bulgu" ve derecelendirilmeyenler tablosu ise Sonuclar'da
+zaten vardi; buradakiler kopyaydi ve silindi.
 
 Butun sayilar kaynaktan turetilir. Sabit yazilmis tek sey yoktur - "24 kosu"
 gibi bir sayi bir donem burada yaziyordu ve defter buyudukce geride kaldi.
@@ -19,10 +30,100 @@ import pandas as pd
 import streamlit as st
 
 import grafik
+import katalog
 import stil
-from data_loader import ajan_kaydi, error_galleries, load_results
+from data_loader import ajan_deneyi, ajan_deneyi_kosu_bazli, load_results
 from teshis.degerlendirme.karsilastirilabilirlik import bozulmasiz_mi, kimlik
-from teshis.degerlendirme.senaryo_ozeti import kanit_gucu, ne_gozlendi
+from teshis.degerlendirme.senaryo_ozeti import ne_gozlendi
+
+# Ana bulgu olarak D4 secildi: bozulma TEK bir alt grupta yogunlasiyor ve
+# genel metrikte kaybolmuyor - ikisi ayni karede gorunuyor.
+ANA_SENARYO = "D4"
+
+
+def _kontrol_sayisi(sonuclar: pd.DataFrame) -> int:
+    return sum(
+        1 for _, r in sonuclar.iterrows()
+        if str(r["scenario"]).startswith("C") and str(r["scenario"])[1:2].isdigit()
+    )
+
+
+# --- Ana grafik -------------------------------------------------------------
+
+def _ana_bulgu_verisi(senaryo: str = ANA_SENARYO) -> pd.DataFrame | None:
+    """Nesne boyutu bandi basina recall: saglikli referans, senaryo, gurultu bandi.
+
+    Band, o grupta hicbir bozulma icermeyen kosular arasinda gozlenen en
+    buyuk yayilimdir. Grafikte serit olarak cizilir; seridin icinde kalan
+    bir nokta saf rastgelelikten ayirt edilemez.
+    """
+    import senaryo_grafikleri as sg
+    from teshis.degerlendirme import gurultu
+
+    veri = sg.boyut_verisi(senaryo)
+    if veri is None or veri.empty:
+        return None
+
+    import veri_seti as vs
+
+    ters = {ad: kod for kod, ad in vs.BANT_ADI.items()}
+    satirlar = []
+    for _, r in veri.iterrows():
+        kod = ters.get(r["grup"], r["grup"])
+        d = gurultu.fark_degerlendir("boyut_bandi_recall", kod, float(r["fark"]))
+        band = d.get("band")
+        if not band:
+            continue
+        oran = abs(float(r["fark"])) / band
+        satirlar.append({
+            "nesne boyutu": r["grup"],
+            "sağlıklı referans": float(r["sağlıklı"]),
+            senaryo: float(r["senaryo"]),
+            "fark": float(r["fark"]),
+            "gürültü bandı": band,
+            "band oranı": round(oran, 2),
+            "gerçek kutu": r.get("gerçek kutu"),
+            "_vurgu": oran >= 1.0,
+            "_etiket": f"gürültü bandının {oran:.0f} katı" if oran >= 1.0 else "",
+        })
+    return pd.DataFrame(satirlar) if satirlar else None
+
+
+def _ana_grafik(senaryo: str = ANA_SENARYO) -> None:
+    veri = _ana_bulgu_verisi(senaryo)
+    if veri is None:
+        return
+
+    vurgulu = veri[veri["_vurgu"]]
+    stil.ust_baslik(f"örnek bulgu · {senaryo}")
+    st.markdown(
+        "#### Genel skor, küçük nesnelerdeki kaybı gizleyebilir",
+        help=None,
+    )
+    st.altair_chart(
+        grafik.dumbbell_bantli(
+            veri, "nesne boyutu", "sağlıklı referans", senaryo,
+            "gürültü bandı", "_vurgu", alan_adi="recall (yakalama oranı)",
+            etiket="_etiket",
+        ),
+        width="stretch",
+    )
+
+    if not vurgulu.empty:
+        r = vurgulu.iloc[0]
+        st.markdown(
+            f"Gri şerit, o boyut grubunda **hiçbir bozulma içermeyen** koşular "
+            f"arasında görülen yayılımdır. {senaryo}'te yalnızca "
+            f"**{r['nesne boyutu']}** grubu şeridin dışına çıkıyor: recall "
+            f"{r['sağlıklı referans']:.4f} → {r[senaryo]:.4f} "
+            f"(**{r['band oranı']:.0f}×** bant). Diğer gruplar şeridin içinde, "
+            "yani o farklar rastgelelikten ayırt edilemiyor."
+        )
+    stil.yorum(
+        f"Bu tek senaryonun sonucudur, bütün senaryoların özeti değildir. "
+        f"Senaryo bazlı sonuçlar Karşılaştırma ve Sonuçlar sayfalarında."
+    )
+
 
 METRIK_ADI = {
     "mAP50": "mAP50", "mAP50_95": "mAP50-95",
@@ -31,10 +132,16 @@ METRIK_ADI = {
 
 
 def _etki_verisi(sonuclar: pd.DataFrame) -> pd.DataFrame:
-    """Senaryo × metrik: farkın gürültü bandına oranı.
+    """Senaryo x metrik: farkin gurultu bandina orani ve YONU.
 
-    Ham fark yerine **orana** bakılır: küçük bir grupta büyük görünen bir
-    fark, o grubun doğal yayılımı içinde olabilir.
+    Ham fark yerine ORANA bakilir: kucuk bir grupta buyuk gorunen bir fark,
+    o grubun dogal yayilimi icinde olabilir.
+
+    "fark" sutunu isaretiyle birlikte tasinir ve harita onu renklendirmede
+    kullanir. Onceden yalnizca mutlak deger vardi; 48 hucrenin 10'u yukselis
+    ve biri (D1 mAP50_95, +0.0240, oran 1.19) esigi asiyordu - yani ayni
+    buyuklukteki bir DUSUSLE ayni rengi alip bozulma kaniti gibi
+    okunuyordu.
     """
     satirlar = []
     for _, r in sonuclar.iterrows():
@@ -57,6 +164,7 @@ def _etki_verisi(sonuclar: pd.DataFrame) -> pd.DataFrame:
                 "senaryo": senaryo,
                 "metrik": METRIK_ADI.get(metrik, metrik),
                 "band oranı": round(abs(d["fark"]) / esik, 2),
+                "yön": "düşüş" if d["fark"] < 0 else "yükseliş",
                 "değer": d["deger"],
                 "referans": d["referans"],
                 "fark": d["fark"],
@@ -66,267 +174,166 @@ def _etki_verisi(sonuclar: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(satirlar)
 
 
-def _guc_dagilimi(sonuclar: pd.DataFrame) -> pd.DataFrame:
-    """Yalnizca DERECELENDIRILEBILEN kosularin dagilimi.
-
-    Kontrol kosulari, referanslar, eslenik olcumler ve esigi olmayan kosular
-    bu dagilima girmez - girseydi "guclu bulgu" sayisi, hicbir bozulma
-    icermeyen kosularla sisirilirdi.
-    """
-    sayim: dict[str, int] = {}
-    for _, r in sonuclar.iterrows():
-        seviye = kanit_gucu(str(r["scenario"]))["seviye"]
-        if seviye in stil.DERECELENDIRILEN:
-            sayim[seviye] = sayim.get(seviye, 0) + 1
-    return pd.DataFrame(
-        {"koşu": [sayim.get(s, 0) for s in stil.DERECELENDIRILEN]},
-        index=[stil.seviye_adi(s) for s in stil.DERECELENDIRILEN],
+def _etki_haritasi_bolumu(sonuclar: pd.DataFrame) -> None:
+    etki = _etki_verisi(sonuclar)
+    if etki.empty:
+        return
+    st.markdown("### Bütün koşuların etki haritası")
+    st.markdown(
+        "Her hücre, o senaryonun o metrikteki farkının **gürültü bandına "
+        "oranıdır**. 1'in altı, farkın hiçbir bozulma içermeyen koşular "
+        "arasında da görüldüğü anlamına gelir."
     )
-
-
-def _derecelendirilemeyen(sonuclar: pd.DataFrame) -> pd.DataFrame:
-    """Derecelendirilmeyen kosular ve NEDEN derecelendirilmedikleri."""
-    satirlar = []
-    for _, r in sonuclar.iterrows():
-        ad = str(r["scenario"])
-        g = kanit_gucu(ad)
-        if g["seviye"] in stil.DERECELENDIRILEN:
-            continue
-        o = ne_gozlendi(ad)
-        satirlar.append({
-            "koşu": ad,
-            "durum": stil.seviye_adi(g["seviye"]),
-            "referansı": o.get("referans_senaryo") or "—",
-        })
-    return pd.DataFrame(satirlar)
-
-
-def _kontrol_sayisi(sonuclar: pd.DataFrame) -> int:
-    return sum(
-        1 for _, r in sonuclar.iterrows()
-        if str(r["scenario"]).startswith("C") and str(r["scenario"])[1:2].isdigit()
+    st.altair_chart(
+        grafik.etki_haritasi(etki, x="metrik", y="senaryo",
+                            deger="band oranı", yon="fark"),
+        width="stretch",
     )
-
-
-def _ajan_skorlari(ajan: dict) -> dict[str, float]:
-    """Rubrik ortalamasini bilesenlerine ayirir.
-
-    Tek sayi vermek yaniltici: kanit ve sinirlama bilesenleri her kosuda tam
-    puan aliyor, dolayisiyla ortalama teshis dogrulugundan cok daha yuksek
-    cikiyor.
-    """
-    kosular = list(ajan.get("puanlar", {}).values())
-    if not kosular:
-        return {}
-    n = len(kosular)
-    return {
-        "teshis": sum(k["diagnosis_score"] for k in kosular) / n,
-        "teshis_tespit": sum(k["diagnosis_score_tespit"] for k in kosular) / n,
-        "kanit": sum(k["evidence_score"] for k in kosular) / n,
-        "sinir": sum(k["limitation_score"] for k in kosular) / n,
-        "rubrik": ajan.get("ozet", {}).get("mean_score"),
-    }
+    yukselen = etki[(etki["yön"] == "yükseliş") & (etki["band oranı"] >= 1)]
+    stil.yorum(
+        "Kırmızıya doğru giden hücreler bandın belirgin üzerinde bir "
+        "<b>düşüş</b>; camgöbeği hücreler bandı aşan bir <b>yükseliş</b>. "
+        "Ortadaki sönük ton gürültü içinde kalan farklardır. Renk ölçeği "
+        f"{grafik.HARITA_RENK_TAVANI:.0f}× oranında kırpılır — gerçek oran "
+        "her zaman hover'da tam değeriyle durur."
+        + (f"<br><b>Yükselen {len(yukselen)} hücre var</b> ("
+           + ", ".join(f"{r['senaryo']} {r['metrik']}"
+                       for _, r in yukselen.iterrows())
+           + "): eşiği aşıyorlar ama bozulma kanıtı değiller — metrik "
+             "beklenenin tersine yükselmiş." if not yukselen.empty else "")
+    )
 
 
 # --- Surec semasi -----------------------------------------------------------
 
-_ADIMLAR = [
-    # Ilk adimin alt metni tani setinden TURETILIR; buradaki deger yalnizca
-    # kunye hic okunamazsa gorunur ve sayi icermez.
-    ("Termal veri", "kilitli tanı seti"),
-    ("Kontrollü arıza", "veri veya eğitim ayarında<br>her seferinde TEK değişken"),
-    ("YOLO eğitimi /<br>değerlendirmesi", "sabit protokol<br>aynı seed, aynı çözünürlük"),
-    ("Genel + kırılımlı<br>metrikler", "sınıf, nesne boyutu,<br>veri kaynağı"),
-    ("Ajan araçlarla<br>kanıt topluyor", "senaryo adını görmez,<br>yalnızca <code>kosu_NN</code>"),
-    ("Teşhis + kanıt<br>+ sınırlama", "cevap anahtarıyla<br>SONRADAN puanlanır"),
+_ASAMALAR = [
+    ("1", "Koşulu değiştir", "Kontrollü arıza",
+     "Veri veya eğitim ayarında <b>her seferinde tek değişken</b>. "
+     "Protokolün geri kalanı sabit: aynı seed, aynı çözünürlük."),
+    ("2", "Değişimi ölç", "Genel + kırılımlı metrikler",
+     "Sağlıklı referansla karşılaştırılır. Kırılım: sınıf, nesne boyutu, "
+     "veri kaynağı. Fark, <b>gürültü bandıyla birlikte</b> raporlanır."),
+    ("3", "Nedeni araştır", "Kör LLM teşhisi",
+     "Ajan araçları çağırıp kanıt toplar, sonra teşhisini yazar. "
+     "Cevap anahtarıyla <b>sonradan</b>, ayrı bir işlemde puanlanır."),
 ]
 
 
-def _surec_semasi(tani: dict) -> str:
-    """Uctan uca akis - SVG degil, HTML kutular: tema degisince birlikte doner."""
-    adimlar = list(_ADIMLAR)
-    if tani.get("goruntu_sayisi"):
-        adimlar[0] = (
-            "Termal veri",
-            f"{tani['goruntu_sayisi']:,}".replace(",", ".")
-            + " görüntü, "
-            + f"{tani.get('bbox_sayisi', 0):,}".replace(",", ".")
-            + " bbox<br>kilitli tanı seti",
-        )
-    # Ok, kendinden SONRAKI kutuyla ayni ogenin icinde durur. Ayri bir oge
-    # olsaydi satir sonunda bosa isaret eden bir ok kalirdi (flex-wrap).
+def _asama_semasi() -> str:
+    """Uc asama - SVG degil HTML: tema degisince birlikte doner.
+
+    Onceki alti kutuluk sema, kutulara dagitilmis bir paragraf gibi
+    okunuyordu. Uc asama, izleyicinin akilda tutabilecegi sayida.
+    """
     kutular = []
-    for i, (baslik, alt) in enumerate(adimlar):
+    for no, etiket, baslik, metin in _ASAMALAR:
         ok = (f'<div style="align-self:center;color:{stil.ADAY};'
-              f'font-size:1.05rem;padding:0 .1rem">→</div>' if i else "")
+              f'font-size:1.3rem;padding:0 .2rem">→</div>' if no != "1" else "")
         kutular.append(
-            f'<div style="display:flex;flex:1 1 190px;min-width:170px;gap:.35rem">'
+            f'<div style="display:flex;flex:1 1 260px;min-width:240px;gap:.4rem">'
             f"{ok}"
-            f'<div style="flex:1;border:1px solid {stil.CIZGI};'
-            f'border-radius:8px;background:{stil.YUZEY};padding:.6rem .7rem">'
-            f'<div style="font-size:.68rem;color:{stil.ADAY};letter-spacing:.08em">'
-            f'ADIM {i + 1}</div>'
-            f'<div style="font-weight:600;font-size:.88rem;color:{stil.METIN};'
-            f'line-height:1.3;margin:.15rem 0 .25rem">{baslik}</div>'
-            f'<div style="font-size:.74rem;color:{stil.METIN_SOLUK};'
-            f'line-height:1.45">{alt}</div></div></div>'
+            f'<div style="flex:1;border:1px solid {stil.CIZGI};border-radius:10px;'
+            f'background:{stil.YUZEY};padding:.75rem .85rem">'
+            f'<div style="font-size:.7rem;color:{stil.ADAY};letter-spacing:.1em;'
+            f'text-transform:uppercase">{no} · {etiket}</div>'
+            f'<div style="font-weight:600;font-size:1rem;color:{stil.METIN};'
+            f'margin:.25rem 0 .35rem">{baslik}</div>'
+            f'<div style="font-size:.78rem;color:{stil.METIN_SOLUK};'
+            f'line-height:1.5">{metin}</div></div></div>'
         )
     return ('<div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:stretch">'
             + "".join(kutular) + "</div>")
 
 
+# --- Sayfa ------------------------------------------------------------------
+
 def goster() -> None:
     import veri_seti as vs
 
     sonuclar = load_results()
-    ajan = ajan_kaydi()
     tani = vs.tani_seti()
 
     st.title("Termal Teşhis Ajanı")
     st.markdown(
-        "Termal drone görüntüleriyle çalışan bir YOLO nesne tespit modeli "
-        "**kontrollü biçimde bozulur**, bozulmanın metriklere nasıl yansıdığı "
-        "ölçülür; sonra bir LLM ajanına bu ölçümler anonim olarak verilerek "
-        "nedeni **kanıta dayalı** teşhis edip edemediği sınanır."
-    )
-    stil.kutu(
-        "<b>Araştırma sorusu:</b> Bir dil modeli, yalnızca ölçüm çıktılarına "
-        "bakarak bir nesne tespit modelindeki bozulmanın <i>nedenini</i> "
-        "ayırt edebilir mi — ve ürettiği gerekçe savunulabilir mi?"
+        "Termal nesne tespitindeki performans değişimlerini **kontrollü "
+        "deneylerle** ölçen ve nedenlerini **kör bir LLM ajanıyla** araştıran "
+        "deney sistemi."
     )
 
     st.write("")
     olculebilir = sum(
         1 for _, r in sonuclar.iterrows() if kimlik(str(r["scenario"])) is not None
     )
-    stil.kpi_satiri([
-        ("Değerlendirme koşusu", olculebilir, "defterde kayıtlı"),
-        ("Kontrol koşusu", _kontrol_sayisi(sonuclar), "yalnızca seed farklı"),
+    deney = ajan_deneyi()
+    kartlar = [
+        ("Araştırma kapsamı", len(katalog.senaryolar()),
+         "senaryo · veri, eğitim, çıkarım"),
+        ("Değerlendirme", olculebilir,
+         f"koşu · {_kontrol_sayisi(sonuclar)} kontrol dahil"),
         ("Kilitli tanı seti",
          f"{tani['goruntu_sayisi']:,}".replace(",", ".")
          if tani.get("goruntu_sayisi") else "kayıtta yok",
-         f"{tani.get('bbox_sayisi', 0):,} bbox".replace(",", ".")
+         f"görüntü · {tani.get('bbox_sayisi', 0):,} nesne".replace(",", ".")
          if tani.get("bbox_sayisi") else "künye okunamadı"),
-        ("Hata galerisi", len(error_galleries()), "koşu başına örnek incelemesi"),
-        ("Ajan denemesi", len(ajan.get("cevaplar") or {}), "kör teşhis koşusu"),
-        ("Test seti kullanımı", "YOK", "final aşamasına kadar yasak"),
-    ])
-
-    st.markdown("---")
-    st.markdown("## Sistem nasıl çalışıyor")
-    st.markdown(_surec_semasi(tani), unsafe_allow_html=True)
+    ]
+    if deney:
+        p = deney["puan"]
+        kartlar.append((
+            "Ajan deneyi", p["gozlem"],
+            f"gözlem · {p['kosu']} koşu × "
+            f"{p['gozlem'] // max(p['kosu'], 1)} tekrar",
+        ))
+    stil.kpi_satiri(kartlar)
     stil.yorum(
-        "Zincirin kritik yeri 5. adım: ajana senaryo adı, bozulma açıklaması "
-        "ve cevap anahtarı gönderilmez. Puanlama, ajan cevabını ürettikten "
-        "SONRA ayrı bir yerel işlemle yapılır."
+        "Kapsam, ölçülen senaryo sayısını gösterir; hepsinin bulgu ürettiği "
+        "anlamına gelmez. <b>Test seti hiç kullanılmadı</b> — bütün ölçümler "
+        "kilitli tanı setinde yapıldı."
     )
 
     st.markdown("---")
-    st.markdown("## Etki haritası")
-    st.markdown(
-        "Her hücre, o senaryonun o metrikteki farkının **gürültü bandına "
-        "oranıdır**. 1'in altı, farkın hiçbir bozulma içermeyen koşular "
-        "arasında da görüldüğü anlamına gelir."
+    st.markdown(_asama_semasi(), unsafe_allow_html=True)
+    stil.kutu(
+        "<b>Ajan görüntülere bakmıyor.</b> Gördüğü tek şey ölçüm çıktıları: "
+        "genel metrikler ve kırılım tabloları, anonim <code>koşu_NN</code> "
+        "kimliğiyle. Senaryo adı, bozulma açıklaması ve cevap anahtarı ona "
+        "hiçbir biçimde gönderilmez."
     )
-    etki = _etki_verisi(sonuclar)
-    if not etki.empty:
-        st.altair_chart(
-            grafik.etki_haritasi(etki, x="metrik", y="senaryo", deger="band oranı"),
-            width="stretch",
-        )
-        stil.yorum(
-            "Koyu hücreler bandın belirgin üzerinde; açık hücreler gürültüden "
-            "ayırt edilemiyor. Hücrenin üzerine gelince gerçek değer, "
-            "referans, fark ve eşik görünür. Renk ölçeği "
-            f"{grafik.HARITA_RENK_TAVANI:.0f}× oranında kırpılır — gerçek oran "
-            "her zaman hover'da tam değeriyle durur."
-        )
-
-    e, f = st.columns([1, 2])
-    with e:
-        stil.ust_baslik("kanıt gücü dağılımı")
-        st.bar_chart(_guc_dagilimi(sonuclar), height=210, color=stil.ADAY)
-        derece_disi = _derecelendirilemeyen(sonuclar)
-        stil.yorum(
-            f"Yalnızca kendi ölçeğinde referansı VE gürültü eşiği olan "
-            f"{int(_guc_dagilimi(sonuclar)['koşu'].sum())} koşu derecelendirilir. "
-            f"Kalan {len(derece_disi)} koşu aşağıda, nedeniyle birlikte."
-        )
-        with st.expander("Derecelendirilmeyen koşular"):
-            st.dataframe(derece_disi, hide_index=True, width="stretch")
-    with f:
-        stil.ust_baslik("üç ana bulgu")
-        for baslik, metin in _ana_bulgular(sonuclar):
-            with st.expander(baslik, expanded=False):
-                st.markdown(metin)
 
     st.markdown("---")
-    st.markdown("## Ajan")
-    skor = _ajan_skorlari(ajan)
-    if skor:
-        g, h, i = st.columns(3)
-        with g:
-            stil.kpi("Doğru neden teşhisi", f"%{skor['teshis'] * 100:.0f}",
-                     "asıl performans ölçüsü")
-        with h:
-            stil.kpi("Tespit-farkındalıklı",
-                     f"%{skor['teshis_tespit'] * 100:.0f}",
-                     "bozulmanın izi yoksa ceza yok")
-        with i:
-            stil.kpi("Rubrik ortalaması", f"%{skor['rubrik'] * 100:.0f}",
-                     "üç bileşenin ortalaması")
-        stil.kutu(
-            "<b>Bu üç sayı aynı şeyi ölçmez.</b> Rubrik ortalaması üç "
-            f"bileşenin ortalamasıdır ve ikisi doymuştur: kanıt "
-            f"%{skor['kanit'] * 100:.0f}, sınırlama %{skor['sinir'] * 100:.0f} "
-            "— her koşuda tam puan. Ayırt eden tek bileşen teşhistir. Yani "
-            f"ajan senaryoların %{skor['rubrik'] * 100:.0f}'ini <i>bilmedi</i>; "
-            f"doğru nedeni bulma oranı %{skor['teshis'] * 100:.0f}."
-        )
+    _ana_grafik()
+
+    st.markdown("---")
+    _etki_haritasi_bolumu(sonuclar)
+
+    if deney:
+        st.markdown("---")
+        _kapanis(deney)
 
 
-def _ana_bulgular(sonuclar: pd.DataFrame) -> list[tuple[str, str]]:
-    """Uc ana bulgu; sayilari olcumden gelir."""
-    deger = {str(r["scenario"]): r for _, r in sonuclar.iterrows()}
+def _kapanis(deney: dict) -> None:
+    """Iki sayi. Ucuncusu eklenirse hicbiri akilda kalmaz."""
+    rol = (deney["puan"].get("rol_bazli") or {}).get("kontrol") or {}
+    kosular = ajan_deneyi_kosu_bazli()
+    tutarli = [k for k in kosular if k["hukum_tutarli"]]
 
-    def m(ad, alan="mAP50"):
-        return float(deger[ad][alan]) if ad in deger else None
-
-    bulgular = []
-
-    g = ne_gozlendi("E4 imgsz512")
-    if g:
-        bulgular.append((
-            "Bozulmanın türü metrik imzasından okunabiliyor",
-            "Çıkarım çözünürlüğü uyumsuzluğu recall'u çökertiyor "
-            f"({g['metrikler']['recall']['fark']:+.4f}) ama etiket "
-            "bozulmaları precision'ı da bozuyor. Hangi metriğin bozulduğu "
-            "arızanın türünü söylüyor — bu, ajanın teşhis için kullandığı "
-            "asıl sinyal.",
-        ))
-
-    if m("E1") is not None and m("v00_saglikli last_pt") is not None:
-        bulgular.append((
-            "Standart raporlama bir arızayı tamamen gizleyebiliyor",
-            "E1'de 200 epoch süren ders kitabı niteliğinde bir aşırı uyum "
-            "elde edildi. En iyi checkpoint ile raporlandığında model "
-            f"sağlıklı görünüyor (mAP50 farkı {m('E1') - m('v00_saglikli'):+.4f}). "
-            f"Arıza son checkpoint'te ortaya çıkıyor: E1 best'ten last'a "
-            f"{m('E1 last_pt') - m('E1'):+.4f} düşerken sağlıklı referans "
-            f"yalnızca {m('v00_saglikli last_pt') - m('v00_saglikli'):+.4f} "
-            "düşüyor. Yani düşüşün kendisi değil, tabandan ne kadar ayrıldığı "
-            "anlamlı.",
-        ))
-
-    g = ne_gozlendi("D1")
-    if g:
-        bulgular.append((
-            "Gürültü ölçülmeden \"etki\" denemez",
-            "Aynı veri ve protokolle, yalnızca rastgelelik tohumu "
-            "değiştirilerek eğitilen modeller arasında bile belirgin fark "
-            f"var: recall'da {g['metrikler']['recall']['gurultu_esigi']:.4f}, "
-            f"mAP50'de {g['metrikler']['mAP50']['gurultu_esigi']:.4f}. Bu "
-            "taban ölçülünce bir dizi iddia zayıfladı ve bir senaryo (D6b) "
-            "bulgu olmaktan çıktı.",
-        ))
-    return bulgular
+    a, b = st.columns(2)
+    with a:
+        if rol:
+            stil.kpi(
+                "Kontrol koşularında uydurma",
+                f"{rol['gozlem'] - round(rol['dogru_teshis'] * rol['gozlem'])}"
+                f" / {rol['gozlem']}",
+                "hiçbir bozulma içermeyen koşularda yanlış teşhis",
+            )
+    with b:
+        if kosular:
+            stil.kpi(
+                "Tekrar tutarlılığı",
+                f"{len(tutarli)} / {len(kosular)}",
+                f"koşu, {kosular[0]['tekrar']} tekrarında da aynı hükmü verdi",
+            )
+    st.caption(
+        "Ajanın senaryo bazlı başarısı tek bir orana indirgenmez: kontrol "
+        "koşuları \"sorun uyduruyor mu\", bozulma senaryoları \"nedeni "
+        "bulabiliyor mu\" sorusunu ölçer. Ayrıntı: LLM Teşhis Ajanı sayfası."
+    )

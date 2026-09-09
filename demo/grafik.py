@@ -57,15 +57,28 @@ def _katman_tema(grafik):
 
 # --- Etki haritasi ----------------------------------------------------------
 
-def etki_haritasi(veri, x: str, y: str, deger: str, baslik: str = ""):
+def etki_haritasi(veri, x: str, y: str, deger: str, baslik: str = "",
+                  yon: str | None = None):
     """Senaryo x metrik etki haritasi.
 
-    Renk, farkin YONUNU degil BUYUKLUGUNU tasir: gurultu bandina orani.
-    Ham farki renklendirmek yaniltici olurdu - kucuk bir grupta buyuk
-    gorunen fark, o grubun dogal yayilimi icinde olabilir.
+    Renk BUYUKLUGU tasir: gurultu bandina oran. Ham farki renklendirmek
+    yaniltici olurdu - kucuk bir grupta buyuk gorunen bir fark, o grubun
+    dogal yayilimi icinde olabilir.
+
+    `yon` verilirse (farkin isaretini tasiyan sutun) YUKSELISLER ayri bir
+    tonda cizilir. Bu bir dogruluk meselesi: harita 48 hucrenin 10'unda
+    yukselis gosteriyor ve biri (D1 mAP50_95, +0.0240) esigi asiyor.
+    Mutlak deger kullanildiginda o hucre, ayni buyuklukteki bir DUSUSLE
+    ayni rengi aliyor ve "bozulma kaniti" gibi okunuyordu - hipotez
+    tablosunda kapatilan D1 hatasinin haritadaki ikizi.
     """
     veri = veri.copy()
     veri["renk"] = veri[deger].clip(upper=HARITA_RENK_TAVANI)
+    if yon is not None:
+        # Yukselisler negatif tarafa tasinir; olcek iki yonlu olur.
+        veri["renk"] = veri.apply(
+            lambda r: r["renk"] if r[yon] < 0 else -r["renk"], axis=1)
+        return _yonlu_harita(veri, x, y, baslik)
     grafik = (
         alt.Chart(veri)
         .mark_rect(stroke=stil.ZEMIN, strokeWidth=2, cornerRadius=2)
@@ -93,6 +106,49 @@ def etki_haritasi(veri, x: str, y: str, deger: str, baslik: str = ""):
 
 
 # --- Gurultu bandi ----------------------------------------------------------
+
+def _yonlu_harita(veri, x: str, y: str, baslik: str = ""):
+    """Iki yonlu etki haritasi: dusus sicak, yukselis soguk tonda.
+
+    Sifir civari notr yuzey rengidir; boylece gurultu icinde kalan hucreler
+    (oran < 1) her iki yonde de sonuk gorunur ve goz once esigi asanlara
+    gider.
+    """
+    return _tema(
+        alt.Chart(veri)
+        .mark_rect(stroke=stil.ZEMIN, strokeWidth=2, cornerRadius=2)
+        .encode(
+            x=alt.X(f"{x}:N", title=None, axis=alt.Axis(
+                labelAngle=0, labelColor=stil.METIN, domainColor=stil.CIZGI,
+                tickColor=stil.CIZGI, labelFontSize=11)),
+            y=alt.Y(f"{y}:N", title=None, sort=None, axis=alt.Axis(
+                labelColor=stil.METIN, domainColor=stil.CIZGI,
+                tickColor=stil.CIZGI, labelFontSize=11)),
+            color=alt.Color(
+                "renk:Q",
+                title="← yükseliş   band oranı   düşüş →",
+                scale=alt.Scale(
+                    range=[stil.IKINCIL, stil.YUZEY_2, stil.YUZEY_2,
+                           stil.UYARI, stil.KRITIK],
+                    domain=[-HARITA_RENK_TAVANI, -1, 1,
+                            HARITA_RENK_TAVANI / 2, HARITA_RENK_TAVANI],
+                    type="linear",
+                ),
+                # Yon isareti olcegin ICINDE tasinir ama efsanede BUYUKLUK
+                # gorunur. Ham haliyle "-10" yaziyordu ve "eksi band orani"
+                # diye okunuyordu - oysa oran her zaman pozitiftir, eksi
+                # yalnizca "yukselis" demek.
+                legend=alt.Legend(
+                    labelColor=stil.METIN, titleColor=stil.METIN_SOLUK,
+                    labelFontSize=11, titleFontSize=11,
+                    labelExpr="abs(datum.value)",
+                ),
+            ),
+            tooltip=[alt.Tooltip(c, title=c) for c in veri.columns if c != "renk"],
+        )
+        .properties(height=max(240, 26 * veri[y].nunique()), title=baslik)
+    )
+
 
 def gurultu_bandi_grafigi(veri, senaryo: str = "senaryo", fark: str = "fark"):
     """Her senaryonun farkini, gurultu bandi kusagiyla birlikte cizer.
@@ -458,4 +514,79 @@ def egri_isaretli(veri, x: str, y: str, seri: str, isaretler,
     )
     return _katman_tema(
         (govde + kural + yazi).properties(height=300, title=baslik)
+    )
+
+
+def dumbbell_bantli(veri, kategori: str, referans: str, aday: str,
+                    band: str, vurgu: str, alan_adi: str = "",
+                    etiket: str | None = None):
+    """Gurultu bandi SERIT olarak cizilmis dumbbell.
+
+    Duz dumbbell "aday referanstan ne kadar uzak" sorusunu cevaplar ama
+    "bu uzaklik anlamli mi" sorusunu izleyiciye birakir. Bu projede ikinci
+    soru birincisinden onemli: bir farki bozulmaya baglamadan once, hicbir
+    bozulma icermeyen kosular arasindaki yayilimi asmasi gerekir.
+
+    Serit = referans +/- o grubun gurultu bandi. Seridin ICINDE kalan bir
+    nokta, saf rastgelelikten ayirt edilemez. Boylece "genel skor kaybi
+    gizleyebilir" ve "once gurultuyu olctuk" ayni karede okunur.
+
+    `vurgu` sutunu True olan satir tam renkte, digerleri soluk cizilir:
+    ana bulgu one cikarken kiyas satirlari da gorunur kalir.
+    """
+    ipucu = [alt.Tooltip(c) for c in veri.columns if c != vurgu]
+    eksen_y = alt.Y(f"{kategori}:N", title=None, sort=None, axis=_EKSEN)
+    veri = veri.copy()
+    veri["_alt"] = veri[referans] - veri[band]
+    veri["_ust"] = veri[referans] + veri[band]
+
+    # Serit once cizilir; noktalar ustune biner.
+    # Eksen: veriye gore daraltilir ama oran alaninda 1.0'i ASMAZ ve
+    # tik sayisi sinirlanir. Varsayilan olcek 0.05 adimlarla 19 etiket
+    # basiyordu; okunacak sey noktalarin YERI, eksenin kendisi degil.
+    en_dusuk = float(min(veri[aday].min(), veri["_alt"].min()))
+    en_yuksek = float(max(veri[referans].max(), veri[aday].max(),
+                          veri["_ust"].max()))
+    pay = max((en_yuksek - en_dusuk) * 0.08, 0.01)
+    alan = alt.Scale(domain=[max(0.0, en_dusuk - pay), min(1.0, en_yuksek + pay)],
+                     zero=False, nice=False, clamp=True)
+    eksen_x = alt.Axis(
+        labelColor=stil.METIN_SOLUK, titleColor=stil.METIN_SOLUK,
+        gridColor=stil.CIZGI, domainColor=stil.CIZGI, tickColor=stil.CIZGI,
+        labelFontSize=11, titleFontSize=11, tickCount=6, format=".2f",
+    )
+    serit = (
+        alt.Chart(veri).mark_bar(height=18, color=stil.CIZGI, opacity=0.85)
+        .encode(y=eksen_y,
+                x=alt.X("_alt:Q", title=alan_adi or None, axis=eksen_x,
+                        scale=alan),
+                x2="_ust:Q", tooltip=ipucu)
+    )
+    saydam = alt.condition(f"datum.{vurgu}", alt.value(1.0), alt.value(0.4))
+    cizgi_ = (
+        alt.Chart(veri).mark_rule(strokeWidth=3, color=stil.KRITIK)
+        .encode(y=eksen_y, x=f"{referans}:Q", x2=f"{aday}:Q",
+                opacity=saydam, tooltip=ipucu)
+    )
+    ref_nokta = (
+        alt.Chart(veri)
+        .mark_point(size=150, filled=True, color=stil.REFERANS, shape="circle")
+        .encode(y=eksen_y, x=f"{referans}:Q", opacity=saydam, tooltip=ipucu)
+    )
+    aday_nokta = (
+        alt.Chart(veri)
+        .mark_point(size=170, filled=True, color=stil.ADAY, shape="square")
+        .encode(y=eksen_y, x=f"{aday}:Q", opacity=saydam, tooltip=ipucu)
+    )
+    katmanlar = [serit, cizgi_, ref_nokta, aday_nokta]
+    if etiket:
+        katmanlar.append(
+            alt.Chart(veri[veri[vurgu]])
+            .mark_text(align="left", dx=12, dy=-16, fontSize=12,
+                       fontWeight="bold", color=stil.KRITIK)
+            .encode(y=eksen_y, x=f"{aday}:Q", text=f"{etiket}:N")
+        )
+    return _katman_tema(
+        alt.layer(*katmanlar).properties(
+            height=max(190, 46 * veri[kategori].nunique()))
     )
