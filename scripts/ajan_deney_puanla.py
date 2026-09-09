@@ -203,9 +203,14 @@ def main() -> None:
     print(f"gecerli gozlem: {len(sonuc.get('runs', []))}  "
           f"({sonuc.get('kosu', 0)} ayri kosu)  "
           f"dislanan: {len(sonuc.get('dislanan', []))}")
+    # IKI puan da yazilir. Yalnizca kati puani yazmak yaniltiyordu: D1 gibi
+    # bozulmanin kanitta anlamli iz BIRAKMADIGI kosularda ajan "bozulma
+    # saptanmadi" dediginde kati puan 0.0 verir, oysa bu, gordugu kanitla
+    # tutarli tek okumadir. Hangisinin kullanilacagi okuyucunun karari.
     for rol, d in (sonuc.get("rol_bazli") or {}).items():
         print(f"  {rol:20} gozlem={d['gozlem']:<3} kosu={d['kosu']:<3} "
-              f"dogru teshis={d['dogru_teshis']}")
+              f"kati={d['dogru_teshis']:<6} "
+              f"tespit-farkindalikli={d['tespit_farkindalikli']}")
     if sonuc.get("_uyari"):
         print(f"\nUYARI: {sonuc['_uyari']}\n")
     for d in sonuc.get("dislanan", [])[:6]:

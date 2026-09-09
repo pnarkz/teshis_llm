@@ -508,3 +508,35 @@ def test_ayni_kosulda_uretilen_deney_uyari_vermiyor(tmp_path):
     sonuc = puanla_modulu.puanla(_deney_kur(tmp_path, [ilk, ikinci], ANAHTAR))
     assert sonuc["tek_parca_mi"] is True
     assert "_uyari" not in sonuc
+
+
+def test_ozet_iki_puani_da_yaziyor(tmp_path, monkeypatch, capsys):
+    """Yalnizca kati puani yazmak yaniltiyor.
+
+    D1 gibi bozulmanin kanitta anlamli iz BIRAKMADIGI kosularda ajan
+    "bozulma saptanmadi" dediginde kati puan 0.0 verir; oysa bu, gordugu
+    kanitla tutarli tek okumadir. Gercek kosuda ozet
+    "bozulma_senaryosu ... dogru teshis=0.0" yaziyordu, tespit-farkindalikli
+    puan 1.0 oldugu halde.
+    """
+    anahtar = {"kosu_02": {"expected": "sinif_yetersizligi",
+                           "gizli_rol": "bozulma_senaryosu",
+                           "gizli_senaryo": "D1"}}
+    dizin = _deney_kur(tmp_path, [
+        _gozlem("kosu_02__g01.json", "kosu_02",
+                teshis="anlamli_degisim_yok", ozet="a"),
+    ], anahtar)
+    sonuc = puanla_modulu.puanla(dizin)
+    d = sonuc["rol_bazli"]["bozulma_senaryosu"]
+    assert d["dogru_teshis"] == 0.0
+    assert d["tespit_farkindalikli"] == 1.0, (
+        "D1 TESPIT_EDILEMEYEN listesinde; gizli_senaryo puanlayiciya "
+        "ulasmiyor demektir")
+
+    monkeypatch.setattr(puanla_modulu, "DENEYLER", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["p.py", "--deney", dizin.name])
+    capsys.readouterr()
+    puanla_modulu.main()
+    cikti = capsys.readouterr().out
+    assert "kati=0.0" in cikti
+    assert "tespit-farkindalikli=1.0" in cikti
