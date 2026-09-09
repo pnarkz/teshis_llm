@@ -275,18 +275,38 @@ def fark_bar(veri, kategori: str, deger: str, esik_alani: str | None = None,
 # --- Veri seti grafikleri ---------------------------------------------------
 
 def yatay_bar(veri, kategori: str, deger: str, baslik: str = "",
-              renk: str | None = None, alan_adi: str = ""):
-    grafik = (
-        alt.Chart(veri)
-        .mark_bar(cornerRadius=2, color=renk or stil.ADAY)
-        .encode(
-            y=alt.Y(f"{kategori}:N", title=None, sort="-x", axis=_EKSEN),
-            x=alt.X(f"{deger}:Q", title=alan_adi or None, axis=_EKSEN),
-            tooltip=[alt.Tooltip(c) for c in veri.columns],
-        )
-        .properties(height=max(160, 30 * len(veri)), title=baslik)
+              renk: str | None = None, alan_adi: str = "",
+              etiket: str | bool = False, sirala: str | None = "-x"):
+    """Yatay cubuk. `etiket` verilirse deger cubugun ucuna YAZILIR.
+
+    Etiketli cubuk, yanina ayni sayilari tekrar eden bir tablo koyma
+    ihtiyacini ortadan kaldirir. Bu sayfada grafik+tablo cifti uc kez
+    yan yana duruyordu ve ikisi de ayni seyi soyluyordu; goz once cubugu
+    okuyup sonra tabloda ayni sayiyi ariyordu.
+
+    `etiket=True` deger sutununu ham haliyle yazar. Binlik ayraci onemliyse
+    ONCEDEN bicimlenmis bir sutun adi verin: Vega'nin ",.0f" bicimi
+    "131,700" yazar, bu konsolun geri kalani "131.700" kullanir ve ayni
+    ekranda iki ayrac bulunmamalidir.
+    """
+    temel = alt.Chart(veri).encode(
+        y=alt.Y(f"{kategori}:N", title=None, sort=sirala, axis=_EKSEN),
+        x=alt.X(f"{deger}:Q", title=alan_adi or None, axis=_EKSEN),
+        tooltip=[alt.Tooltip(c) for c in veri.columns],
     )
-    return _tema(grafik)
+    cubuk = temel.mark_bar(cornerRadius=2, color=renk or stil.ADAY)
+    if etiket:
+        alan = deger if etiket is True else etiket
+        cubuk = cubuk + temel.mark_text(
+            align="left", dx=5, fontSize=11, color=stil.METIN,
+        ).encode(text=alt.Text(f"{alan}:N" if alan != deger
+                               else f"{alan}:Q", format=""
+                               if alan != deger else ",.0f"))
+    return _katman_tema(
+        cubuk.properties(height=max(160, 32 * len(veri)), title=baslik)
+    ) if etiket else _tema(
+        cubuk.properties(height=max(160, 30 * len(veri)), title=baslik)
+    )
 
 
 def isi_haritasi(veri, x: str, y: str, deger: str, baslik: str = ""):

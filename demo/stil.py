@@ -125,9 +125,20 @@ CSS = f"""
   div[data-testid="stAlertContentWarning"] {{ border-color: {UYARI}; }}
   div[data-testid="stAlertContentSuccess"] {{ border-color: {GUCLU}; }}
   div[data-testid="stAlertContentError"] {{ border-color: {KRITIK}; }}
-  .stTabs [data-baseweb="tab-list"] {{ gap: .2rem; border-bottom: 1px solid {CIZGI}; }}
-  .stTabs [data-baseweb="tab"] {{ color: {METIN_SOLUK}; }}
-  .stTabs [aria-selected="true"] {{ color: {METIN}; }}
+  /* Sekmeler. Onceki gap .2rem idi ve sekmelerin kendi ic bosluklari yoktu:
+     "Veri seti Etiketli ornekler Saglikli referans model" tek bir cumle gibi
+     akiyordu ve sunumda hangisinin sekme oldugu anlasilmiyordu. Ayrik
+     durmalari icin hem aralik hem ic bosluk gerekiyor. */
+  .stTabs [data-baseweb="tab-list"] {{
+    gap: 1.75rem; border-bottom: 1px solid {CIZGI}; margin-bottom: .35rem;
+  }}
+  .stTabs [data-baseweb="tab"] {{
+    color: {METIN_SOLUK}; padding: .35rem .1rem; font-size: 1rem;
+    font-weight: 500; letter-spacing: .01em;
+  }}
+  .stTabs [data-baseweb="tab"]:hover {{ color: {METIN}; }}
+  .stTabs [aria-selected="true"] {{ color: {METIN}; font-weight: 600; }}
+  .stTabs [data-baseweb="tab-highlight"] {{ background-color: {ADAY}; }}
 </style>
 """
 

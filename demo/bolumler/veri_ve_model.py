@@ -68,13 +68,21 @@ def _veri_seti_sekmesi() -> None:
     # hucre olur - dogru okuma da budur: deger yok, sifir degil.
     for sutun in ("görüntü", "bbox", "boş etiket", "görüntü başına nesne"):
         bolumler[sutun] = pd.to_numeric(bolumler[sutun], errors="coerce")
-    a, b = st.columns([3, 2])
-    with a:
-        st.altair_chart(
-            grafik.yatay_bar(bolumler, "bölüm", "bbox", alan_adi="bbox sayısı"),
-            width="stretch",
-        )
-    with b:
+    # Cubuk degeri UCUNDA yaziyor; yanina ayni sayilari tekrar eden bir
+    # tablo koymaya gerek yok. Tablonun tasidigi FAZLA sutunlar (goruntu,
+    # bos etiket, goruntu basina nesne) acilir bolumde duruyor.
+    # Etiket ONCEDEN bicimlenir: Vega'nin ",.0f" bicimi "131,700" yazar,
+    # sayfanin geri kalani ise "154.141" kullaniyor. Ayni ekranda iki
+    # binlik ayraci olmaz.
+    st.altair_chart(
+        grafik.yatay_bar(
+            bolumler.assign(_etiket=[f"{int(v):,}".replace(",", ".")
+                                     for v in bolumler["bbox"]]),
+            "bölüm", "bbox", alan_adi="bbox sayısı",
+            etiket="_etiket", sirala=None),
+        width="stretch",
+    )
+    with st.expander("Tam sayılar (görüntü, boş etiket, görüntü başına nesne)"):
         st.dataframe(bolumler, hide_index=True, width="stretch")
     stil.yorum(
         "Kilitli tanı seti val'in bir alt kümesidir; ayrı bir bölüm değildir. "
@@ -88,14 +96,18 @@ def _veri_seti_sekmesi() -> None:
     )
     anahtar = {"Kilitli tanı seti": "tani", "Tüm veri": "toplam"}.get(kapsam, kapsam)
     siniflar = pd.DataFrame(vs.sinif_dagilimi(anahtar))
-    a, b = st.columns([3, 2])
-    with a:
-        st.altair_chart(
-            grafik.yatay_bar(siniflar, "sınıf", "bbox", alan_adi="bbox sayısı"),
-            width="stretch",
-        )
-    with b:
-        st.dataframe(siniflar, hide_index=True, width="stretch")
+    # Etikette hem sayi hem pay: "2.718 · %67,7". Tablo ayni ikisini
+    # tekrar ediyordu.
+    etiketli = siniflar.assign(_etiket=[
+        f"{int(r['bbox']):,}".replace(",", ".")
+        + (f"  ·  %{r['pay']:.1f}" if r.get("pay") is not None else "")
+        for _, r in siniflar.iterrows()
+    ])
+    st.altair_chart(
+        grafik.yatay_bar(etiketli, "sınıf", "bbox", alan_adi="bbox sayısı",
+                         etiket="_etiket"),
+        width="stretch",
+    )
 
     nadir = [s for s in vs.sinif_dagilimi("tani") if s["bbox"] < 30]
     if nadir:
@@ -265,19 +277,16 @@ def _model_sekmesi() -> None:
                              "sağlıklı referans (v00)": round(v, 4),
                              "fark": round(v - b, 4)})
         fine = pd.DataFrame(satirlar)
-        a, b = st.columns([3, 2])
-        with a:
-            uzun = fine.melt(
-                id_vars="metrik",
-                value_vars=["fine-tune öncesi", "sağlıklı referans (v00)"],
-                var_name="seri", value_name="değer",
-            )
-            st.altair_chart(
-                grafik.gruplu_bar(uzun, "metrik", "değer", "seri",
-                                  alan_adi="değer"),
-                width="stretch",
-            )
-        with b:
+        # Gruplu cubuk yerine SIFIR MERKEZLI fark. Dort metrigin ikisi de
+        # 0.9 civarindaydi; yan yana iki cubugu gozle kiyaslamak farki
+        # okunmaz kiliyordu. Okunmasi gereken sey zaten fark: en buyugu
+        # 0.03. Sifir merkezli grafikte yon de dogrudan gorunuyor -
+        # precision YUKSELIYOR, digerleri dusuyor.
+        st.altair_chart(
+            grafik.fark_profili(fine, "metrik", "fark"),
+            width="stretch",
+        )
+        with st.expander("Ham değerler (fine-tune öncesi / sonrası)"):
             st.dataframe(fine, hide_index=True, width="stretch")
         stil.yorum(
             "Bu fark bir senaryo etkisi DEĞİLDİR; iki farklı eğitim durumunun "
@@ -296,12 +305,29 @@ def _model_sekmesi() -> None:
         [{"alan": k, "değer": ("kayıtta yok" if v is None else str(v))}
          for k, v in kunye.items()]
     )
-    a, b = st.columns(2)
-    yari = (len(kunye_df) + 1) // 2
-    with a:
-        st.dataframe(kunye_df.iloc[:yari], hide_index=True, width="stretch")
-    with b:
-        st.dataframe(kunye_df.iloc[yari:], hide_index=True, width="stretch")
+    # Yirmi satir iki tablo halinde duruyordu ve hepsi ayni agirliktaydi.
+    # Bir karsilastirmanin gecerli olup olmadigi DORT kimlik alanina bakar
+    # (baslangic modeli, degerlendirme kumesi, cozunurluk, checkpoint) -
+    # onlar gorunur kalir. Geri kalani inceleyen icin, izleyici icin degil.
+    KIMLIK = ("başlangıç ağırlığı", "değerlendirme kümesi",
+              "çıkarım çözünürlüğü", "checkpoint", "seed", "veri sürümü")
+    kartlar = [(a, kunye.get(a)) for a in KIMLIK if kunye.get(a) is not None]
+    if kartlar:
+        stil.kpi_satiri([(a, str(d), "") for a, d in kartlar[:3]])
+        if len(kartlar) > 3:
+            stil.kpi_satiri([(a, str(d), "") for a, d in kartlar[3:6]])
+        stil.yorum(
+            "İlk dört alan <b>karşılaştırılabilirlik kimliğidir</b>: bir "
+            "senaryonun metriği ancak bu dördü de aynı olan bir referansla "
+            "karşılaştırılabilir. Seed ve veri sürümü tekrarlanabilirlik için."
+        )
+    with st.expander("Eğitim künyesinin tamamı (optimizer, lr, batch, süre)"):
+        a, b = st.columns(2)
+        yari = (len(kunye_df) + 1) // 2
+        with a:
+            st.dataframe(kunye_df.iloc[:yari], hide_index=True, width="stretch")
+        with b:
+            st.dataframe(kunye_df.iloc[yari:], hide_index=True, width="stretch")
 
     not_ = vs.optimizer_notu(SENARYO)
     if not_:
@@ -310,18 +336,16 @@ def _model_sekmesi() -> None:
     st.markdown("### Sınıf bazlı performans")
     siniflar = pd.DataFrame(vs.sinif_metrikleri(SENARYO))
     if not siniflar.empty:
-        a, b = st.columns([3, 2])
-        with a:
-            uzun = siniflar.melt(
-                id_vars="sınıf", value_vars=["AP50", "AP50-95", "recall"],
-                var_name="metrik", value_name="değer",
-            )
-            st.altair_chart(
-                grafik.gruplu_bar(uzun, "sınıf", "değer", "metrik",
-                                  yatay=True, alan_adi="değer"),
-                width="stretch",
-            )
-        with b:
+        uzun = siniflar.melt(
+            id_vars="sınıf", value_vars=["AP50", "AP50-95", "recall"],
+            var_name="metrik", value_name="değer",
+        )
+        st.altair_chart(
+            grafik.gruplu_bar(uzun, "sınıf", "değer", "metrik",
+                              yatay=True, alan_adi="değer"),
+            width="stretch",
+        )
+        with st.expander("Sayısal değerler ve örnek sayıları"):
             st.dataframe(siniflar, hide_index=True, width="stretch")
         stil.yorum(
             "UAP ve UAI'nin yüksek görünen skorları yanıltıcıdır: sırasıyla "
@@ -331,6 +355,17 @@ def _model_sekmesi() -> None:
     kirilim = vs.kirilim(SENARYO)
     if kirilim:
         st.markdown("### Kırılımlı performans")
+        # Iki tablo yerine iki grafik: kirilimin anlatmak istedigi sey
+        # "hangi grup geride kaliyor" ve bunu bir cubuk anında soyluyor.
+        # Etikette recall'in yaninda ORNEK SAYISI da var - az ornekli bir
+        # grubun yuksek recall'i tek basina okunmasin diye.
+        def _etiketle(veri, kategori):
+            return veri.assign(_etiket=[
+                f"{r['recall']:.4f}   (n={int(r['gerçek kutu']):,})".replace(",", ".")
+                if r.get("gerçek kutu") else f"{r['recall']:.4f}"
+                for _, r in veri.iterrows()
+            ])
+
         a, b = st.columns(2)
         with a:
             stil.ust_baslik("nesne boyutuna göre recall")
@@ -339,7 +374,12 @@ def _model_sekmesi() -> None:
                  "gerçek kutu": v.get("gercek_kutu")}
                 for k, v in (kirilim.get("boyut_bandi_recall") or {}).items()
             ])
-            st.dataframe(boyut, hide_index=True, width="stretch")
+            st.altair_chart(
+                grafik.yatay_bar(_etiketle(boyut, "bant"), "bant", "recall",
+                                 alan_adi="recall", etiket="_etiket",
+                                 sirala=None),
+                width="stretch",
+            )
         with b:
             stil.ust_baslik("veri kaynağına göre recall")
             kaynak = pd.DataFrame([
@@ -347,7 +387,12 @@ def _model_sekmesi() -> None:
                  "gerçek kutu": v.get("gercek_kutu")}
                 for k, v in (kirilim.get("kaynak_recall") or {}).items()
             ])
-            st.dataframe(kaynak, hide_index=True, width="stretch")
+            st.altair_chart(
+                grafik.yatay_bar(_etiketle(kaynak, "kaynak"), "kaynak",
+                                 "recall", alan_adi="recall",
+                                 etiket="_etiket", renk=stil.IKINCIL),
+                width="stretch",
+            )
         stil.yorum(
             "Sağlıklı modelde bile küçük nesnelerde ve bazı kaynaklarda "
             "belirgin düşüş var. Bu, bozulma değil verinin kendi zorluğudur — "
