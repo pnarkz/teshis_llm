@@ -28,7 +28,7 @@ Kapsam:
 - `test_veri_istatistik.py`: dataset saglik taramasinin (yetim
   goruntu/etiket, gecersiz sinif, cok kucuk kutu) sentetik bir mini
   dataset uzerinde dogru sayim yaptigi. Gercek dataset'e dokunmaz.
-- `test_demo_render.py`: demo konsolunun her sayfa, her senaryo ve her galeri
+- `test_demo_konsol.py`: demo konsolunun her sayfa, her senaryo ve her galeri
   siralamasinda istisnasiz render edildigi (Streamlit AppTest ile headless).
   Demo bagimliliklari kurulu degilse atlanir.
 

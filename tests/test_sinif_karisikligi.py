@@ -1,4 +1,4 @@
-"""scripts/senaryo_D3_D3b_sinif_karisikligi.py::build_dataset — sinif karisikligi uretimi testleri.
+"""teshis/veri/senaryo_d3_d3b_sinif_karisikligi.py::build_dataset — sinif karisikligi uretimi testleri.
 
 Sentetik bir mini dataset uzerinde calisir; gercek dataset'e dokunmaz.
 D3 (UAP/UAI) ve D3b (tasit/insan) ayni kodu farkli sinif ciftiyle kullandigi
@@ -6,7 +6,6 @@ icin, takas mantiginin sinif ciftinden bagimsiz dogru calistigi burada
 dogrulanir.
 """
 
-import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -16,9 +15,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-_spec = importlib.util.spec_from_file_location("local_d3", ROOT / "scripts/senaryo_D3_D3b_sinif_karisikligi.py")
-local_d3 = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(local_d3)
+from teshis.veri import senaryo_d3_d3b_sinif_karisikligi as local_d3
 
 
 def _mini_dataset(root: Path, satirlar: dict[str, list[str]]) -> None:

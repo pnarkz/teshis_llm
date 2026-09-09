@@ -18,12 +18,11 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Senaryo veri surumu data.yaml'i ureten scriptler.
+# Senaryo veri surumu data.yaml'i ureten uygulama modulleri.
 URETICI_SCRIPTLER = [
-    ROOT / "scripts/senaryo_D2b_eksik_etiket.py",
-    ROOT / "scripts/senaryo_D3_D3b_sinif_karisikligi.py",
-    ROOT / "scripts/kaggle_D2a_lokalizasyon_gurultusu.py",
-    ROOT / "scripts/kaggle_D2b_eksik_etiket.py",
+    ROOT / "teshis/veri/senaryo_d3_d3b_sinif_karisikligi.py",
+    ROOT / "teshis/veri/senaryo_d2a_lokalizasyon_gurultusu.py",
+    ROOT / "teshis/veri/senaryo_d2b_eksik_etiket.py",
 ]
 
 VERI_SURUMU_YAMLLARI = sorted((ROOT / "veri_surumleri").glob("*/data.yaml"))
