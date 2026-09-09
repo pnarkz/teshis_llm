@@ -37,7 +37,12 @@ from data_loader import (
     load_results,
     referans_galerisi,
 )
-from teshis.degerlendirme.karsilastirilabilirlik import bozulmasiz_mi, kimlik
+from teshis.degerlendirme.karsilastirilabilirlik import (
+    bozulmasiz_mi,
+    esik_yoklugu_aciklamasi,
+    gurultu_esigi_gecerli_mi,
+    kimlik,
+)
 from teshis.degerlendirme.senaryo_ozeti import kanit_gucu, ne_gozlendi, ozet
 
 SECIM = "secili_senaryo"
@@ -111,11 +116,10 @@ def _katalog(secili: str) -> None:
         gosterilen = [s for s in gosterilen
                       if s["kanit"] in ("zayif", "gurultu icinde", "olcum yok")]
 
-    with st.expander("Gelişmiş filtreler (checkpoint, başlangıç modeli, seed)"):
-        st.markdown(
-            "Bu boyutlar senaryo keşfinin değil **koşu defterinin** parçası. "
-            "Aşağıdaki \"Koşu defteri\" bölümünde filtrelenebilirler."
-        )
+    # "Gelismis filtreler" diye bir acilir kutu vardi ama icinde yalnizca
+    # "bunlar kosu defterinde" yazan bir yonlendirme metni bulunuyordu -
+    # hicbir filtre sunmuyordu. Bos vaat vermek yerine kaldirildi; koshu
+    # defterinin kendi filtreleri zaten asagida.
 
     if not gosterilen:
         st.warning("Bu filtrelerle senaryo bulunamadı.")
@@ -174,11 +178,12 @@ def _kritik_sinirlama(kosu: str, gozlem: dict) -> str | None:
 
     if not gozlem:
         return None
-    if gozlem["karsilastirma_turu"] == "yok":
-        return gozlem["karsilastirma_aciklamasi"]
-    if not gozlem["kontrol_kosu_sayisi"] and gozlem["karsilastirma_turu"] != "eslenik":
-        return ("Bu ölçekte kontrol koşusu yok: fark ölçülebiliyor ama "
-                "gürültüden ayrılamıyor.")
+    if (gozlem["karsilastirma_turu"] == "yok"
+            or not gurultu_esigi_gecerli_mi(kosu)
+            or not gozlem["kontrol_kosu_sayisi"]):
+        # Metin TEK KAYNAKTAN; burada ayri yazilmisti ve eslenik olcumde
+        # "kontrol kosusu yok" diyordu - oysa aranan bir kontrol yok.
+        return esik_yoklugu_aciklamasi(kosu)
     kod = kosu.split()[0]
     if kod in ("D3",):
         az = ", ".join(f"{a} n={n}" for a, n in VAL_DIAGNOSTIC_BBOX_N.items()
@@ -411,12 +416,61 @@ def _ayrinti(kod: str) -> None:
     with teknik:
         _teknik(kosu, o, gozlem)
 
-    if s["varyantlar"]:
-        stil.yorum(
-            "Bu senaryonun teknik varyantları (" + ", ".join(s["varyantlar"])
-            + ") koşu defterinde; ayrı senaryo değil aynı hipotezin farklı "
-            "checkpoint/çözünürlük/seed kayıtlarıdır."
-        )
+    _iliskili_kanit(s, kosu)
+
+
+def _iliskili_kanit(s: dict, kosu: str) -> None:
+    """Senaryonun varyantlari ve onlarin TASIDIGI BULGU.
+
+    Varyantlar ayri arastirma senaryosu degildir ama bazilari projenin
+    temel bulgusunu tasir: E1'in asil kaniti best.pt/last.pt ayrismasidir,
+    D1'inki iki baslangic modeli arasindaki farktir. Bunlari yalnizca kosu
+    defterinde birakmak, bulgunun ait oldugu senaryodan kopmasi demekti.
+    """
+    from teshis.degerlendirme.senaryo_ozeti import ne_gozlendi as _ng
+
+    if not s["varyantlar"]:
+        return
+    st.markdown("#### İlişkili kanıt")
+    satirlar = []
+    for v in s["varyantlar"]:
+        g = _ng(v) or {}
+        m = (g.get("metrikler") or {}).get("mAP50") or {}
+        ana_m = ((_ng(kosu) or {}).get("metrikler") or {}).get("mAP50") or {}
+        fark = (None if m.get("deger") is None or ana_m.get("deger") is None
+                else round(m["deger"] - ana_m["deger"], 4))
+        satirlar.append({
+            "varyant": v,
+            "ne değişiyor": _varyant_farki(kosu, v),
+            "mAP50": m.get("deger"),
+            f"Δ {kosu}": fark,
+            "referansı": g.get("referans_senaryo") or "—",
+            "kanıt": stil.seviye_adi(kanit_gucu(v)["seviye"]),
+        })
+    st.dataframe(pd.DataFrame(satirlar), hide_index=True, width="stretch")
+    stil.yorum(
+        "Bunlar ayrı araştırma senaryosu değil, aynı hipotezin farklı "
+        "checkpoint / başlangıç modeli / çözünürlük / seed kayıtlarıdır. "
+        "Karşılaştırma sayfasından her biri tek tek açılabilir."
+    )
+
+
+def _varyant_farki(ana: str, varyant: str) -> str:
+    """Varyantin ana kosudan HANGI alanda ayrildigi - kimlikten turetilir."""
+    a, b = kimlik(ana), kimlik(varyant)
+    if a is None or b is None:
+        return "—"
+    farklar = [
+        (ad, getattr(a, alan), getattr(b, alan))
+        for alan, ad in (("checkpoint", "checkpoint"),
+                         ("model", "başlangıç modeli"),
+                         ("imgsz_eval", "çıkarım çözünürlüğü"),
+                         ("degerlendirme_seti", "değerlendirme kümesi"))
+        if getattr(a, alan) != getattr(b, alan)
+    ]
+    if farklar:
+        return " · ".join(f"{ad}: {x} → {y}" for ad, x, y in farklar)
+    return "seed"
 
 
 # --- Kosu defteri -----------------------------------------------------------
@@ -456,7 +510,7 @@ def _kosu_defteri(sonuclar: pd.DataFrame) -> None:
     df = pd.DataFrame(satirlar)
     df["Δ mAP50"] = pd.to_numeric(df["Δ mAP50"], errors="coerce")
 
-    a, b, c = st.columns(3)
+    a, b, c, d = st.columns(4)
     with a:
         rol = st.multiselect("Rol", sorted(set(df["rol"])), key="defter_rol")
     with b:
@@ -465,6 +519,9 @@ def _kosu_defteri(sonuclar: pd.DataFrame) -> None:
     with c:
         model = st.multiselect("Başlangıç modeli", sorted(set(df["model"])),
                                key="defter_model")
+    with d:
+        # Seed filtresi metinde vaat ediliyordu ama defterde YOKTU.
+        seed = st.multiselect("Seed", sorted(set(df["seed"])), key="defter_seed")
     g = df
     if rol:
         g = g[g["rol"].isin(rol)]
@@ -472,6 +529,8 @@ def _kosu_defteri(sonuclar: pd.DataFrame) -> None:
         g = g[g["checkpoint"].isin(cp)]
     if model:
         g = g[g["model"].isin(model)]
+    if seed:
+        g = g[g["seed"].isin(seed)]
     st.dataframe(g, hide_index=True, width="stretch", height=440)
     st.download_button("Koşu defterini CSV olarak indir",
                        g.to_csv(index=False).encode("utf-8-sig"),

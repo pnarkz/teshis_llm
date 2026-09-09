@@ -41,6 +41,10 @@ from teshis.degerlendirme.karsilastirilabilirlik import (
     kontrol_kosulari,
 )
 from teshis.degerlendirme.karsilastirilabilirlik import esikler as _grup_esikleri
+from teshis.degerlendirme.karsilastirilabilirlik import (
+    esik_yoklugu_aciklamasi,
+    gurultu_esigi_gecerli_mi,
+)
 from teshis.degerlendirme.senaryo_ozeti import kanit_gucu, ne_gozlendi, ozet
 
 
@@ -108,19 +112,10 @@ def _sonuc_cumlesi(senaryo: str, gozlem: dict, yildiz_notu: str) -> str:
     """Sayfanin tek cumlelik hukmu - olcumden turetilir."""
     asan = gozlem["asan_metrikler"]
     n = gozlem["kontrol_kosu_sayisi"]
-    # ESLENIK olcumde kontrol kosusu ARANMAZ: model dosyasi birebir ayni,
-    # egitim rastgeleligi hic devrede degil. "Kontrol yok, gurultuden
-    # ayrilamiyor" demek bu kosular icin yanlisti - ayrilacak bir gurultu
-    # zaten yok, fark tamamen degisen ayarindir.
-    if gozlem.get("karsilastirma_turu") == "eslenik":
-        ref = gozlem.get("referans_senaryo")
-        return (f"{senaryo} ile {ref} <b>aynı ağırlık dosyasını</b> kullanır; "
-                "eğitim rastgeleliği devrede değildir. Bu yüzden gürültü "
-                "eşiği uygulanmaz: ölçülen fark tamamen değişen çıkarım "
-                "ayarının veya değerlendirme kümesinin etkisidir.")
+    if not gurultu_esigi_gecerli_mi(senaryo):
+        return esik_yoklugu_aciklamasi(senaryo)
     if not n:
-        return (f"Bu ölçekte kontrol koşusu yok, bu yüzden {senaryo}'nun "
-                "farkı ölçülebiliyor ama gürültüden ayrılamıyor.")
+        return esik_yoklugu_aciklamasi(senaryo)
     if not asan:
         return (f"{senaryo}'nun hiçbir genel metriği gürültü eşiğini aşmıyor: "
                 "genel metriklere dayanan bir etki iddiası kurulamaz.")
@@ -494,17 +489,57 @@ def _deney_defteri(sonuclar: pd.DataFrame) -> None:
 
 # --- Sayfa ------------------------------------------------------------------
 
+def _varyant_etiketi(ana: str, varyant: str) -> str:
+    """Varyantin ana kosudan hangi alanda ayrildigi - kimlikten turetilir."""
+    from teshis.degerlendirme.karsilastirilabilirlik import kimlik
+
+    a, b = kimlik(ana), kimlik(varyant)
+    if a is None or b is None:
+        return "varyant"
+    for alan, ad in (("checkpoint", "checkpoint"),
+                     ("model", "başlangıç modeli"),
+                     ("imgsz_eval", "çözünürlük"),
+                     ("degerlendirme_seti", "değerlendirme kümesi")):
+        if getattr(a, alan) != getattr(b, alan):
+            return f"{ad}: {getattr(b, alan)}"
+    return "seed"
+
+
 def goster() -> None:
     sonuclar = load_results()
     st.title("Karşılaştırma")
 
-    adaylar = [
-        str(r["scenario"]) for _, r in sonuclar.iterrows()
-        if not bozulmasiz_mi(str(r["scenario"])) and ne_gozlendi(str(r["scenario"]))
-    ]
-    varsayilan = adaylar.index("D4") if "D4" in adaylar else 0
-    senaryo = st.selectbox("Karşılaştırılacak hata senaryosu", adaylar,
-                           index=varsayilan)
+    # SENARYO once, KOSU sonra. Onceki surum tek bir listede 20 kosu
+    # gosteriyordu ve "hata senaryosu" diye etiketliyordu - oysa listede
+    # D4 ile "D4 last_pt" yan yana, ayni seviyedeymis gibi duruyordu.
+    import katalog
+
+    senaryolar = [x for x in katalog.senaryolar() if x["ana_kosu"]]
+    a, b = st.columns([3, 3])
+    with a:
+        secilen = st.selectbox(
+            "Hata senaryosu", senaryolar,
+            index=next((i for i, x in enumerate(senaryolar)
+                        if x["kod"] == "D4"), 0),
+            format_func=lambda x: f"{x['kod']} · {x['ad']}",
+        )
+    kosular = [secilen["ana_kosu"], *secilen["varyantlar"]]
+    with b:
+        senaryo = st.selectbox(
+            "Koşu (ana koşu / varyant)", kosular,
+            format_func=lambda k: (
+                f"{k}  ·  ana koşu" if k == secilen["ana_kosu"]
+                else f"{k}  ·  {_varyant_etiketi(secilen['ana_kosu'], k)}"
+            ),
+        )
+    if len(kosular) > 1:
+        stil.yorum(
+            f"{secilen['kod']} senaryosunun {len(kosular)} kaydı var: bir ana "
+            "koşu ve " + ", ".join(
+                f"{k} ({_varyant_etiketi(secilen['ana_kosu'], k)})"
+                for k in secilen["varyantlar"]
+            ) + ". Ayrı senaryo değil, aynı hipotezin farklı kayıtlarıdır."
+        )
 
     o = ozet(senaryo)
     gozlem = o["ne_gozlendi"]
@@ -535,11 +570,10 @@ def goster() -> None:
     with b:
         band = _fark_bandi_verisi(gozlem)
         if band.empty:
-            st.info(
-                "Bu ölçekte kontrol koşusu yok, gürültü eşiği "
-                "hesaplanamıyor — fark ölçülebiliyor ama rastgelelikten "
-                "ayrılamıyor."
-            )
+            # Metin TEK KAYNAKTAN gelir. Burada ayri bir cumle yazilmisti ve
+            # eslenik olcum duzeltmesi ona ulasmadi: E4 secildiginde kutu
+            # hala "rastgelelikten ayrilamiyor" diyordu.
+            st.info(esik_yoklugu_aciklamasi(senaryo))
         else:
             st.altair_chart(
                 grafik.gurultu_bandi_grafigi(band, senaryo="metrik"),

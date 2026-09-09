@@ -150,18 +150,34 @@ def test_her_senaryo_render_ediliyor(senaryo: str):
 
 @pytest.mark.parametrize("kosu", _kosular())
 def test_her_kosu_karsilastirmada_render_ediliyor(kosu: str):
-    """Karsilastirma sayfasi defterdeki her kosuyu acabilmeli."""
+    """Karsilastirma sayfasi defterdeki her bozulma kosusunu acabilmeli.
+
+    Secim IKI ASAMALI: once senaryo, sonra o senaryonun ana kosusu veya
+    varyanti. Tek listede 20 kosu gostermek D4 ile "D4 last_pt"yi ayni
+    seviyedeymis gibi yan yana koyuyordu.
+    """
     import sys
 
     sys.path.insert(0, str(ROOT / "demo"))
+    import katalog
     from teshis.degerlendirme.karsilastirilabilirlik import bozulmasiz_mi
 
     if bozulmasiz_mi(kosu):
-        pytest.skip("bozulmasiz kosu karsilastirma seciciye girmez")
+        pytest.skip("bozulmasiz kosu senaryo seciciye girmez")
+
+    senaryo = next(
+        (x for x in katalog.senaryolar()
+         if kosu == x["ana_kosu"] or kosu in x["varyantlar"]), None)
+    assert senaryo is not None, f"{kosu} hicbir senaryoya bagli degil"
+
     app = _bolum(_bolum_adi("Karşılaştırma"))
-    secici = next(s for s in app.selectbox
-                  if "hata senaryosu" in (s.label or ""))
-    secici.set_value(kosu).run()
+    sen_secici = next(x for x in app.selectbox
+                      if "senaryo" in (x.label or "").lower())
+    sen_secici.set_value(senaryo).run()
+    assert not _sorunlar(app), f"{senaryo['kod']}: {_sorunlar(app)}"
+
+    kosu_secici = next(x for x in app.selectbox if "Koşu" in (x.label or ""))
+    kosu_secici.set_value(kosu).run()
     assert not _sorunlar(app), f"{kosu}: {_sorunlar(app)}"
 
 
