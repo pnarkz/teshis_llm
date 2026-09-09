@@ -34,8 +34,11 @@ def devam_et(run_dir: Path, onayla: bool = False) -> Path:
     Ozellik silinmedi cunku kesif/duman testi gibi karsilastirmaya girmeyen
     kosularda hala ise yarayabilir; ancak bilincli onay ister.
     """
-    from ultralytics import YOLO
-
+    # Ultralytics importu DOGRULAMALARDAN SONRA yapilir. Once yapilirsa,
+    # Ultralytics kurulu olmayan bir makinede kullanici "checkpoint yok" veya
+    # "onay gerekli" gibi anlamli bir hata yerine ModuleNotFoundError alir -
+    # yani asil sorunu hic ogrenemez. Bu dosyanin geri kalani (protokol,
+    # manifest) Ultralytics'siz de calisir.
     son = run_dir.resolve() / "weights/last.pt"
     if not son.is_file():
         raise FileNotFoundError(
@@ -51,6 +54,8 @@ def devam_et(run_dir: Path, onayla: bool = False) -> Path:
             "Yine de devam etmek istiyorsaniz --devam-onayla ekleyin."
         )
     print(f"UYARI: devam ediliyor, egitim bozulabilir -> {son}")
+    from ultralytics import YOLO
+
     YOLO(str(son)).train(resume=True)
     return run_dir
 

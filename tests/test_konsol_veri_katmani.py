@@ -282,3 +282,40 @@ def test_gorsel_cozumleyici_aynayi_buluyor():
         if k.get("image") and _ayna_yolu(Path("hata_galerisi_D4") / k["image"]).is_file()
     )
     assert bulunan >= 8, f"aynada yalnizca {bulunan} kare var"
+
+
+def test_kisa_yol_isletim_sisteminden_bagimsiz():
+    """Windows'ta uretilmis yollar Linux'ta da dosya adina inmeli.
+
+    Kayitlar Windows'ta uretildigi icin ters bolulu. `Path(...).name` Linux'ta
+    boyle bir yolu tek parca sayar ve tam yolu dondururdu; konsol baska bir
+    isletim sisteminde acildiginda ekranda KULLANICI ADI dahil tam yol
+    goruntuleniyordu.
+    """
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from veri_seti import kisa_yol
+
+    windows = r"C:\Users\ASUS\Desktop\termal_teshis\runs\v00\weights\best.pt"
+    assert kisa_yol(windows) == "best.pt"
+    assert "Users" not in kisa_yol(windows)
+    assert kisa_yol("/home/biri/proje/data/veri.yaml") == "veri.yaml"
+    assert kisa_yol("yolov8n.pt") == "yolov8n.pt"     # yol degil, dokunma
+    assert kisa_yol(640) == 640                        # sayi, dokunma
+    assert kisa_yol(None) is None
+
+
+def test_egitim_ayarlarinda_mutlak_yol_gorunmuyor():
+    """Ekranda gosterilen hicbir ayar tam yol veya kullanici adi tasimamali."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from veri_seti import egitim_ayarlari
+
+    for senaryo in ("v00_saglikli", "D2b", "D4"):
+        for alan, deger in egitim_ayarlari(senaryo).items():
+            if isinstance(deger, str):
+                assert "\\" not in deger, f"{senaryo}/{alan}: {deger}"
+                assert not deger.startswith("/"), f"{senaryo}/{alan}: {deger}"
+                assert "Users" not in deger, f"{senaryo}/{alan}: {deger}"

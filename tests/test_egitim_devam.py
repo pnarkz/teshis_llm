@@ -45,3 +45,25 @@ def test_devam_onayla_bayragi_tanimli():
     """CLI'da onay bayragi bulunmali; aksi halde ozellik hic kullanilamaz."""
     kaynak = Path(kos.__file__).read_text(encoding="utf-8")
     assert "--devam-onayla" in kaynak
+
+
+def test_ultralytics_modul_seviyesinde_ice_aktarilmiyor():
+    """Dogrulamalar agir bagimlilik OLMADAN calisabilmeli.
+
+    `from ultralytics import YOLO` dosyanin tepesindeyken, yalnizca demo
+    bagimlilikları kurulu temiz bir ortamda bu modul hic ice aktarilamiyordu:
+    onay kontrolu ve checkpoint kontrolu, hicbir egitim yapilmayacak olsa
+    bile ImportError'a takiliyordu. Import artik dogrulamalardan SONRA.
+    """
+    import ast
+
+    kaynak = Path(kos.__file__).read_text(encoding="utf-8")
+    agac = ast.parse(kaynak)
+    tepe = [d for d in agac.body
+            if isinstance(d, (ast.Import, ast.ImportFrom))]
+    adlar = {getattr(d, "module", None) or ""
+             for d in tepe} | {a.name for d in tepe for a in d.names}
+    assert not any(a.startswith("ultralytics") for a in adlar), (
+        "ultralytics modul seviyesinde ice aktariliyor: temiz ortamda "
+        "devam_et dogrulamalari calistirilamaz"
+    )

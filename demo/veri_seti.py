@@ -203,6 +203,24 @@ def _defter() -> dict[str, dict[str, str]]:
         return {s["scenario"]: s for s in csv.DictReader(f)}
 
 
+def kisa_yol(deger):
+    """Mutlak yollari yalnizca dosya adina indirger.
+
+    ``Path(...).name`` YETMEZ: Linux'ta PosixPath, ters bolu iceren bir
+    Windows yolunu tek parca sayar ve tam yolu oldugu gibi dondurur
+    (orn. ``C:`` ile baslayan, kullanici adini iceren bir yol). Kayitlar
+    Windows'ta uretildigi icin yollar ters bolulu; konsol baska bir isletim
+    sisteminde acildiginda ekranda kullanici adi dahil tam yol gorunurdu.
+
+    Iki ayirici da elle denenir; boylece davranis isletim sisteminden
+    bagimsiz olur. Modul seviyesinde durur ki isletim sisteminden bagimsiz
+    oldugu bir testle dogrulanabilsin.
+    """
+    if not isinstance(deger, str) or not ("\\" in deger or "/" in deger):
+        return deger
+    return deger.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+
+
 def kosu_dizini(senaryo: str) -> Path | None:
     satir = _defter().get(senaryo)
     if not satir:
@@ -227,12 +245,7 @@ def egitim_ayarlari(senaryo: str = "v00_saglikli") -> dict[str, Any]:
             args = yaml.safe_load(yol.read_text(encoding="utf-8")) or {}
         manifest = _oku(dizin / "run_manifest.json")
 
-    def kisa(deger):
-        """Mutlak yollari yalnizca dosya adina indirger."""
-        if isinstance(deger, str) and ("\\" in deger or "/" in deger):
-            return Path(deger).name
-        return deger
-
+    kisa = kisa_yol
     return {
         "koşu kimliği": satir.get("run_id"),
         "başlangıç ağırlığı": kisa(args.get("model") or satir.get("model")),
