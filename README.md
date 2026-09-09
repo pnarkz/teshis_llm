@@ -179,4 +179,38 @@ atlanir.
   (`teshis/degerlendirme/karsilastirilabilirlik.py`). Ayni filtre ajan
   araclarinda zaten vardi; kural iki yerde yasayinca biri geride kaldi.
 
+- **Esdegerlik metni tek kaynaktan (2026-09-09):** E4 ve D6a "eslenik
+  olcum"dur: aday ile referans AYNI agirlik dosyasini kullanir, yalnizca
+  cikarim ayari degisir. Egitim rastgeleligi devrede olmadigi icin bu
+  kosularda gurultu esigi uygulanmaz. Bu istisna uc ekranda ayri ayri
+  yazilmisti ve E4 sayfasinda cozunurluk "sabit" gorunuyordu - oysa DEGISEN
+  buydu. Metin artik tek yerden uretilir
+  (`karsilastirilabilirlik.gurultu_esigi_gecerli_mi` ve
+  `esik_yoklugu_aciklamasi`).
+
+- **Hipotez hukumlerinin kapsami (2026-09-09):** Tablo "hipotez
+  desteklendi" diyordu; hesaplanan sey ise "fark gurultu bandini asti mi"
+  idi. Etiketler artik yalnizca hesaplanani soyler ("Esigi asan dusus",
+  "Beklenmedik yonde etki", "Gurultuyu asan etki yok", "Eslenik olcum",
+  "Olculemedi"). D1'de mAP50_95'teki YUKSELIS "kismen desteklendi" olarak
+  okunuyordu.
+
+- **Senaryo ile kosu ayrimi (2026-09-09):** Katalog bir deney defteri degil;
+  senaryo bir hipotez, kosu ise onun bir kaydidir. Ayrim artik Senaryolar,
+  Karsilastirma ve Sonuclar sayfalarinda ayni sekilde uygulanir
+  (`demo/katalog.py`); Karsilastirma once senaryo, sonra kosu sorar.
+
+- **Yeni deney duzeni (2026-09-09):** Eski ana denemede ustveri yoktu: hangi
+  cevabin hangi kod haliyle uretildigi kesin bilinmiyordu ve **102 arac
+  cagrisinin hicbirinin cevabi saklanmamisti**. Yeni kosucu
+  (`scripts/ajan_deney.py`) her gozlemi degismez bir deney kimligi
+  (`<UTC>__<git sha>`) altinda; model, arac surumu, Git commit'i, calisma
+  parametreleri, HAM ve ayristirilmis cevap ve **her arac cevabinin
+  snapshot'i** ile kaydeder. Puanlama ayri bir adimdir
+  (`scripts/ajan_deney_puanla.py`): cevap anahtari uretim tarafina hic
+  girmez, ayni uretim iki kez sayilmaz, gecerli tekrarlar korunur ve sonuclar
+  **rol bazli** raporlanir - kontrol kosulari ile bozulma senaryolari tek bir
+  basari oraninda birlestirilmez. Yeni deneyler `reports/ajan_deneyleri/`
+  altindadir ve eski `reports/ajan_denemesi/` sonuclariyla karistirilmaz.
+
 Guncel ayrinti: [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md)
