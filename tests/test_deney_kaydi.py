@@ -293,3 +293,83 @@ def test_prova_klasorleri_git_disinda():
     sonuc = subprocess.run(["git", "check-ignore", "-q", yol],
                            cwd=ROOT, capture_output=True)
     assert sonuc.returncode == 0, f"{yol} .gitignore kapsaminda degil"
+
+
+def test_dusen_gozlem_sirasi_devamda_dolduruluyor(tmp_path, monkeypatch):
+    """g01 duserse g02/g03 uretilse bile o sira BOS kalmamali.
+
+    Gercek kosuda goruldu: kosu_01 g01 gecici bir 503 ile dustu, dosya
+    yazilmadi, calisma g02 ile devam etti. Eski mantik "kac gozlem var"
+    sayiyordu; --devam sayiya bakip g03'u zaten var goruyor ve kosu KALICI
+    olarak 2 tekrarla kaliyordu. Ustelik hicbir yerde hata gorunmuyordu.
+    """
+    monkeypatch.setattr(ajan_deney, "DENEYLER", tmp_path)
+    dizin = tmp_path / "d"
+    # g01 dusmus gibi: yalnizca g02 ve g03 diskte.
+    ajan_deney.kosuyu_calistir(dizin, "kosu_04", 2, "m", kuru=True)
+    ajan_deney.kosuyu_calistir(dizin, "kosu_04", 3, "m", kuru=True)
+
+    kosulan = []
+    gercek = ajan_deney.kosuyu_calistir
+
+    def izle(d, kosu, sira, model, kuru=False):
+        if not ajan_deney._gozlem_yolu(d, kosu, sira).is_file():
+            kosulan.append((kosu, sira))
+        return gercek(d, kosu, sira, model, kuru=kuru)
+
+    monkeypatch.setattr(ajan_deney, "kosuyu_calistir", izle)
+    plan = {"kosular": [
+        {"kosu_id": "kosu_04", "tekrar": 3, "gizli_rol": "x",
+         "gizli_senaryo": "D2b", "beklenen_teshis": "eksik_etiket"},
+    ], "toplam_gozlem": 3}
+    ajan_deney.deneyi_yurut(dizin.name, plan, "m", kuru=True, devam=True)
+
+    assert kosulan == [("kosu_04", 1)], (
+        f"eksik sira doldurulmadi; kosulan: {kosulan}")
+    assert len(ajan_deney.mevcut_gozlemler(dizin)["kosu_04"]) == 3
+
+
+def test_uretilemeyen_gozlem_sessizce_gecilmiyor(tmp_path, monkeypatch, capsys):
+    """Uretilemeyen gozlem ekrana yazilmali; deney eksik bittigini soylemeli."""
+    monkeypatch.setattr(ajan_deney, "DENEYLER", tmp_path)
+    monkeypatch.setattr(ajan_deney, "kosuyu_calistir",
+                        lambda *a, **k: None)          # her uretim dusuyor
+    plan = {"kosular": [
+        {"kosu_id": "kosu_04", "tekrar": 2, "gizli_rol": "x",
+         "gizli_senaryo": "D2b", "beklenen_teshis": "eksik_etiket"},
+    ], "toplam_gozlem": 2}
+    ajan_deney.deneyi_yurut("d", plan, "m", kuru=True, devam=False)
+    cikti = capsys.readouterr().out
+    assert "URETILEMEYEN GOZLEM (2)" in cikti
+    assert "kosu_04 g01" in cikti and "kosu_04 g02" in cikti
+
+
+def test_gecici_sunucu_hatasi_yeniden_deneniyor(monkeypatch):
+    """503 'high demand' kota degil, gecici sunucu yogunlugudur.
+
+    Ilk denemede firlatilirsa gozlem kaybolur. Kaybolan gozlem de deneyi
+    planlanandan az tekrarla birakir.
+    """
+    from teshis.ajan import ajan as ajan_modulu
+
+    assert ajan_modulu._gecici_sunucu_hatasi_mi(
+        Exception("ServerError: 503 UNAVAILABLE. This model is currently "
+                  "experiencing high demand."))
+    assert not ajan_modulu._gecici_sunucu_hatasi_mi(
+        Exception("429 RESOURCE_EXHAUSTED PerDay quota"))
+
+    monkeypatch.setattr(ajan_modulu.time, "sleep", lambda s: None)
+    cagri = {"n": 0}
+
+    class SahteModeller:
+        def generate_content(self, **kwargs):
+            cagri["n"] += 1
+            if cagri["n"] < 3:
+                raise Exception("ServerError: 503 UNAVAILABLE high demand")
+            return "cevap"
+
+    class SahteClient:
+        models = SahteModeller()
+
+    assert ajan_modulu._istek_gonder(SahteClient(), "m", [], None) == "cevap"
+    assert cagri["n"] == 3, "gecici hata yeniden denenmedi"

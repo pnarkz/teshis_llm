@@ -309,12 +309,28 @@ def deneyi_yurut(deney_id: str | None, plan: dict, model: str,
          for k in plan["kosular"]},
         ensure_ascii=False, indent=2), encoding="utf-8")
 
-    mevcut = mevcut_gozlemler(dizin)
+    # EKSIK SIRALAR doldurulur, tamamlananlarin SAYISINDAN devam edilmez.
+    #
+    # Onceki hali `range(var + 1, tekrar + 1)` idi: yani "kac gozlem var" sayilip
+    # oradan devam ediliyordu. g01 gecici bir sunucu hatasiyla dustugunde dosya
+    # yazilmaz; sonraki tur g02 ve g03'u uretir, sayim 2 olur ve --devam
+    # `range(3, 4)`e bakip g03'u zaten var gorur. Sonuc: kosu KALICI olarak 2
+    # tekrarla kalir ve --devam bunu bir daha asla duzeltmez - ustelik hicbir
+    # yerde hata gorunmez. Artik her sira ayri ayri kontrol edilir.
+    basarisiz: list[str] = []
     for kayit in plan["kosular"]:
         kosu_id = kayit["kosu_id"]
-        var = len(mevcut.get(kosu_id, []))
-        for sira in range(var + 1, kayit["tekrar"] + 1):
-            kosuyu_calistir(dizin, kosu_id, sira, model, kuru=kuru)
+        for sira in range(1, kayit["tekrar"] + 1):
+            if _gozlem_yolu(dizin, kosu_id, sira).is_file():
+                continue
+            if kosuyu_calistir(dizin, kosu_id, sira, model, kuru=kuru) is None:
+                basarisiz.append(f"{kosu_id} g{sira:02d}")
+
+    if basarisiz:
+        # Sessiz eksik birakilmaz: hangi gozlemlerin uretilemedigi yazilir.
+        print(f"\nURETILEMEYEN GOZLEM ({len(basarisiz)}): {', '.join(basarisiz)}")
+        print("--devam ile yeniden denenebilir; tamamlananlar tekrar "
+              "API'ye gitmez.")
     return dizin
 
 

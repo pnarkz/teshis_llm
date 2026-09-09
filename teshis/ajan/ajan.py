@@ -187,6 +187,21 @@ class GunlukKotaBitti(RuntimeError):
     """Gunluk API kotasi tukendi; beklemek ise yaramaz."""
 
 
+def _gecici_sunucu_hatasi_mi(hata: Exception) -> bool:
+    """Sunucu kaynakli GECICI hata mi (503/500/502/504)?
+
+    Kota hatasindan farklidir: istek sayilmaz, sinir asilmamistir, sunucu o
+    an yogundur. Ilk denemede firlatilirsa gozlem sessizce kaybolur - ve
+    kaybolan gozlem sirasi bir daha doldurulmadigi icin deney planlanandan
+    az tekrarla biter. Bu yuzden yeniden denenir.
+    """
+    metin = str(hata)
+    return any(imza in metin for imza in (
+        "503", "UNAVAILABLE", "overloaded", "high demand",
+        "500 INTERNAL", "502", "504",
+    ))
+
+
 def _istek_gonder(client, model: str, contents, config, deneme: int = 4):
     """generate_content cagrisini yapar; kota hatasinda bekleyip yeniden dener.
 
@@ -205,6 +220,15 @@ def _istek_gonder(client, model: str, contents, config, deneme: int = 4):
                     "Beklemek ise yaramaz; kota ertesi gun yenilenir. Tamamlanan "
                     "kosular kaydedildi, kalanlar --devam ile surdurulebilir."
                 ) from hata
+            if _gecici_sunucu_hatasi_mi(hata) and sira < deneme:
+                son_hata = hata
+                # Ustel geri cekilme: kota degil, sunucu yogunlugu. Sunucu
+                # retryDelay onermez, bu yuzden kendi araligimizi kullaniriz.
+                sure = min(5 * 2 ** (sira - 1), 60)
+                print(f"      sunucu yogun (gecici), {sure:.0f} sn bekleniyor "
+                      f"({sira}/{deneme - 1})...")
+                time.sleep(sure)
+                continue
             if not _kota_hatasi_mi(hata) or sira == deneme:
                 raise
             son_hata = hata
