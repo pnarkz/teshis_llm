@@ -1,0 +1,255 @@
+{
+  "kosu_id": "kosu_08",
+  "gozlem_sirasi": 1,
+  "zaman_utc": "2026-09-09T16:40:24.615342+00:00",
+  "kuru_calistirma": false,
+  "model": "gemini-3.6-flash",
+  "arac_surumu": "91f5bab96ed2",
+  "git_commit": "0e40cdce571b70d07ab61880a12fe00f860bd589",
+  "git_temiz": false,
+  "ham_cevap": {
+    "tur": 2,
+    "ham": "{\n  \"diagnosis\": \"Çok küçük nesnelerde (0-16 px) belirgin duyarlılık (recall) kaybı\",\n  \"evidence\": [\n    \"0-16 px boyutundaki çok küçük nesneler grubunda recall değeri referans koşudaki 0.7446 seviyesinden 0.2922 seviyesine düşerek 0.4524 puan kayıp göstermiştir (band oranı: 43.92).\",\n    \"A kaynak grubunda recall değeri referanstaki 0.8402 seviyesinden 0.5954 seviyesine gerilemiş ve 0.2448 puanlık düşüş yaşanmıştır (band oranı: 18.83).\",\n    \"16-32 px (fark: +0.0020), 32-64 px (fark: -0.0116) ve 64+ px (fark: 0.0000) boyut gruplarındaki farklar gürültü bandı sınırları içerisinde kalmıştır.\"\n  ],\n  \"confidence\": \"yuksek\",\n  \"limitations\": [\n    \"UAI (17 bbox) ve UAP (15 bbox) sınıflarında toplam örnek sayısı 20'nin altında olduğu için bu sınıflar üzerinde kesin genelleme yapılamamaktadır.\"\n  ],\n  \"next_measurement\": \"Farklı girdi çözünürlükleri veya piramit ölçeklendirme parametreleri altında küçük nesne tespiti performans testlerinin yapılması.\"\n}",
+    "bitis_nedeni": "FinishReason.STOP"
+  },
+  "cevap": {
+    "diagnosis": "Çok küçük nesnelerde (0-16 px) belirgin duyarlılık (recall) kaybı",
+    "evidence": [
+      "0-16 px boyutundaki çok küçük nesneler grubunda recall değeri referans koşudaki 0.7446 seviyesinden 0.2922 seviyesine düşerek 0.4524 puan kayıp göstermiştir (band oranı: 43.92).",
+      "A kaynak grubunda recall değeri referanstaki 0.8402 seviyesinden 0.5954 seviyesine gerilemiş ve 0.2448 puanlık düşüş yaşanmıştır (band oranı: 18.83).",
+      "16-32 px (fark: +0.0020), 32-64 px (fark: -0.0116) ve 64+ px (fark: 0.0000) boyut gruplarındaki farklar gürültü bandı sınırları içerisinde kalmıştır."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI (17 bbox) ve UAP (15 bbox) sınıflarında toplam örnek sayısı 20'nin altında olduğu için bu sınıflar üzerinde kesin genelleme yapılamamaktadır."
+    ],
+    "next_measurement": "Farklı girdi çözünürlükleri veya piramit ölçeklendirme parametreleri altında küçük nesne tespiti performans testlerinin yapılması.",
+    "run_id": "kosu_08"
+  },
+  "arac_cagrilari": [
+    {
+      "tur": 1,
+      "arac": "baseline_metriklerini_getir",
+      "argumanlar": {},
+      "cevap": {
+        "mAP50": 0.9199649,
+        "mAP50_95": 0.6706607,
+        "precision": 0.9175451,
+        "recall": 0.8785459,
+        "class_AP50": {
+          "tasit": 0.8856465,
+          "insan": 0.806991,
+          "UAP": 0.995,
+          "UAI": 0.9922222
+        }
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "kosu_metriklerini_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_08"
+      },
+      "cevap": {
+        "mAP50": 0.8975405,
+        "mAP50_95": 0.6701034,
+        "precision": 0.8533346,
+        "recall": 0.8436181,
+        "class_AP50": {
+          "tasit": 0.8863766,
+          "insan": 0.7388288,
+          "UAP": 0.995,
+          "UAI": 0.9699565
+        }
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "baseline_farkini_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_08"
+      },
+      "cevap": {
+        "mAP50": -0.022424,
+        "mAP50_95": -0.000557,
+        "precision": -0.06421,
+        "recall": -0.034928
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "bbox_sayilarini_getir",
+      "argumanlar": {},
+      "cevap": {
+        "tasit": 1264,
+        "insan": 2718,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "boyut_bazli_recall_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_08"
+      },
+      "cevap": {
+        "bant_tanimi_px": {
+          "cok_kucuk_16_alti": "0-16 px",
+          "kucuk_16_32": "16-32 px",
+          "orta_32_64": "32-64 px",
+          "buyuk_64_ustu": "64+ px"
+        },
+        "bantlar": {
+          "cok_kucuk_16_alti": {
+            "bbox_n": 1167,
+            "recall": 0.2922,
+            "referans_recall": 0.7446,
+            "fark": -0.4524,
+            "gurultu_bandi": 0.0103,
+            "band_orani": 43.92,
+            "band_yorumu": "bandın belirgin üzerinde"
+          },
+          "kucuk_16_32": {
+            "bbox_n": 2011,
+            "recall": 0.8364,
+            "referans_recall": 0.8344,
+            "fark": 0.002,
+            "gurultu_bandi": 0.0497,
+            "band_orani": 0.04,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "orta_32_64": {
+            "bbox_n": 520,
+            "recall": 0.9192,
+            "referans_recall": 0.9308,
+            "fark": -0.0116,
+            "gurultu_bandi": 0.0462,
+            "band_orani": 0.25,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "buyuk_64_ustu": {
+            "bbox_n": 316,
+            "recall": 0.9873,
+            "referans_recall": 0.9873,
+            "fark": 0.0,
+            "gurultu_bandi": 0.0158,
+            "band_orani": 0.0,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          }
+        },
+        "gurultu_notu": "Her grup icin 'gurultu_bandi', hicbir bozulma icermeyen kosular arasinda o grupta gozlenen en buyuk yayilimi verir; 'bozulmasiz_kosu_degerleri' o kosularda olculen degerlerdir. 'band_orani' = |fark| / band. Orani 1'in ALTINDA olan bir fark, saf rastgelelikten ayirt edilemez ve bozulma kaniti olarak kullanilmamalidir - farkin mutlak buyuklugu ne olursa olsun. Orani 1'in uzerinde olsa bile, band az sayida kosudan hesaplandiysa ('band_kosu_sayisi') tek basina yeterli kanit degildir; 'band_yorumu' bunu belirtir."
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "kaynak_bazli_recall_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_08"
+      },
+      "cevap": {
+        "aciklama": "Kaynak gruplari anonimlestirilmistir; sira bbox sayisina gore sabittir.",
+        "kaynaklar": {
+          "kaynak_a": {
+            "bbox_n": 2165,
+            "recall": 0.5954,
+            "referans_recall": 0.8402,
+            "fark": -0.2448,
+            "gurultu_bandi": 0.013,
+            "band_orani": 18.83,
+            "band_yorumu": "bandın belirgin üzerinde"
+          },
+          "kaynak_b": {
+            "bbox_n": 885,
+            "recall": 0.9209,
+            "referans_recall": 0.9107,
+            "fark": 0.0102,
+            "gurultu_bandi": 0.018,
+            "band_orani": 0.57,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "kaynak_c": {
+            "bbox_n": 858,
+            "recall": 0.7098,
+            "referans_recall": 0.7145,
+            "fark": -0.0047,
+            "gurultu_bandi": 0.1306,
+            "band_orani": 0.04,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "kaynak_d": {
+            "bbox_n": 106,
+            "recall": 0.9434,
+            "referans_recall": 0.9906,
+            "fark": -0.0472,
+            "gurultu_bandi": 0.1321,
+            "band_orani": 0.36,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          }
+        }
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "sinif_karisikligini_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_08"
+      },
+      "cevap": {
+        "UAI": {
+          "toplam_gercek_kutu": 17,
+          "tahminler": {
+            "UAI": 15,
+            "bulunamadi": 2
+          },
+          "referans_tahminler": {
+            "UAI": 17
+          }
+        },
+        "UAP": {
+          "toplam_gercek_kutu": 15,
+          "tahminler": {
+            "UAP": 15
+          },
+          "referans_tahminler": {
+            "UAP": 15
+          }
+        },
+        "insan": {
+          "toplam_gercek_kutu": 2718,
+          "tahminler": {
+            "insan": 1669,
+            "bulunamadi": 1043,
+            "tasit": 6
+          },
+          "referans_tahminler": {
+            "insan": 2180,
+            "bulunamadi": 534,
+            "tasit": 4
+          }
+        },
+        "tasit": {
+          "toplam_gercek_kutu": 1264,
+          "tahminler": {
+            "tasit": 1113,
+            "bulunamadi": 149,
+            "insan": 2
+          },
+          "referans_tahminler": {
+            "tasit": 1131,
+            "bulunamadi": 131,
+            "insan": 2
+          }
+        }
+      },
+      "hata": null
+    }
+  ],
+  "uretim_ozeti": "03e1f213f1031ce5"
+}

@@ -1,0 +1,67 @@
+{
+  "kosu_01": {
+    "expected": "saglikli_referans",
+    "gizli_senaryo": "v00_saglikli",
+    "gizli_rol": "saglikli_referans"
+  },
+  "kosu_02": {
+    "expected": "sinif_yetersizligi",
+    "gizli_senaryo": "D1",
+    "gizli_rol": "bozulma_senaryosu"
+  },
+  "kosu_03": {
+    "expected": "lokalizasyon_etiket_gurultusu",
+    "gizli_senaryo": "D2a",
+    "gizli_rol": "bozulma_senaryosu"
+  },
+  "kosu_04": {
+    "expected": "eksik_etiket",
+    "gizli_senaryo": "D2b",
+    "gizli_rol": "bozulma_senaryosu"
+  },
+  "kosu_05": {
+    "expected": "eksik_etiket",
+    "gizli_senaryo": "D2b final_best",
+    "gizli_rol": "bozulma_senaryosu"
+  },
+  "kosu_06": {
+    "expected": "uap_uai_sinif_karisikligi",
+    "gizli_senaryo": "D3",
+    "gizli_rol": "bozulma_senaryosu"
+  },
+  "kosu_07": {
+    "expected": "tasit_insan_sinif_karisikligi",
+    "gizli_senaryo": "D3b",
+    "gizli_rol": "bozulma_senaryosu"
+  },
+  "kosu_08": {
+    "expected": "kucuk_nesne_sinyal_kaybi",
+    "gizli_senaryo": "D4",
+    "gizli_rol": "bozulma_senaryosu"
+  },
+  "kosu_09": {
+    "expected": "kaynak_alani_kaymasi",
+    "gizli_senaryo": "D5",
+    "gizli_rol": "bozulma_senaryosu"
+  },
+  "kosu_10": {
+    "expected": "tekrar_agirligi",
+    "gizli_senaryo": "D6b",
+    "gizli_rol": "bozulma_senaryosu"
+  },
+  "kosu_11": {
+    "expected": "anlamli_degisim_yok",
+    "gizli_senaryo": "C2 seed7",
+    "gizli_rol": "kontrol"
+  },
+  "kosu_12": {
+    "expected": "anlamli_degisim_yok",
+    "gizli_senaryo": "C2 seed13",
+    "gizli_rol": "kontrol"
+  },
+  "kosu_13": {
+    "expected": "anlamli_degisim_yok",
+    "gizli_senaryo": "C2 seed21",
+    "gizli_rol": "kontrol"
+  }
+}

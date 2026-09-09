@@ -1,0 +1,256 @@
+{
+  "kosu_id": "kosu_13",
+  "gozlem_sirasi": 2,
+  "zaman_utc": "2026-09-09T17:00:17.786521+00:00",
+  "kuru_calistirma": false,
+  "model": "gemini-3.6-flash",
+  "arac_surumu": "91f5bab96ed2",
+  "git_commit": "0e40cdce571b70d07ab61880a12fe00f860bd589",
+  "git_temiz": false,
+  "ham_cevap": {
+    "tur": 3,
+    "ham": "{\n  \"diagnosis\": \"bozulma_tespit_edilmedi\",\n  \"evidence\": [\n    \"mAP50 değeri baseline referansı olan 0.9200 seviyesinden 0.9260 değerine (+0.0060 fark) yükselmiştir; mAP50_95 değeri ise 0.6707 seviyesinden 0.6908 değerine (+0.0201 fark) çıkmıştır.\",\n    \"Kaynak bazlı recall analizinde kaynak_b (-0.0045 fark, gürültü bandı 0.0180), kaynak_c (-0.0187 fark, gürültü bandı 0.1306) ve kaynak_d (-0.0472 fark, gürültü bandı 0.1321) üzerindeki değişimlerin tamamı gürültü bantlarının içerisindedir ve rastgele değişkenlik sınırındadır.\",\n    \"Boyut bazlı recall kırılımında küçük nesneler (16-32 px) için recall 0.8344'ten 0.8255'e düşmüş görünse de (-0.0089 fark), bu sapma 0.0497 olan gürültü bandının oldukça altındadır.\"\n  ],\n  \"confidence\": \"yuksek\",\n  \"limitations\": [\n    \"UAI sınıfı için doğrulama setinde yalnızca 17 bbox bulunmaktadır; bu gruptaki tespitler istatistiksel genelleme için yetersizdir.\",\n    \"UAP sınıfı için doğrulama setinde yalnızca 15 bbox bulunmaktadır; bu gruptaki tespitler istatistiksel genelleme için yetersizdir.\"\n  ],\n  \"next_measurement\": \"Modelin genel performansı sağlıklı göründüğünden rutin test sürecine devam edilebilir veya az örnekli sınıflar (UAI, UAP) için ek doğrulama verisi toplanabilir.\"\n}",
+    "bitis_nedeni": "FinishReason.STOP"
+  },
+  "cevap": {
+    "diagnosis": "bozulma_tespit_edilmedi",
+    "evidence": [
+      "mAP50 değeri baseline referansı olan 0.9200 seviyesinden 0.9260 değerine (+0.0060 fark) yükselmiştir; mAP50_95 değeri ise 0.6707 seviyesinden 0.6908 değerine (+0.0201 fark) çıkmıştır.",
+      "Kaynak bazlı recall analizinde kaynak_b (-0.0045 fark, gürültü bandı 0.0180), kaynak_c (-0.0187 fark, gürültü bandı 0.1306) ve kaynak_d (-0.0472 fark, gürültü bandı 0.1321) üzerindeki değişimlerin tamamı gürültü bantlarının içerisindedir ve rastgele değişkenlik sınırındadır.",
+      "Boyut bazlı recall kırılımında küçük nesneler (16-32 px) için recall 0.8344'ten 0.8255'e düşmüş görünse de (-0.0089 fark), bu sapma 0.0497 olan gürültü bandının oldukça altındadır."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI sınıfı için doğrulama setinde yalnızca 17 bbox bulunmaktadır; bu gruptaki tespitler istatistiksel genelleme için yetersizdir.",
+      "UAP sınıfı için doğrulama setinde yalnızca 15 bbox bulunmaktadır; bu gruptaki tespitler istatistiksel genelleme için yetersizdir."
+    ],
+    "next_measurement": "Modelin genel performansı sağlıklı göründüğünden rutin test sürecine devam edilebilir veya az örnekli sınıflar (UAI, UAP) için ek doğrulama verisi toplanabilir.",
+    "run_id": "kosu_13"
+  },
+  "arac_cagrilari": [
+    {
+      "tur": 1,
+      "arac": "baseline_metriklerini_getir",
+      "argumanlar": {},
+      "cevap": {
+        "mAP50": 0.9199649,
+        "mAP50_95": 0.6706607,
+        "precision": 0.9175451,
+        "recall": 0.8785459,
+        "class_AP50": {
+          "tasit": 0.8856465,
+          "insan": 0.806991,
+          "UAP": 0.995,
+          "UAI": 0.9922222
+        }
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "kosu_metriklerini_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_13"
+      },
+      "cevap": {
+        "mAP50": 0.9259885,
+        "mAP50_95": 0.6907673,
+        "precision": 0.899552,
+        "recall": 0.8623181,
+        "class_AP50": {
+          "tasit": 0.9072185,
+          "insan": 0.8095133,
+          "UAP": 0.995,
+          "UAI": 0.9922222
+        }
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "baseline_farkini_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_13"
+      },
+      "cevap": {
+        "mAP50": 0.006024,
+        "mAP50_95": 0.020107,
+        "precision": -0.017993,
+        "recall": -0.016228
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "bbox_sayilarini_getir",
+      "argumanlar": {},
+      "cevap": {
+        "tasit": 1264,
+        "insan": 2718,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "hata": null
+    },
+    {
+      "tur": 2,
+      "arac": "boyut_bazli_recall_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_13"
+      },
+      "cevap": {
+        "bant_tanimi_px": {
+          "cok_kucuk_16_alti": "0-16 px",
+          "kucuk_16_32": "16-32 px",
+          "orta_32_64": "32-64 px",
+          "buyuk_64_ustu": "64+ px"
+        },
+        "bantlar": {
+          "cok_kucuk_16_alti": {
+            "bbox_n": 1167,
+            "recall": 0.7498,
+            "referans_recall": 0.7446,
+            "fark": 0.0052,
+            "gurultu_bandi": 0.0051,
+            "band_orani": 1.02,
+            "band_yorumu": "Bandın üzerinde, ANCAK band yalnızca 3 bozulmasız koşudan hesaplandı (gözlenen değerler: [0.7446, 0.7404, 0.7395]). Bu kadar az gözlemle 'uç bir rastgelelik çekilişi' ile 'gerçek etki' ayırt edilemez. Bu grubu tek başına teşhise dayanak yapmayın; başka kırılımlarda da destek arayın."
+          },
+          "kucuk_16_32": {
+            "bbox_n": 2011,
+            "recall": 0.8255,
+            "referans_recall": 0.8344,
+            "fark": -0.0089,
+            "gurultu_bandi": 0.0497,
+            "band_orani": 0.18,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "orta_32_64": {
+            "bbox_n": 520,
+            "recall": 0.95,
+            "referans_recall": 0.9308,
+            "fark": 0.0192,
+            "gurultu_bandi": 0.0347,
+            "band_orani": 0.55,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "buyuk_64_ustu": {
+            "bbox_n": 316,
+            "recall": 1.0,
+            "referans_recall": 0.9873,
+            "fark": 0.0127,
+            "gurultu_bandi": 0.0063,
+            "band_orani": 2.02,
+            "band_yorumu": "Bandın üzerinde, ANCAK band yalnızca 3 bozulmasız koşudan hesaplandı (gözlenen değerler: [0.9873, 0.9905, 0.9842]). Bu kadar az gözlemle 'uç bir rastgelelik çekilişi' ile 'gerçek etki' ayırt edilemez. Bu grubu tek başına teşhise dayanak yapmayın; başka kırılımlarda da destek arayın."
+          }
+        },
+        "gurultu_notu": "Her grup icin 'gurultu_bandi', hicbir bozulma icermeyen kosular arasinda o grupta gozlenen en buyuk yayilimi verir; 'bozulmasiz_kosu_degerleri' o kosularda olculen degerlerdir. 'band_orani' = |fark| / band. Orani 1'in ALTINDA olan bir fark, saf rastgelelikten ayirt edilemez ve bozulma kaniti olarak kullanilmamalidir - farkin mutlak buyuklugu ne olursa olsun. Orani 1'in uzerinde olsa bile, band az sayida kosudan hesaplandiysa ('band_kosu_sayisi') tek basina yeterli kanit degildir; 'band_yorumu' bunu belirtir."
+      },
+      "hata": null
+    },
+    {
+      "tur": 2,
+      "arac": "kaynak_bazli_recall_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_13"
+      },
+      "cevap": {
+        "aciklama": "Kaynak gruplari anonimlestirilmistir; sira bbox sayisina gore sabittir.",
+        "kaynaklar": {
+          "kaynak_a": {
+            "bbox_n": 2165,
+            "recall": 0.8527,
+            "referans_recall": 0.8402,
+            "fark": 0.0125,
+            "gurultu_bandi": 0.0014,
+            "band_orani": 8.93,
+            "band_yorumu": "bandın belirgin üzerinde"
+          },
+          "kaynak_b": {
+            "bbox_n": 885,
+            "recall": 0.9062,
+            "referans_recall": 0.9107,
+            "fark": -0.0045,
+            "gurultu_bandi": 0.018,
+            "band_orani": 0.25,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "kaynak_c": {
+            "bbox_n": 858,
+            "recall": 0.6958,
+            "referans_recall": 0.7145,
+            "fark": -0.0187,
+            "gurultu_bandi": 0.1306,
+            "band_orani": 0.14,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "kaynak_d": {
+            "bbox_n": 106,
+            "recall": 0.9434,
+            "referans_recall": 0.9906,
+            "fark": -0.0472,
+            "gurultu_bandi": 0.1321,
+            "band_orani": 0.36,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          }
+        }
+      },
+      "hata": null
+    },
+    {
+      "tur": 2,
+      "arac": "sinif_karisikligini_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_13"
+      },
+      "cevap": {
+        "UAI": {
+          "toplam_gercek_kutu": 17,
+          "tahminler": {
+            "UAI": 15,
+            "bulunamadi": 2
+          },
+          "referans_tahminler": {
+            "UAI": 17
+          }
+        },
+        "UAP": {
+          "toplam_gercek_kutu": 15,
+          "tahminler": {
+            "UAP": 15
+          },
+          "referans_tahminler": {
+            "UAP": 15
+          }
+        },
+        "insan": {
+          "toplam_gercek_kutu": 2718,
+          "tahminler": {
+            "insan": 2163,
+            "bulunamadi": 550,
+            "tasit": 5
+          },
+          "referans_tahminler": {
+            "insan": 2180,
+            "bulunamadi": 534,
+            "tasit": 4
+          }
+        },
+        "tasit": {
+          "toplam_gercek_kutu": 1264,
+          "tahminler": {
+            "tasit": 1151,
+            "bulunamadi": 112,
+            "insan": 1
+          },
+          "referans_tahminler": {
+            "tasit": 1131,
+            "bulunamadi": 131,
+            "insan": 2
+          }
+        }
+      },
+      "hata": null
+    }
+  ],
+  "uretim_ozeti": "a7e092cfe2637690"
+}

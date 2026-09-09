@@ -1,0 +1,128 @@
+{
+  "deney_id": "20260909T120445Z__a15487c9",
+  "baslangic_utc": "2026-09-09T12:04:45.294663+00:00",
+  "model": "gemini-3.6-flash",
+  "kuru_calistirma": false,
+  "git_commit": "a15487c9eea36a936d4184321f2601177ec7bd71",
+  "git_temiz": true,
+  "uretim_parametreleri": {
+    "automatic_function_calling": "kapali",
+    "sicaklik": "saglayici varsayilani (acikca ayarlanmadi)",
+    "max_tur": 8,
+    "sema": "teshis/ajan/semalar.py::TESHIS_SEMASI",
+    "sistem_talimati": "teshis/ajan/ajan.py::SISTEM_TALIMATI"
+  },
+  "plan": {
+    "kosu_sayisi": 13,
+    "kosu_basina_tekrar": 3,
+    "toplam_gozlem": 39,
+    "tahmini_api_istegi": 98,
+    "tahmin_gerekcesi": "Her gozlem ~2.5 istek: bir tur arac cagrisi + nihai cevap, artı ara sira ek tur. Ucretsiz katman 20 istek/gun, 5 istek/dk.",
+    "kosular": [
+      {
+        "kosu_id": "kosu_01",
+        "gizli_rol": "saglikli_referans",
+        "gizli_senaryo": "v00_saglikli",
+        "beklenen_teshis": "saglikli_referans",
+        "gerekce": "Karsilastirma tabani. Ajanin 'bozulma yok' diyebilmesi gerekir; diyemezse yanlis pozitif uretiyor demektir.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_02",
+        "gizli_rol": "bozulma_senaryosu",
+        "gizli_senaryo": "D1",
+        "beklenen_teshis": "sinif_yetersizligi",
+        "gerekce": "Kasitli bir bozulma icerir; ajanin nedeni ayirt edip edemedigi olculur.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_03",
+        "gizli_rol": "bozulma_senaryosu",
+        "gizli_senaryo": "D2a",
+        "beklenen_teshis": "lokalizasyon_etiket_gurultusu",
+        "gerekce": "Kasitli bir bozulma icerir; ajanin nedeni ayirt edip edemedigi olculur.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_04",
+        "gizli_rol": "bozulma_senaryosu",
+        "gizli_senaryo": "D2b",
+        "beklenen_teshis": "eksik_etiket",
+        "gerekce": "Kasitli bir bozulma icerir; ajanin nedeni ayirt edip edemedigi olculur.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_05",
+        "gizli_rol": "bozulma_senaryosu",
+        "gizli_senaryo": "D2b final_best",
+        "beklenen_teshis": "eksik_etiket",
+        "gerekce": "Kasitli bir bozulma icerir; ajanin nedeni ayirt edip edemedigi olculur.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_06",
+        "gizli_rol": "bozulma_senaryosu",
+        "gizli_senaryo": "D3",
+        "beklenen_teshis": "uap_uai_sinif_karisikligi",
+        "gerekce": "Kasitli bir bozulma icerir; ajanin nedeni ayirt edip edemedigi olculur.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_07",
+        "gizli_rol": "bozulma_senaryosu",
+        "gizli_senaryo": "D3b",
+        "beklenen_teshis": "tasit_insan_sinif_karisikligi",
+        "gerekce": "Kasitli bir bozulma icerir; ajanin nedeni ayirt edip edemedigi olculur.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_08",
+        "gizli_rol": "bozulma_senaryosu",
+        "gizli_senaryo": "D4",
+        "beklenen_teshis": "kucuk_nesne_sinyal_kaybi",
+        "gerekce": "Kasitli bir bozulma icerir; ajanin nedeni ayirt edip edemedigi olculur.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_09",
+        "gizli_rol": "bozulma_senaryosu",
+        "gizli_senaryo": "D5",
+        "beklenen_teshis": "kaynak_alani_kaymasi",
+        "gerekce": "Kasitli bir bozulma icerir; ajanin nedeni ayirt edip edemedigi olculur.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_10",
+        "gizli_rol": "bozulma_senaryosu",
+        "gizli_senaryo": "D6b",
+        "beklenen_teshis": "tekrar_agirligi",
+        "gerekce": "Kasitli bir bozulma icerir; ajanin nedeni ayirt edip edemedigi olculur.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_11",
+        "gizli_rol": "kontrol",
+        "gizli_senaryo": "C2 seed7",
+        "beklenen_teshis": "anlamli_degisim_yok",
+        "gerekce": "Yalnizca seed farkli, hicbir bozulma yok. Projenin en zayif iddiasini ('ajan sorun uydurmuyor') dogrudan sinar.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_12",
+        "gizli_rol": "kontrol",
+        "gizli_senaryo": "C2 seed13",
+        "beklenen_teshis": "anlamli_degisim_yok",
+        "gerekce": "Yalnizca seed farkli, hicbir bozulma yok. Projenin en zayif iddiasini ('ajan sorun uydurmuyor') dogrudan sinar.",
+        "tekrar": 3
+      },
+      {
+        "kosu_id": "kosu_13",
+        "gizli_rol": "kontrol",
+        "gizli_senaryo": "C2 seed21",
+        "beklenen_teshis": "anlamli_degisim_yok",
+        "gerekce": "Yalnizca seed farkli, hicbir bozulma yok. Projenin en zayif iddiasini ('ajan sorun uydurmuyor') dogrudan sinar.",
+        "tekrar": 3
+      }
+    ]
+  }
+}

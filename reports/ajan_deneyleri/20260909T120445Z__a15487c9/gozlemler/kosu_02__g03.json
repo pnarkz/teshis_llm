@@ -1,0 +1,253 @@
+{
+  "kosu_id": "kosu_02",
+  "gozlem_sirasi": 3,
+  "zaman_utc": "2026-09-09T12:07:41.725604+00:00",
+  "kuru_calistirma": false,
+  "model": "gemini-3.6-flash",
+  "arac_surumu": "91f5bab96ed2",
+  "git_commit": "a15487c9eea36a936d4184321f2601177ec7bd71",
+  "git_temiz": false,
+  "ham_cevap": {
+    "tur": 3,
+    "ham": "{\n  \"diagnosis\": \"saglikli\",\n  \"evidence\": [\n    \"kosu_02'nin mAP50 degeri 0.9250 olup baseline referansina (0.9200) kiyasla +0.0050 degisim gostererek saglikli seviyededir.\",\n    \"mAP50_95 degeri 0.6947 olarak olculmustur ve baseline degerine (0.6707) gore +0.0240 fark ile yuksek basariyi korumaktadir.\",\n    \"Boyut ve kaynak bazli recall analizlerinde tum bantlardaki farklar gurultu esiginin altindadir (orn. kucuk_16_32 boyut bandi orani 0.07, kaynak_a band orani 0.14).\"\n  ],\n  \"confidence\": \"yuksek\",\n  \"limitations\": [\n    \"UAI (17 bbox) ve UAP (15 bbox) siniflarindaki ornek sayilari 20 bbox altinda oldugu icin bu siniflar uzerindeki genelleme sinirlidir.\"\n  ],\n  \"next_measurement\": \"Modelin saglikli durumunu teyit etmek amaciyla farkli cografi veya iklimsel test veri setlerinde izlemeye devam edilmesi onerilir.\"\n}",
+    "bitis_nedeni": "FinishReason.STOP"
+  },
+  "cevap": {
+    "diagnosis": "saglikli",
+    "evidence": [
+      "kosu_02'nin mAP50 degeri 0.9250 olup baseline referansina (0.9200) kiyasla +0.0050 degisim gostererek saglikli seviyededir.",
+      "mAP50_95 degeri 0.6947 olarak olculmustur ve baseline degerine (0.6707) gore +0.0240 fark ile yuksek basariyi korumaktadir.",
+      "Boyut ve kaynak bazli recall analizlerinde tum bantlardaki farklar gurultu esiginin altindadir (orn. kucuk_16_32 boyut bandi orani 0.07, kaynak_a band orani 0.14)."
+    ],
+    "confidence": "yuksek",
+    "limitations": [
+      "UAI (17 bbox) ve UAP (15 bbox) siniflarindaki ornek sayilari 20 bbox altinda oldugu icin bu siniflar uzerindeki genelleme sinirlidir."
+    ],
+    "next_measurement": "Modelin saglikli durumunu teyit etmek amaciyla farkli cografi veya iklimsel test veri setlerinde izlemeye devam edilmesi onerilir.",
+    "run_id": "kosu_02"
+  },
+  "arac_cagrilari": [
+    {
+      "tur": 1,
+      "arac": "baseline_metriklerini_getir",
+      "argumanlar": {},
+      "cevap": {
+        "mAP50": 0.9199649,
+        "mAP50_95": 0.6706607,
+        "precision": 0.9175451,
+        "recall": 0.8785459,
+        "class_AP50": {
+          "tasit": 0.8856465,
+          "insan": 0.806991,
+          "UAP": 0.995,
+          "UAI": 0.9922222
+        }
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "kosu_metriklerini_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_02"
+      },
+      "cevap": {
+        "mAP50": 0.92496,
+        "mAP50_95": 0.6947089,
+        "precision": 0.9160378,
+        "recall": 0.8619409,
+        "class_AP50": {
+          "tasit": 0.8878973,
+          "insan": 0.8329722,
+          "UAP": 0.995,
+          "UAI": 0.9839706
+        }
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "baseline_farkini_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_02"
+      },
+      "cevap": {
+        "mAP50": 0.004995,
+        "mAP50_95": 0.024048,
+        "precision": -0.001507,
+        "recall": -0.016605
+      },
+      "hata": null
+    },
+    {
+      "tur": 1,
+      "arac": "bbox_sayilarini_getir",
+      "argumanlar": {},
+      "cevap": {
+        "tasit": 1264,
+        "insan": 2718,
+        "UAP": 15,
+        "UAI": 17
+      },
+      "hata": null
+    },
+    {
+      "tur": 2,
+      "arac": "boyut_bazli_recall_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_02"
+      },
+      "cevap": {
+        "bant_tanimi_px": {
+          "cok_kucuk_16_alti": "0-16 px",
+          "kucuk_16_32": "16-32 px",
+          "orta_32_64": "32-64 px",
+          "buyuk_64_ustu": "64+ px"
+        },
+        "bantlar": {
+          "cok_kucuk_16_alti": {
+            "bbox_n": 1167,
+            "recall": 0.7395,
+            "referans_recall": 0.7446,
+            "fark": -0.0051,
+            "gurultu_bandi": 0.0103,
+            "band_orani": 0.5,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "kucuk_16_32": {
+            "bbox_n": 2011,
+            "recall": 0.8379,
+            "referans_recall": 0.8344,
+            "fark": 0.0035,
+            "gurultu_bandi": 0.0497,
+            "band_orani": 0.07,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "orta_32_64": {
+            "bbox_n": 520,
+            "recall": 0.9538,
+            "referans_recall": 0.9308,
+            "fark": 0.023,
+            "gurultu_bandi": 0.0462,
+            "band_orani": 0.5,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "buyuk_64_ustu": {
+            "bbox_n": 316,
+            "recall": 0.9968,
+            "referans_recall": 0.9873,
+            "fark": 0.0095,
+            "gurultu_bandi": 0.0158,
+            "band_orani": 0.6,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          }
+        },
+        "gurultu_notu": "Her grup icin 'gurultu_bandi', hicbir bozulma icermeyen kosular arasinda o grupta gozlenen en buyuk yayilimi verir; 'bozulmasiz_kosu_degerleri' o kosularda olculen degerlerdir. 'band_orani' = |fark| / band. Orani 1'in ALTINDA olan bir fark, saf rastgelelikten ayirt edilemez ve bozulma kaniti olarak kullanilmamalidir - farkin mutlak buyuklugu ne olursa olsun. Orani 1'in uzerinde olsa bile, band az sayida kosudan hesaplandiysa ('band_kosu_sayisi') tek basina yeterli kanit degildir; 'band_yorumu' bunu belirtir."
+      },
+      "hata": null
+    },
+    {
+      "tur": 2,
+      "arac": "kaynak_bazli_recall_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_02"
+      },
+      "cevap": {
+        "aciklama": "Kaynak gruplari anonimlestirilmistir; sira bbox sayisina gore sabittir.",
+        "kaynaklar": {
+          "kaynak_a": {
+            "bbox_n": 2165,
+            "recall": 0.842,
+            "referans_recall": 0.8402,
+            "fark": 0.0018,
+            "gurultu_bandi": 0.013,
+            "band_orani": 0.14,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "kaynak_b": {
+            "bbox_n": 885,
+            "recall": 0.9085,
+            "referans_recall": 0.9107,
+            "fark": -0.0022,
+            "gurultu_bandi": 0.018,
+            "band_orani": 0.12,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "kaynak_c": {
+            "bbox_n": 858,
+            "recall": 0.7343,
+            "referans_recall": 0.7145,
+            "fark": 0.0198,
+            "gurultu_bandi": 0.1306,
+            "band_orani": 0.15,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          },
+          "kaynak_d": {
+            "bbox_n": 106,
+            "recall": 0.9623,
+            "referans_recall": 0.9906,
+            "fark": -0.0283,
+            "gurultu_bandi": 0.1321,
+            "band_orani": 0.21,
+            "band_yorumu": "GÜRÜLTÜ İÇİNDE: bu büyüklükteki bir fark, hiçbir bozulma içermeyen koşular arasında da görülüyor. Tek başına bozulma kanıtı değildir."
+          }
+        }
+      },
+      "hata": null
+    },
+    {
+      "tur": 2,
+      "arac": "sinif_karisikligini_getir",
+      "argumanlar": {
+        "kosu_id": "kosu_02"
+      },
+      "cevap": {
+        "UAI": {
+          "toplam_gercek_kutu": 17,
+          "tahminler": {
+            "UAI": 17
+          },
+          "referans_tahminler": {
+            "UAI": 17
+          }
+        },
+        "UAP": {
+          "toplam_gercek_kutu": 15,
+          "tahminler": {
+            "UAP": 15
+          },
+          "referans_tahminler": {
+            "UAP": 15
+          }
+        },
+        "insan": {
+          "toplam_gercek_kutu": 2718,
+          "tahminler": {
+            "insan": 2180,
+            "bulunamadi": 534,
+            "tasit": 4
+          },
+          "referans_tahminler": {
+            "insan": 2180,
+            "bulunamadi": 534,
+            "tasit": 4
+          }
+        },
+        "tasit": {
+          "toplam_gercek_kutu": 1264,
+          "tahminler": {
+            "tasit": 1147,
+            "bulunamadi": 117
+          },
+          "referans_tahminler": {
+            "tasit": 1131,
+            "bulunamadi": 131,
+            "insan": 2
+          }
+        }
+      },
+      "hata": null
+    }
+  ],
+  "uretim_ozeti": "00b2a2104cea54a6"
+}
