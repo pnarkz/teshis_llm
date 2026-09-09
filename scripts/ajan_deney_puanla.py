@@ -123,9 +123,24 @@ def puanla(dizin: Path) -> dict[str, Any]:
         satir["gizli_senaryo"] = gizli.get("gizli_senaryo")
         satirlar.append(satir)
 
+    # Deney TEK PARCA mi: butun gozlemler ayni model, ayni arac surumu ve
+    # ayni kod haliyle mi uretildi?
+    #
+    # Bir deney gunlere yayilabilir (kota), farkli bir hesapla surdurulebilir,
+    # arada kod degisebilir. API anahtari onemli degil - model, arac katmani
+    # ve commit onemli. Bunlar karisirsa gozlemler ayni kosulda uretilmemis
+    # olur ve tek bir oran altinda toplanamaz. Sessiz kalmak yerine yazilir.
+    uretim = {
+        alan: sorted({str(k.get(alan)) for k in gecerli})
+        for alan in ("model", "arac_surumu", "git_commit")
+    }
+    karisik = {a: v for a, v in uretim.items() if len(v) > 1}
+
     sonuc: dict[str, Any] = {
         "gozlem": len(satirlar),
         "kosu": len({s["run_id"] for s in satirlar}),
+        "uretim_kosullari": uretim,
+        "tek_parca_mi": not karisik,
         "runs": satirlar,
         "metric_definition": (
             "diagnosis, evidence ve limitations ayri ayri 0..1 puanlanir; "
@@ -160,6 +175,14 @@ def puanla(dizin: Path) -> dict[str, Any]:
         "Tek bir ortalama ikisini de yaniltir. Bu deney, eski "
         "reports/ajan_denemesi sonuclarindan da AYRIDIR."
     )
+    if karisik:
+        sonuc["_uyari"] = (
+            "Gozlemler ayni kosulda uretilmemis; su alanlar deney icinde "
+            "degisiyor: "
+            + "; ".join(f"{a} -> {', '.join(v)}" for a, v in karisik.items())
+            + ". Bu gozlemler tek bir oran altinda toplanmadan once "
+              "hangisinin hangi kosulda uretildigi belirtilmelidir."
+        )
     return sonuc
 
 
@@ -183,6 +206,8 @@ def main() -> None:
     for rol, d in (sonuc.get("rol_bazli") or {}).items():
         print(f"  {rol:20} gozlem={d['gozlem']:<3} kosu={d['kosu']:<3} "
               f"dogru teshis={d['dogru_teshis']}")
+    if sonuc.get("_uyari"):
+        print(f"\nUYARI: {sonuc['_uyari']}\n")
     for d in sonuc.get("dislanan", [])[:6]:
         print(f"  DISLANDI {d['dosya']}: {d['neden']}")
 

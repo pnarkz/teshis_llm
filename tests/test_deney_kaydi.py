@@ -477,3 +477,34 @@ def test_durum_api_ye_gitmeden_neredeyiz_diyor(tmp_path, monkeypatch, capsys):
     assert "uretilen gozlem: 1/39" in cikti
     assert "eksik kosu_01: var=[2] eksik=[1, 3]" in cikti
     assert "--devam" in cikti
+
+
+def test_karisik_uretim_kosulu_uyari_veriyor(tmp_path):
+    """Deney gunlere yayilabilir; model veya kod degisirse sessiz kalinmamali.
+
+    Kota yuzunden yarim kalan bir deney baska bir gun, baska bir hesapla ya
+    da degismis bir kodla surdurulebilir. API anahtari onemli degil; model,
+    arac katmani ve commit onemlidir. Karisirlarsa gozlemler ayni kosulda
+    uretilmemistir ve tek bir oran altinda toplanamaz.
+    """
+    ilk = _gozlem("kosu_04__g01.json", "kosu_04", ozet="a")
+    ikinci = _gozlem("kosu_04__g02.json", "kosu_04", ozet="b", sira=2)
+    ilk.update(model="gemini-3.6-flash", arac_surumu="3", git_commit="aaa")
+    ikinci.update(model="gemini-3.6-pro", arac_surumu="3", git_commit="aaa")
+    dizin = _deney_kur(tmp_path, [ilk, ikinci], ANAHTAR)
+
+    sonuc = puanla_modulu.puanla(dizin)
+    assert sonuc["tek_parca_mi"] is False
+    assert "model" in sonuc["_uyari"]
+    assert "gemini-3.6-pro" in sonuc["_uyari"]
+    assert sonuc["uretim_kosullari"]["git_commit"] == ["aaa"]
+
+
+def test_ayni_kosulda_uretilen_deney_uyari_vermiyor(tmp_path):
+    ilk = _gozlem("kosu_04__g01.json", "kosu_04", ozet="a")
+    ikinci = _gozlem("kosu_04__g02.json", "kosu_04", ozet="b", sira=2)
+    for g in (ilk, ikinci):
+        g.update(model="gemini-3.6-flash", arac_surumu="3", git_commit="aaa")
+    sonuc = puanla_modulu.puanla(_deney_kur(tmp_path, [ilk, ikinci], ANAHTAR))
+    assert sonuc["tek_parca_mi"] is True
+    assert "_uyari" not in sonuc
