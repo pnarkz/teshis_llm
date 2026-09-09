@@ -392,3 +392,88 @@ def test_devam_tek_basina_calistir_istemiyor():
         "--devam hala --calistir istiyor")
     assert "--devam icin --deney" in hata
     assert "Mevcut deneyler:" in hata
+
+
+def test_gunluk_kota_bitince_calisma_hemen_duruyor(tmp_path, monkeypatch, capsys):
+    """Gunluk kota tek bir gozlemin sorunu degil, calismanin sonudur.
+
+    Yutuldugunda kalan her gozlem sirayla denenip ayni hatayla dusuyor,
+    ekrana onlarca ayni satir basiliyor ve hicbiri uretilmiyordu. Kullanici
+    da hangi noktada durdugunu goremiyordu.
+    """
+    from teshis.ajan.ajan import GunlukKotaBitti
+
+    monkeypatch.setattr(ajan_deney, "DENEYLER", tmp_path)
+    deneme = []
+
+    def kota_bitti(d, kosu, sira, model, kuru=False):
+        deneme.append((kosu, sira))
+        raise GunlukKotaBitti("Gunluk API kotasi tukendi")
+
+    monkeypatch.setattr(ajan_deney, "kosuyu_calistir", kota_bitti)
+    plan = {"kosular": [
+        {"kosu_id": f"kosu_{i:02d}", "tekrar": 3, "gizli_rol": "x",
+         "gizli_senaryo": "D2b", "beklenen_teshis": "eksik_etiket"}
+        for i in (1, 2, 3)
+    ], "toplam_gozlem": 9}
+    ajan_deney.deneyi_yurut("d", plan, "m", kuru=False, devam=False)
+
+    assert len(deneme) == 1, (
+        f"kota bittikten sonra {len(deneme)} gozlem daha denendi")
+    cikti = capsys.readouterr().out
+    assert "CALISMA YARIDA KESILDI" in cikti
+    assert "GunlukKotaBitti" in cikti
+    assert "EKSIK GOZLEM: 9/9" in cikti
+    assert "--devam" in cikti and "--deney d" in cikti
+
+
+def test_ctrl_c_ozet_yazip_cikiyor(tmp_path, monkeypatch, capsys):
+    """Elle durdurma da yigin izi degil, nerede kalindigini yazmali."""
+    monkeypatch.setattr(ajan_deney, "DENEYLER", tmp_path)
+
+    def kesildi(d, kosu, sira, model, kuru=False):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(ajan_deney, "kosuyu_calistir", kesildi)
+    plan = {"kosular": [{"kosu_id": "kosu_01", "tekrar": 2, "gizli_rol": "x",
+                         "gizli_senaryo": "D2b",
+                         "beklenen_teshis": "eksik_etiket"}],
+            "toplam_gozlem": 2}
+    ajan_deney.deneyi_yurut("d", plan, "m", kuru=False, devam=False)
+    cikti = capsys.readouterr().out
+    assert "elle durduruldu" in cikti
+    assert "EKSIK GOZLEM: 2/2" in cikti
+
+
+def test_tamamlanan_deney_tamam_diyor(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(ajan_deney, "DENEYLER", tmp_path)
+    plan = {"kosular": [{"kosu_id": "kosu_04", "tekrar": 2, "gizli_rol": "x",
+                         "gizli_senaryo": "D2b",
+                         "beklenen_teshis": "eksik_etiket"}],
+            "toplam_gozlem": 2}
+    ajan_deney.deneyi_yurut("d", plan, "m", kuru=True, devam=False)
+    cikti = capsys.readouterr().out
+    assert "Deney tamam: 2 gozlemin hepsi uretildi" in cikti
+    assert "EKSIK GOZLEM" not in cikti
+
+
+def test_durum_api_ye_gitmeden_neredeyiz_diyor(tmp_path, monkeypatch, capsys):
+    """Kota bitince "neredeyim" sorusu API harcamadan cevaplanabilmeli."""
+    monkeypatch.setattr(ajan_deney, "DENEYLER", tmp_path)
+    dizin = tmp_path / "d"
+    ajan_deney.kosuyu_calistir(dizin, "kosu_01", 2, "m", kuru=True)
+    (dizin / "deney.json").write_text("{}", encoding="utf-8")
+    capsys.readouterr()
+
+    monkeypatch.setattr(sys, "argv",
+                        ["ajan_deney.py", "--durum", "--tekrar", "3"])
+    # teshis_uret cagrilirsa test coker: --durum API'ye GITMEMELI.
+    from teshis.ajan import ajan as ajan_modulu
+    monkeypatch.setattr(ajan_modulu, "teshis_uret", lambda *a, **k:
+                        pytest.fail("--durum API'ye gitti"))
+    ajan_deney.main()
+
+    cikti = capsys.readouterr().out
+    assert "uretilen gozlem: 1/39" in cikti
+    assert "eksik kosu_01: var=[2] eksik=[1, 3]" in cikti
+    assert "--devam" in cikti

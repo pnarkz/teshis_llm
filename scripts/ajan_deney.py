@@ -242,6 +242,11 @@ def kosuyu_calistir(dizin: Path, kosu_id: str, sira: int, model: str,
 
         try:
             cevap, arac_kaydi = ajan_modulu.teshis_uret(kosu_id, model=model)
+        except ajan_modulu.GunlukKotaBitti:
+            # Gunluk kota tek bir gozlemin sorunu degil, calismanin sonudur.
+            # Yutulursa kalan her gozlem sirayla denenir, hepsi ayni hatayla
+            # duser ve ekrana onlarca ayni satir basilir - hicbiri uretilmez.
+            raise
         except Exception as hata:  # noqa: BLE001
             print(f"  {kosu_id} g{sira:02d}: BASARISIZ - "
                   f"{type(hata).__name__}: {str(hata)[:160]}")
@@ -318,25 +323,63 @@ def deneyi_yurut(deney_id: str | None, plan: dict, model: str,
     # tekrarla kalir ve --devam bunu bir daha asla duzeltmez - ustelik hicbir
     # yerde hata gorunmez. Artik her sira ayri ayri kontrol edilir.
     basarisiz: list[str] = []
-    for kayit in plan["kosular"]:
-        kosu_id = kayit["kosu_id"]
-        for sira in range(1, kayit["tekrar"] + 1):
-            if _gozlem_yolu(dizin, kosu_id, sira).is_file():
-                continue
-            if kosuyu_calistir(dizin, kosu_id, sira, model, kuru=kuru) is None:
-                basarisiz.append(f"{kosu_id} g{sira:02d}")
+    durduran: str | None = None
+    try:
+        for kayit in plan["kosular"]:
+            kosu_id = kayit["kosu_id"]
+            for sira in range(1, kayit["tekrar"] + 1):
+                if _gozlem_yolu(dizin, kosu_id, sira).is_file():
+                    continue
+                if kosuyu_calistir(dizin, kosu_id, sira, model,
+                                   kuru=kuru) is None:
+                    basarisiz.append(f"{kosu_id} g{sira:02d}")
+    except KeyboardInterrupt:
+        durduran = "elle durduruldu (Ctrl+C)"
+    except Exception as hata:  # noqa: BLE001 - kota vb. calismayi bitirir
+        durduran = f"{type(hata).__name__}: {str(hata).splitlines()[0][:160]}"
 
-    if basarisiz:
-        # Sessiz eksik birakilmaz: hangi gozlemlerin uretilemedigi yazilir.
-        print(f"\nURETILEMEYEN GOZLEM ({len(basarisiz)}): {', '.join(basarisiz)}")
-        print("--devam ile yeniden denenebilir; tamamlananlar tekrar "
-              "API'ye gitmez.")
+    _kalan_ozeti(dizin, plan, basarisiz, durduran)
     return dizin
+
+
+def eksik_gozlemler(dizin: Path, plan: dict) -> list[str]:
+    """Plana gore diskte olmayan gozlemler."""
+    return [f"{k['kosu_id']} g{s:02d}"
+            for k in plan["kosular"]
+            for s in range(1, k["tekrar"] + 1)
+            if not _gozlem_yolu(dizin, k["kosu_id"], s).is_file()]
+
+
+def _kalan_ozeti(dizin: Path, plan: dict, basarisiz: list[str],
+                 durduran: str | None) -> None:
+    """Calismanin sonunda NE EKSIK kaldigini ve nasil surdurulecegini yazar.
+
+    Yarim kalmis bir calisma sessizce "bitti" gorunmemeli: deneyin
+    planlanandan az gozlemle kaldigi, ancak ustveriye elle bakarak
+    anlasilirsa fark edilmeyecegi icin burada acikca soylenir.
+    """
+    eksik = eksik_gozlemler(dizin, plan)
+    if durduran:
+        print(f"\nCALISMA YARIDA KESILDI - {durduran}")
+    if basarisiz:
+        print(f"URETILEMEYEN GOZLEM ({len(basarisiz)}): {', '.join(basarisiz)}")
+    if eksik:
+        print(f"EKSIK GOZLEM: {len(eksik)}/{plan['toplam_gozlem']}  "
+              f"-> {', '.join(eksik[:8])}"
+              + (" ..." if len(eksik) > 8 else ""))
+        print("Surdurmek icin:\n"
+              f"  python scripts/ajan_deney.py --devam "
+              f"--tekrar {plan['kosular'][0]['tekrar']} --deney {dizin.name}")
+        print("Tamamlanan gozlemler tekrar API'ye GITMEZ.")
+    else:
+        print(f"\nDeney tamam: {plan['toplam_gozlem']} gozlemin hepsi uretildi.")
 
 
 def main() -> None:
     a = argparse.ArgumentParser(description=__doc__)
     a.add_argument("--plan", action="store_true", help="yalnizca plani yaz")
+    a.add_argument("--durum", action="store_true",
+                   help="deneyin neresinde kalindigini yazar; API'ye gitmez")
     a.add_argument("--kuru-calistirma", action="store_true",
                    help="API'siz tam prova: araclar calisir, model cagrilmaz")
     a.add_argument("--calistir", action="store_true", help="gercek deney")
@@ -357,6 +400,30 @@ def main() -> None:
     plan = plan_uret(args.tekrar)
     if args.plan:
         print(json.dumps(plan, ensure_ascii=False, indent=2))
+        return
+
+    if args.durum:
+        # Kota bittiginde veya calisma yarida kesildiginde "neredeyim"
+        # sorusu API'ye hic gitmeden cevaplanabilmeli.
+        adaylar = sorted(d for d in DENEYLER.glob("*")
+                         if (d / "deney.json").is_file()
+                         and not d.name.startswith("KURU__"))
+        secili = (DENEYLER / args.deney) if args.deney else (
+            adaylar[-1] if adaylar else None)
+        if secili is None or not secili.is_dir():
+            raise SystemExit("deney bulunamadi")
+        mevcut = mevcut_gozlemler(secili)
+        uretilen = sum(len(v) for v in mevcut.values())
+        print(f"deney: {secili.name}")
+        print(f"uretilen gozlem: {uretilen}/{plan['toplam_gozlem']}")
+        for kayit in plan["kosular"]:
+            var = sorted(g["gozlem_sirasi"]
+                         for g in mevcut.get(kayit["kosu_id"], []))
+            eksik = [s for s in range(1, kayit["tekrar"] + 1) if s not in var]
+            isaret = "TAM " if not eksik else "eksik"
+            print(f"  {isaret} {kayit['kosu_id']}: var={var or '-'} "
+                  f"eksik={eksik or '-'}")
+        _kalan_ozeti(secili, plan, [], None)
         return
 
     # --devam zaten "calistir"in bir bicimidir; ayrica --calistir istemek
