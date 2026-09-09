@@ -24,6 +24,21 @@ Kosu klasorleri `run_YYYYMMDD_HHMMSS_<senaryo>_<seed>` bicimindedir.
 
 ## Klasorler
 
+### Senaryo kodunun yeri
+
+Senaryo uygulamalari `teshis/veri/senaryo_<kod>_<aciklama>.py` altinda
+bulunur. Dosya adlari kucuk harfle yazilir; D3 ve D3b ayni algoritmanin
+parametreli iki kullanimi oldugu icin tek modulde tutulur. E1'in alt kume
+uretimi veri katmaninda, E4'un cozunurluk taramasi degerlendirme katmanindadir.
+E2/E3/E3b, `egitim_protokolu.yaml` ve `teshis/egitim/kos.py` ile uygulanir.
+
+`scripts/senaryo_*.py` ve `scripts/kaggle_*.py` komut satiri/ortam
+girisleridir; veri bozma algoritmasi icermezler. Eski komutlar korunur.
+`surum_uret.py` v00/D1 komut girisidir; `bozulmalar.py` eski importlar icin
+uyumluluk katmanidir. Yeni kod dogrudan ilgili senaryo modulunu kullanir.
+
+Sunumda soru -> kod -> sonuc eslesmesi: [Kod haritasi](KOD_HARITASI.md).
+
 ```text
 termal_teshis/
   README.md                     Giris kapisi ve belge haritasi
@@ -38,6 +53,7 @@ termal_teshis/
 
   docs/                         Belgeler
     MIMARI.md                   Bu dosya: dosya sozlesmesi
+    KOD_HARITASI.md              Sunumda soru -> uygulama -> sonuc dizini
     BULGULAR.md                 Tum senaryo sonuclari
     KURALLAR.md                 Degismez kurallar ve sabit yollar
     CALISTIRMA.md               Kurulum ve komutlar
@@ -48,14 +64,26 @@ termal_teshis/
   teshis/                       Ana Python paketi
     veri/
       istatistik.py             Dataset saglik taramasi ve kaynak gruplama
-      surum_uret.py             v00 saglikli surum + D1 (manifest-only)
+      surum_uret.py             v00/D1 komut girisi
       val_olustur.py            Kilitli tanı seti uretimi
-      bozulmalar.py             Ortak bozulma yardimcilari
+      dosyalar.py               Goruntu bulma ve kaynak etiket hash'i
+      referans_v00_saglikli.py   Saglikli veri surumu uretimi
+      senaryo_d1_sinif_yetersizligi.py
+      senaryo_d2a_lokalizasyon_gurultusu.py
+      senaryo_d2b_eksik_etiket.py
+      senaryo_d3_d3b_sinif_karisikligi.py
+      senaryo_d4_kucuk_nesne_sinyal_kaybi.py
+      senaryo_d5_kaynak_alani_kaymasi.py
+      senaryo_d6a_split_sizintisi.py
+      senaryo_d6b_tekrar_agirligi.py
+      senaryo_e1_overfitting.py  E1 icin tabakali alt kume
+      bozulmalar.py             Eski D1 importlari icin uyumluluk
     egitim/
       kos.py                    Kontrollu egitim kosusu (+ --devam)
       protokol.py               Ortak egitim protokolunu YAML'dan okur
       kayit.py                  Kosu manifesti yazar
     degerlendirme/
+      senaryo_e4_cozunurluk_uyumsuzlugu.py  E4 cozunurluk taramasi
       d1_sonuc.py               Tanı setinde degerlendirme (sinif AP/P/R)
       metrikler.py              Sinif / boyut / kaynak kirilimi + karisiklik matrisi
       bootstrap.py              Wilson araligi, iki oran testi, goruntu bootstrap
@@ -106,7 +134,8 @@ termal_teshis/
     data_loader.py              Rapor okuma + ajan katmani
     bolumler/                   Her bolum kendi modulunde
       genel_bakis.py            Proje, durum, uc ana bulgu
-      tasarim.py                Kontrollu deney kurgusu + NEYI SOYLEYEMIYORUZ
+      veri_ve_model.py          Veri kumesi ve saglikli model
+      sonuclar.py               Sonuclar ve sinirlamalar
       senaryolar.py             Kosu basina deney ozeti ve kanit
       karsilastirma.py          Capraz tablo + gurultu tabani
       hata_analizi.py           Siralanmis hata ornekleri
@@ -170,8 +199,9 @@ reports/senaryo_D4/
 ```text
 dataset/
   -> teshis/veri/istatistik.py          saglik raporu
-  -> teshis/veri/surum_uret.py          veri_surumleri/vNN_*/manifest.json
-     veya scripts/senaryo_*.py
+  -> teshis/veri/referans_v00_saglikli.py veya senaryo_*.py
+                                      veri_surumleri/vNN_*/manifest.json
+     (komut girisleri: surum_uret.py ve scripts/senaryo_*.py)
   -> teshis/egitim/kos.py               experiments/run_*/weights/best.pt
   -> teshis/degerlendirme/d1_sonuc.py   reports/senaryo_*/d1_metrics.json
   -> teshis/degerlendirme/metrikler.py  reports/kirilim/<run_id>.json

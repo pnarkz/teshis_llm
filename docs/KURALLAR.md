@@ -42,6 +42,8 @@ GitHub: https://github.com/pnarkz/teshis_llm
 Ana Python paketi:
 
 - teshis/veri: istatistik, manifest, veri surumu ve val uretimi.
+  Senaryo uygulamalari `senaryo_<kod>_<aciklama>.py` dosyalarindadir;
+  `scripts/` altindaki senaryo betikleri komut girisleridir.
 - teshis/egitim: egitim kosucusu ve kosu manifestleri.
 - teshis/degerlendirme: model, metrik, hata ve kanit analizi.
 - teshis/ajan: ajan araclari, semalar ve puanlama.

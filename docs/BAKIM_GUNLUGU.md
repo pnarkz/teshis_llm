@@ -9,6 +9,31 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-09-09 — Senaryo uygulamalari sunumda bulunabilir modullere ayrildi
+
+**Sorun.** `teshis/veri/bozulmalar.py` yalnizca D1'i iceriyordu; diger
+bozulmalar `scripts/` altindaki calistiricilara dagilmisti. Dosya adi ile
+icerigi arasindaki bu fark, sunumda senaryonun kodunu bulmayi zorlastiriyordu.
+
+**Duzenleme.** D1-D6b uygulamalari `teshis/veri/senaryo_<kod>_<aciklama>.py`
+modullerine, saglikli referans `referans_v00_saglikli.py` dosyasina tasindi.
+E1 veri hazirligi veri katmaninda, E4 taramasi degerlendirme katmanindadir.
+E2/E3/E3b ortak protokol ve kosucu ile uygulanmaya devam eder. Eski script
+komutlari ve D1 importlari korunur; yaniltici `NotImplementedError` girisi
+kaldirildi. D2b'nin yerel ve Kaggle cikti bicimleri ayni modulde korunur.
+
+`docs/KOD_HARITASI.md` senaryo, uygulama, komut ve sonuc yollarini esler;
+README ve mimari belgesi bu haritaya baglanir. Uygulama testleri yeni
+modullere yonlendirildi; eski girislerin ayni fonksiyonlari cagirdigini ve
+D2 veri davranisini denetleyen regresyon testleri eklendi.
+Komut girisleri kontrol edilirken D6b'nin `--help` metnindeki yuzde
+isaretinin argparse bicimlendirmesini bozdugu goruldu ve duzeltildi.
+
+Dogrulama: `python -m pytest -q` ile **555 test gecti, 6 test atlandi**.
+Dokuz komut girisinin `--help` kontrolu ve Python sozdizimi kontrolu gecti.
+Tasinan 37 fonksiyonun AST karsilastirmasi algoritmalarin korundugunu
+dogruladi (Kaggle D2b'de yalnizca yardimci import adi farklidir).
+
 ### 2026-09-08 — Konsol yeniden tasarlandi: koyu tema, yedi bolum, veri anlatimi
 
 **Sorun.** Konsol islevseldi ama rapor gibi okunuyordu: kirik beyaz zemin,

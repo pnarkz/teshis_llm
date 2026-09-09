@@ -15,6 +15,8 @@ Sinif sozlesmesi degismez: `0 tasit`, `1 insan`, `2 UAP`, `3 UAI`.
 
 ## Belgeler
 
+Sunumda kod bulmak icin: **[Kod haritasi — senaryo, uygulama ve sonuc](docs/KOD_HARITASI.md)**.
+
 | Belge | Icerik |
 |---|---|
 | [docs/BULGULAR.md](docs/BULGULAR.md) | **Tum senaryo sonuclari.** Otoriter karsilastirma tablosu ve her senaryonun ayrintisi. |
