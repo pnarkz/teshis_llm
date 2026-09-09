@@ -98,15 +98,37 @@ def ne_sabit_kaldi(senaryo: str) -> list[str]:
     # Degerlendirme seti SABIT YAZILAMAZ: D6a kasitli olarak sizintili kume
     # uzerinde olculur. Sabit yazildiginda sayfa kendi kendisiyle celisiyordu -
     # ust kutuda "kilitli set hic degismez", alt kutuda "baska sette olculdu".
+    from .karsilastirilabilirlik import karsilastirma, kimlik
+
+    # Referanstan FARKLI olan alan "sabit" diye yazilamaz. E4 512 px'te
+    # olculur ve referansi 768 px'tir; liste "Cikarim cozunurlugu: 512 px"
+    # deyip bunu sabitler arasinda gosteriyordu - oysa DEGISEN alan tam
+    # olarak oydu. Fark, kosunun kendi kimligi ile referansinkinin
+    # karsilastirilmasindan turetilir.
+    # `referans_senaryo` yalnizca AYNI olcekteki referansi bulur ve eslenik
+    # olcumlerde (E4, D6a) None doner - oysa DEGISEN alani isaretlemek tam
+    # da o kosularda gerekli. `karsilastirma` her iki durumu da kapsar.
+    ref_ad = karsilastirma(senaryo).get("referans")
+    ben, ref = kimlik(senaryo), (kimlik(ref_ad) if ref_ad else None)
+    if ben is None:
+        return []
+
+    def isaret(alan: str, metin: str) -> str:
+        if ref is None or getattr(ben, alan) == getattr(ref, alan):
+            return metin
+        return f"{metin} — **DEĞİŞEN** (referansta: {getattr(ref, alan)})"
+
     kume = satir.get("evaluation_set", "?")
     sabitler = [
-        (f"Değerlendirme seti: {kume} (kilitli, hiç değişmez)"
-         if kume == "val_diagnostic"
-         else f"Değerlendirme seti: {kume} — kilitli set DEĞİL"),
-        f"Çıkarım çözünürlüğü: {satir.get('imgsz_eval', '?')} px",
-        f"Başlangıç modeli: {satir.get('model', '?')}",
+        isaret("degerlendirme_seti",
+               f"Değerlendirme seti: {kume}"
+               + (" (kilitli)" if kume == "val_diagnostic"
+                  else " — kilitli set DEĞİL")),
+        isaret("imgsz_eval", f"Çıkarım çözünürlüğü: {satir.get('imgsz_eval', '?')} px"),
+        isaret("model", f"Başlangıç modeli: {satir.get('model', '?')}"),
         f"Seed: {satir.get('seed', '?')}",
-        f"Checkpoint: {'last.pt' if str(satir.get('weights_path', '')).endswith('last.pt') else 'best.pt'}",
+        isaret("checkpoint",
+               f"Checkpoint: {'last.pt' if str(satir.get('weights_path', '')).endswith('last.pt') else 'best.pt'}"),
     ]
     if konfig.get("hedef_split") == "train":
         sabitler.append("Yalnızca train bölümü değiştirildi; val ve test dokunulmadı")

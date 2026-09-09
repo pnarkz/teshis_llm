@@ -336,7 +336,18 @@ def kontrol_tekrarlari() -> dict[str, dict]:
             "cevap": cevap,
             "arac_cagrilari": (arac.get(kosu_id) or {}).get("arac_cagrilari", []),
             "dosya": cevap_yolu.name,
+            "puan": None,
         })
+
+    # Tekrarlarin PUANI ayri bir dosyada durur (scripts/ajan_tekrarlari_puanla.py).
+    # Ana denemenin llm_score.json'una karistirilmaz: iki ayri deney, iki
+    # farkli arac surumu.
+    puanlar = read_json(dizin / "llm_score_tekrarlar.json")
+    for satir in (puanlar.get("runs") or []):
+        for kayit in kayitlar.get(satir.get("run_id"), []):
+            if kayit["dosya"] == satir.get("dosya") or kayit["puan"] is None:
+                kayit["puan"] = satir
+                break
     return kayitlar
 
 
@@ -358,6 +369,25 @@ def ajan_kaydi() -> dict:
         # uretilmesini onler.
         "tekrarlar": tekrarlar,
     }
+
+
+def referans_galerisi(kosu: str) -> tuple[str | None, dict]:
+    """Bir kosunun KENDI referansinin hata galerisi.
+
+    GERCEK TUTARSIZLIK: sayisal referans otomatik secilirken (D1n -> v00n,
+    D4 last_pt -> v00_saglikli last_pt) gorsel karsilastirma her yerde
+    `v00_saglikli` galerisine sabitlenmisti. Yani ekranda sayilar bir
+    referansa, goruntuler baska bir referansa gore okunuyordu.
+
+    Gorsel ve sayisal kanit AYNI referansi kullanmali; ikisi ayrisirsa
+    karsilastirma kendi kendini yalanlar.
+    """
+    from teshis.degerlendirme.senaryo_ozeti import ne_gozlendi
+
+    ref = (ne_gozlendi(kosu) or {}).get("referans_senaryo")
+    if not ref:
+        return None, {}
+    return ref, (error_galleries().get(ref) or {})
 
 
 def ajan_kaydi_var_mi(kosu_id: str) -> str:

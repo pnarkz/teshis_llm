@@ -1,0 +1,72 @@
+{
+  "metric_definition": "diagnosis, evidence and limitations each score 0..1; this is a pilot rubric, not a scientific benchmark",
+  "mean_score_aciklama": {
+    "mean_score": "Kati puan: cevap, UYGULANAN bozulmanin adiyla eslesiyor mu? Bozulmanin kanitta gorunmedigi kosularda model dogru cevap verse bile (anlamli degisim yok) sifir alir.",
+    "mean_score_tespit": "Tespit-farkindalikli puan: bozulmanin kilitli tanı setinde anlamli iz birakmadigi kosularda 'anlamli degisim yok' cevabi da dogru sayilir. Hangi kosularin bu kapsamda oldugu teshis/ajan/puanlama.py::TESPIT_EDILEMEYEN icinde, projenin kendi istatistiksel analizine dayanarak listelenir."
+  },
+  "runs": [
+    {
+      "run_id": "kosu_01",
+      "expected": "saglikli_referans",
+      "expected_label": "saglikli referans",
+      "diagnosis_score": 1.0,
+      "diagnosis_score_tespit": 1.0,
+      "evidence_score": 1.0,
+      "limitation_score": 1.0,
+      "total": 1.0,
+      "total_tespit": 1.0,
+      "tespit_edilebilir": true,
+      "tespit_notu": null,
+      "model_diagnosis": "saglikli_referans",
+      "dosya": "kosu_01_tekrar1.json"
+    },
+    {
+      "run_id": "kosu_11",
+      "expected": "anlamli_degisim_yok",
+      "expected_label": "anlamli degisim yok",
+      "diagnosis_score": 1.0,
+      "diagnosis_score_tespit": 1.0,
+      "evidence_score": 1.0,
+      "limitation_score": 1.0,
+      "total": 1.0,
+      "total_tespit": 1.0,
+      "tespit_edilebilir": true,
+      "tespit_notu": null,
+      "model_diagnosis": "bozulma_saptanmadi",
+      "dosya": "kosu_11_tekrar1.json"
+    },
+    {
+      "run_id": "kosu_12",
+      "expected": "anlamli_degisim_yok",
+      "expected_label": "anlamli degisim yok",
+      "diagnosis_score": 1.0,
+      "diagnosis_score_tespit": 1.0,
+      "evidence_score": 1.0,
+      "limitation_score": 1.0,
+      "total": 1.0,
+      "total_tespit": 1.0,
+      "tespit_edilebilir": true,
+      "tespit_notu": null,
+      "model_diagnosis": "bozulma_yok",
+      "dosya": "kosu_12_tekrar1.json"
+    },
+    {
+      "run_id": "kosu_13",
+      "expected": "anlamli_degisim_yok",
+      "expected_label": "anlamli degisim yok",
+      "diagnosis_score": 1.0,
+      "diagnosis_score_tespit": 1.0,
+      "evidence_score": 1.0,
+      "limitation_score": 1.0,
+      "total": 1.0,
+      "total_tespit": 1.0,
+      "tespit_edilebilir": true,
+      "tespit_notu": null,
+      "model_diagnosis": "saglikli_referansla_uyumlu",
+      "dosya": "kosu_13_tekrar1.json"
+    }
+  ],
+  "mean_score": 1.0,
+  "mean_score_tespit": 1.0,
+  "_not": "Kontrol tekrarlari. Ana denemeden AYRI tutulur: farkli arac surumuyle ve farkli tarihte uretildiler; ortalamalar birlestirilirse iki ayri deneyi tek orana katan yaniltici bir sayi cikar."
+}

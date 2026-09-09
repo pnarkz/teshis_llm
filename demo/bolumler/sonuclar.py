@@ -26,36 +26,72 @@ DERECELENDIRILEN = stil.DERECELENDIRILEN
 
 
 def _hipotez_tablosu(sonuclar: pd.DataFrame) -> pd.DataFrame:
-    """Her senaryo icin: ne bekleniyordu, ne cikti, hangi hukum.
+    """Her senaryo icin: ne bekleniyordu, ne olctuk, hangi hukum.
 
-    Hukum yalnizca kanit gucunden turetilir - "desteklendi" demek icin
-    gurultu esigini asmis olmak gerekir. Beklentinin YONU ayrica kontrol
-    edilmez: bu, olcumden degil metinden okunacak bir sey olurdu.
+    HUKUM NASIL VERILIR
+    -------------------
+    Beklenti metni serbest yazidir ("insan recall ve AP belirgin duser") ve
+    makine tarafindan ayristirilamaz. Dolayisiyla hukum, beklentinin
+    METNINI degil, olculen etkinin VARLIGINI ve YONUNU degerlendirir.
+
+    GERCEK HATA: ilk surum yalnizca "esigi asan metrik var mi" diye
+    bakiyordu. Sonuc D1'de sacmaydi - beklenti "insan recall duser" iken
+    tablo, genel `mAP50_95` degerinin ARTMASI uzerinden "Kismen
+    desteklendi" yaziyordu. Bir metrigin yukselmesi, dususu ongoren bir
+    hipotezi desteklemez.
+
+    Bozulma senaryolarinda beklenen yon her zaman DUSUS'tur; bu tek varsayim
+    makine tarafindan uygulanabilir. Esigi asan etki artis yonundeyse hukum
+    "beklenmedik yon" olur ve bu bir bulgudur, bir basari degil.
+
+    Tablo `katalog.senaryolar()` uzerinden kurulur: 14 arastirma senaryosu,
+    E3'un olculemedigi ve E4/D6a'nin eslenik olcum oldugu dahil. Onceden
+    `results.csv` satirlarindan kuruluyordu ve E3b'nin iki seed'i ayri satir
+    olarak gorunurken E3, E4 ve D6a tabloda hic yoktu.
     """
-    HUKUM = {
-        "guclu": ("Desteklendi", "guclu"),
-        "zayif": ("Kısmen desteklendi", "uyari"),
-        "gurultu icinde": ("Desteklenmedi (gürültü içinde)", "kritik"),
-    }
+    import katalog
+
     satirlar = []
-    for _, r in sonuclar.iterrows():
-        ad = str(r["scenario"])
-        if bozulmasiz_mi(ad) or kimlik(ad) is None:
-            continue
-        seviye = kanit_gucu(ad)["seviye"]
-        if seviye not in HUKUM:
-            continue
-        gozlem = ne_gozlendi(ad)
-        o = ozet(ad)
+    for s in katalog.senaryolar():
+        kosu = s["ana_kosu"]
+        o = ozet(kosu) if kosu else {}
+        gozlem = ne_gozlendi(kosu) if kosu else {}
+        e = s["ana_etki"]
+
+        if not kosu:
+            hukum, tur = "Ölçülemedi", "notr"
+            gozlenen = "eğitim ıraksadı; değerlendirilebilir model üretilmedi"
+        elif gozlem.get("karsilastirma_turu") == "eslenik":
+            hukum, tur = "Eşlenik ölçüm", "ikincil"
+            gozlenen = (f"{e['alan']} {e['fark']:+.4f} — aynı ağırlıklar, "
+                        "eğitim gürültüsü devrede değil" if e else "—")
+        elif not gozlem.get("kontrol_kosu_sayisi"):
+            hukum, tur = "Eşik yok", "uyari"
+            gozlenen = "bu ölçekte kontrol koşusu yok"
+        elif not e:
+            hukum, tur = "Desteklenmedi (gürültü içinde)", "kritik"
+            gozlenen = "hiçbir etki gürültü eşiğini aşmıyor"
+        elif e["fark"] > 0:
+            # Bozulma bekleniyordu, olculen etki ARTIS yonunde.
+            hukum, tur = "Beklenmedik yön (artış)", "uyari"
+            gozlenen = f"{e['alan']} {e['fark']:+.4f} (yükseliş)"
+        else:
+            asan = gozlem.get("asan_metrikler") or []
+            guclu = len(asan) >= 2 or (e.get("kirilim") and e["oran"] >= 5)
+            hukum = "Desteklendi" if guclu else "Kısmen desteklendi"
+            tur = "guclu" if guclu else "uyari"
+            gozlenen = f"{e['alan']} {e['fark']:+.4f}"
+
         satirlar.append({
-            "senaryo": ad,
+            "kod": s["kod"],
+            "senaryo": s["ad"],
             # YAML katlanmis skaler (">") sonunda satir sonu birakir ve
-            # tabloda kacis dizisi olarak gorunuyordu; bosluklar tek tek
-            # normallestirilir.
+            # tabloda kacis dizisi olarak gorunuyordu.
             "beklenen etki": " ".join(str(o.get("beklenen_etki") or "—").split()),
-            "eşiği aşan metrikler": ", ".join(gozlem["asan_metrikler"]) or "—",
-            "hüküm": HUKUM[seviye][0],
-            "_tur": HUKUM[seviye][1],
+            "gözlenen": gozlenen,
+            "eşiği aşan metrikler": ", ".join(gozlem.get("asan_metrikler") or []) or "—",
+            "hüküm": hukum,
+            "_tur": tur,
         })
     return pd.DataFrame(satirlar)
 
@@ -258,21 +294,35 @@ def goster() -> None:
         sayim = tablo["hüküm"].value_counts()
         stil.kpi_satiri([
             ("Desteklendi", int(sayim.get("Desteklendi", 0)),
-             "birden fazla metrik eşiği aşıyor"),
-            ("Kısmen desteklendi", int(sayim.get("Kısmen desteklendi", 0)),
-             "yalnızca tek metrik"),
+             "düşüş yönünde, eşiği aşan etki"),
+            ("Kısmen", int(sayim.get("Kısmen desteklendi", 0)),
+             "tek metrik, düşüş yönünde"),
+            ("Beklenmedik yön",
+             int(sayim.get("Beklenmedik yön (artış)", 0)),
+             "etki var ama yükseliş yönünde"),
             ("Desteklenmedi",
              int(sayim.get("Desteklenmedi (gürültü içinde)", 0)),
-             "hiçbir metrik eşiği aşmıyor"),
-            ("Derecelendirilemeyen", len(_derecelendirilemeyenler(sonuclar)),
-             "referansı veya eşiği yok"),
+             "hiçbir etki eşiği aşmıyor"),
+            ("Değerlendirilemeyen",
+             int(sayim.get("Ölçülemedi", 0)) + int(sayim.get("Eşlenik ölçüm", 0))
+             + int(sayim.get("Eşik yok", 0)),
+             "ölçülemedi / eşlenik / eşiksiz"),
         ])
         st.dataframe(tablo.drop(columns=["_tur"]), hide_index=True,
-                     width="stretch", height=420)
-        stil.yorum(
-            "\"Desteklendi\" hükmü yalnızca ölçüme dayanır: birden fazla genel "
-            "metrik, kendi ölçeğinin gürültü eşiğini aşıyorsa. Beklentinin "
-            "metnine bakılarak verilmez."
+                     width="stretch", height=460)
+        stil.kutu(
+            "<b>Bu tablo bir hipotez testi değildir.</b> Beklenti sütunu "
+            "serbest metindir (\"insan recall ve AP belirgin düşer\") ve "
+            "makine tarafından ayrıştırılamaz; hangi <i>sınıfın</i> hangi "
+            "<i>metriğinin</i> düşmesi beklendiği otomatik olarak "
+            "denetlenmez. Hüküm yalnızca şunu söyler: ölçülen etki gürültü "
+            "eşiğini aşıyor mu ve <b>hangi yönde</b>."
+            '<div class="yorum" style="margin-top:.5rem">İlk sürüm yalnızca '
+            "\"eşiği aşan metrik var mı\" diye bakıyordu ve D1'de saçma bir "
+            "sonuç veriyordu: beklenti \"insan recall düşer\" iken tablo, "
+            "genel mAP50-95'in <b>artması</b> üzerinden \"kısmen "
+            "desteklendi\" yazıyordu. Bir metriğin yükselmesi, düşüşü "
+            "öngören bir hipotezi desteklemez.</div>"
         )
 
     with st.expander("Derecelendirilmeyen koşular ve nedenleri"):

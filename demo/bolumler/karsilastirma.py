@@ -29,7 +29,12 @@ import grafik
 import senaryo_grafikleri as sg
 import stil
 import veri_seti as vs
-from data_loader import error_galleries, gorsel_coz, load_results
+from data_loader import (
+    error_galleries,
+    gorsel_coz,
+    load_results,
+    referans_galerisi,
+)
 from teshis.degerlendirme.karsilastirilabilirlik import (
     METRIKLER,
     bozulmasiz_mi,
@@ -103,6 +108,16 @@ def _sonuc_cumlesi(senaryo: str, gozlem: dict, yildiz_notu: str) -> str:
     """Sayfanin tek cumlelik hukmu - olcumden turetilir."""
     asan = gozlem["asan_metrikler"]
     n = gozlem["kontrol_kosu_sayisi"]
+    # ESLENIK olcumde kontrol kosusu ARANMAZ: model dosyasi birebir ayni,
+    # egitim rastgeleligi hic devrede degil. "Kontrol yok, gurultuden
+    # ayrilamiyor" demek bu kosular icin yanlisti - ayrilacak bir gurultu
+    # zaten yok, fark tamamen degisen ayarindir.
+    if gozlem.get("karsilastirma_turu") == "eslenik":
+        ref = gozlem.get("referans_senaryo")
+        return (f"{senaryo} ile {ref} <b>aynı ağırlık dosyasını</b> kullanır; "
+                "eğitim rastgeleliği devrede değildir. Bu yüzden gürültü "
+                "eşiği uygulanmaz: ölçülen fark tamamen değişen çıkarım "
+                "ayarının veya değerlendirme kümesinin etkisidir.")
     if not n:
         return (f"Bu ölçekte kontrol koşusu yok, bu yüzden {senaryo}'nun "
                 "farkı ölçülebiliyor ama gürültüden ayrılamıyor.")
@@ -130,7 +145,12 @@ OLCUT = {
 def _gorsel_kanit(senaryo: str) -> None:
     galeriler = error_galleries()
     galeri = galeriler.get(senaryo)
-    saglikli_galeri = galeriler.get("v00_saglikli") or {}
+    # Gorsel referans SAYISAL referansla AYNI olmali. Sabit
+    # `v00_saglikli` kullanmak D1n'i (referansi v00n) ve last_pt
+    # kosularini (referansi v00'in last.pt'si) yanlis tabana gore
+    # gosteriyordu: ekranda sayilar bir referansa, goruntuler baska
+    # bir referansa gore okunuyordu.
+    ref_ad, saglikli_galeri = referans_galerisi(senaryo)
     if not galeri:
         st.info(
             "Bu koşu için hata galerisi üretilmemiş, görsel karşılaştırma "
@@ -142,7 +162,7 @@ def _gorsel_kanit(senaryo: str) -> None:
     kayitlar = [k for k in galeri["entries"] if k.get("source") in saglikli]
     if not kayitlar:
         st.info(
-            "Bu koşunun en sorunlu kareleri sağlıklı modelin galerisinde yok; "
+            f"Bu koşunun en sorunlu kareleri {ref_ad} galerisinde yok; "
             "galeriler her koşunun KENDİ en kötü kareleriyle üretildiği için "
             "listeler her zaman örtüşmez."
         )
@@ -171,13 +191,13 @@ def _gorsel_kanit(senaryo: str) -> None:
 
     a, b = st.columns(2)
     with a:
-        stil.ust_baslik("sağlıklı referans modeli")
+        stil.ust_baslik(f"referans modeli — {ref_ad}")
         yol = gorsel_coz((saglikli_galeri.get("folder") or galeri["folder"])
                          / eslesen["image"])
         if yol:
             st.image(str(yol), width="stretch")
         else:
-            st.info("Sağlıklı modelin bu karesi bulunamadı.")
+            st.info(f"{ref_ad} referansının bu karesi bulunamadı.")
         stil.yorum(f"kaçırılan {eslesen.get('false_negatives')} · "
                    f"fazladan {eslesen.get('false_positives')} · "
                    f"IoU {eslesen.get('mean_iou', 0):.2f}")

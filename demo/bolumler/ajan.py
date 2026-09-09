@@ -342,7 +342,10 @@ def goster() -> None:
         )
         cevap = tekrarlar[0]["cevap"]
         cagrilar = tekrarlar[0]["arac_cagrilari"]
-    elif not cevap:
+        tekrar_puani = tekrarlar[0].get("puan")
+    else:
+        tekrar_puani = None
+    if not cevap:
         st.warning(f"{kosu_id} için kayıtlı cevap yok. Canlı modu deneyebilirsiniz.")
         return
     if cagrilar:
@@ -376,6 +379,7 @@ def goster() -> None:
         st.json(cevap)
 
     st.markdown("---")
+    _kontrol_tekrarlari_ozeti(kayit)
     _denemenin_butunu(kayit)
 
 
@@ -484,6 +488,44 @@ def _gercegi_goster(senaryo: str, kayit: dict, kosu_id: str,
     if st.button("Yeniden gizle"):
         st.session_state[anahtar] = False
         st.rerun()
+
+
+def _kontrol_tekrarlari_ozeti(kayit: dict) -> None:
+    """Kontrol tekrarlari - ana denemeden AYRI bir sonuc.
+
+    Bu, projenin en zayif iddiasinin dogrudan kanitidir: "ajan bozulma
+    yokken sorun uydurmuyor". Ana denemede yalnizca iki saf kontrol vardi;
+    tekrarlarla gozlem sayisi artti ve hepsi band'li araclarla uretildi.
+    """
+    tekrarlar = kayit.get("tekrarlar") or {}
+    if not tekrarlar:
+        return
+    satirlar = []
+    for kosu_id, kayitlar in sorted(tekrarlar.items()):
+        for t in kayitlar:
+            p = t.get("puan") or {}
+            satirlar.append({
+                "koşu": kosu_id,
+                "beklenen": p.get("expected", "—"),
+                "ajanın teşhisi": t["cevap"].get("diagnosis"),
+                "teşhis puanı": p.get("diagnosis_score"),
+                "kaynak dosya": t["dosya"],
+            })
+    dogru = sum(1 for s in satirlar if s["teşhis puanı"] == 1.0)
+    with st.expander(
+        f"Kontrol tekrarları — {dogru}/{len(satirlar)} doğru (ana denemeden ayrı)"
+    ):
+        st.dataframe(pd.DataFrame(satirlar), hide_index=True, width="stretch")
+        stil.kutu(
+            "<b>Bunlar ana denemenin parçası değildir.</b> Farklı tarihte ve "
+            "farklı araç sürümüyle (gürültü bandı alanları eklendikten "
+            "sonra) üretildiler; ortalamalar birleştirilirse iki ayrı deneyi "
+            "tek orana katan yanıltıcı bir sayı çıkar."
+            f'<div class="yorum" style="margin-top:.5rem">Hepsi bozulmasız '
+            f"koşu ve ajan {dogru}/{len(satirlar)}'inde \"bozulma yok\" dedi. "
+            "Bu, projenin en zayıf iddiasına (\"ajan sorun uydurmuyor\") "
+            "doğrudan kanıt ekler — ama örneklem hâlâ küçüktür.</div>"
+        )
 
 
 def _denemenin_butunu(kayit: dict) -> None:

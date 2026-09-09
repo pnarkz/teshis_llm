@@ -30,7 +30,13 @@ import katalog
 import senaryo_grafikleri as sg
 import stil
 import veri_seti as vs
-from data_loader import error_galleries, evidence_for, gorsel_coz, load_results
+from data_loader import (
+    error_galleries,
+    evidence_for,
+    gorsel_coz,
+    load_results,
+    referans_galerisi,
+)
 from teshis.degerlendirme.karsilastirilabilirlik import bozulmasiz_mi, kimlik
 from teshis.degerlendirme.senaryo_ozeti import kanit_gucu, ne_gozlendi, ozet
 
@@ -247,7 +253,12 @@ def _genel_gorunum(s: dict, kosu: str, o: dict, gozlem: dict) -> None:
 def _gorsel_kanit(kosu: str) -> None:
     galeriler = error_galleries()
     galeri = galeriler.get(kosu)
-    saglikli_galeri = galeriler.get("v00_saglikli") or {}
+    # Gorsel referans SAYISAL referansla AYNI olmali. Sabit
+    # `v00_saglikli` kullanmak D1n'i (referansi v00n) ve last_pt
+    # kosularini (referansi v00'in last.pt'si) yanlis tabana gore
+    # gosteriyordu: ekranda sayilar bir referansa, goruntuler baska
+    # bir referansa gore okunuyordu.
+    ref_ad, saglikli_galeri = referans_galerisi(kosu)
     saglikli = {e.get("source"): e for e in (saglikli_galeri.get("entries") or [])}
 
     if galeri:
@@ -268,7 +279,7 @@ def _gorsel_kanit(kosu: str) -> None:
             es = saglikli[kayit["source"]]
             a, b = st.columns(2)
             for sutun, baslik, kyt, klasor in (
-                (a, "sağlıklı referans modeli", es,
+                (a, f"referans modeli — {ref_ad}", es,
                  saglikli_galeri.get("folder")),
                 (b, f"{kosu} modeli", kayit, galeri["folder"]),
             ):
@@ -292,7 +303,7 @@ def _gorsel_kanit(kosu: str) -> None:
             )
         else:
             st.info(
-                "Bu koşunun en sorunlu kareleri sağlıklı modelin galerisinde "
+                f"Bu koşunun en sorunlu kareleri {ref_ad} galerisinde "
                 "yok; galeriler her koşunun KENDİ en kötü kareleriyle "
                 "üretildiği için listeler her zaman örtüşmez. Eşleşmiş çift "
                 "bulunmadığı için yan yana karşılaştırma yapılmıyor."

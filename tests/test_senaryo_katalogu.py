@@ -202,3 +202,144 @@ def test_mutlak_fark_basligi_kalmadi():
                 continue
             if '"mutlak fark"' in satir:
                 pytest.fail(f"{yol.name}: {satir.strip()}")
+
+
+# --- Bilimsel yorum tutarliligi ---------------------------------------------
+
+def test_hipotez_hukmu_yonu_dikkate_aliyor():
+    """GERCEK HATA: hukum yalnizca "esigi asan metrik var mi" diye bakiyordu.
+
+    D1'de beklenti "insan recall ve AP belirgin duser" iken tablo, genel
+    `mAP50_95` degerinin ARTMASI uzerinden "Kismen desteklendi" yaziyordu.
+    Bir metrigin yukselmesi, dususu ongoren bir hipotezi desteklemez.
+    """
+    from data_loader import load_results
+    from bolumler.sonuclar import _hipotez_tablosu
+
+    tablo = _hipotez_tablosu(load_results())
+    satirlar = {r["kod"]: r for _, r in tablo.iterrows()}
+
+    d1 = satirlar["D1"]
+    assert "Beklenmedik yön" in d1["hüküm"], d1["hüküm"]
+    assert "+" in d1["gözlenen"], "yukselisin isareti gorunmeli"
+
+    # Genel kural: "Desteklendi" ya da "Kismen" diyen her satirin gozlenen
+    # etkisi DUSUS yonunde olmali.
+    for kod, r in satirlar.items():
+        if r["hüküm"].startswith(("Desteklendi", "Kısmen")):
+            assert "-" in r["gözlenen"] or "−" in r["gözlenen"], (
+                f"{kod}: '{r['hüküm']}' ama gozlenen dusus degil "
+                f"({r['gözlenen']})"
+            )
+
+
+def test_hipotez_tablosu_on_dort_senaryoyu_kapsiyor():
+    """E3, E4 ve D6a tabloda hic yoktu; E3b'nin iki seed'i ayri satirdaydi."""
+    from data_loader import load_results
+    from bolumler.sonuclar import _hipotez_tablosu
+
+    tablo = _hipotez_tablosu(load_results())
+    kodlar = list(tablo["kod"])
+    assert kodlar == [s["kod"] for s in katalog.senaryolar()]
+    assert len(kodlar) == len(set(kodlar)), "ayni senaryo birden fazla satirda"
+    for kod in ("E3", "E4", "D6a", "D6b"):
+        assert kod in kodlar, kod
+
+    satirlar = {r["kod"]: r for _, r in tablo.iterrows()}
+    assert satirlar["E3"]["hüküm"] == "Ölçülemedi"
+    for kod in ("E4", "D6a"):
+        assert satirlar[kod]["hüküm"] == "Eşlenik ölçüm", kod
+
+
+def test_gorsel_referans_sayisal_referansla_ayni():
+    """GERCEK TUTARSIZLIK: sayisal referans otomatik secilirken gorsel
+    karsilastirma her yerde `v00_saglikli` galerisine sabitlenmisti."""
+    from data_loader import referans_galerisi
+    from teshis.degerlendirme.senaryo_ozeti import ne_gozlendi
+
+    for kosu in ("D4", "D1n", "D4 last_pt", "E4 imgsz512"):
+        ad, galeri = referans_galerisi(kosu)
+        assert ad == ne_gozlendi(kosu)["referans_senaryo"], kosu
+        assert galeri, f"{kosu}: {ad} galerisi bulunamadi"
+
+    # Bolumlerde sabit galeri adi kalmamali.
+    for dosya in ("karsilastirma.py", "senaryolar.py", "hata_analizi.py"):
+        kaynak = (ROOT / "demo/bolumler" / dosya).read_text(encoding="utf-8")
+        for satir in kaynak.splitlines():
+            if satir.strip().startswith("#"):
+                continue
+            assert 'galeriler.get("v00_saglikli")' not in satir, dosya
+
+
+def test_eslenik_olcumde_kontrol_kosusu_aranmiyor():
+    """E4/D6a'da model dosyasi birebir ayni; ayrilacak bir gurultu yok."""
+    from bolumler.karsilastirma import _sonuc_cumlesi
+    from teshis.degerlendirme.senaryo_ozeti import ne_gozlendi
+
+    for kosu in ("E4 imgsz512", "D6a"):
+        cumle = _sonuc_cumlesi(kosu, ne_gozlendi(kosu), "")
+        assert "aynı ağırlık dosyası" in cumle, kosu
+        assert "gürültüden ayrılamıyor" not in cumle, kosu
+
+
+def test_degisen_alan_sabit_diye_gosterilmiyor():
+    """E4 512 px'te olculur ve referansi 768'dir; liste bunu "sabit"
+    sayiyordu - oysa DEGISEN alan tam olarak oydu."""
+    from teshis.degerlendirme.senaryo_ozeti import ne_sabit_kaldi
+
+    e4 = " ".join(ne_sabit_kaldi("E4 imgsz512"))
+    assert "512 px — **DEĞİŞEN**" in e4, e4
+    d6a = " ".join(ne_sabit_kaldi("D6a"))
+    assert "DEĞİŞEN" in d6a and "v08_sizintili_kume" in d6a
+
+    # Gercekten sabit olan alanlar isaretlenmemeli.
+    d4 = " ".join(ne_sabit_kaldi("D4"))
+    assert "DEĞİŞEN" not in d4, d4
+
+
+def test_hicbir_bozulma_kosusu_oksuz_kalmiyor():
+    """D1n hicbir senaryoya bagli degildi: kodu 'D1n', katalogda yok."""
+    import csv as _csv
+
+    from teshis.degerlendirme.karsilastirilabilirlik import bozulmasiz_mi
+
+    bagli = set()
+    for s in katalog.senaryolar():
+        if s["ana_kosu"]:
+            bagli.add(s["ana_kosu"])
+        bagli |= set(s["varyantlar"])
+    with (ROOT / "results.csv").open(encoding="utf-8") as f:
+        defter = {r["scenario"] for r in _csv.DictReader(f)}
+    oksuz = sorted(a for a in defter - bagli if not bozulmasiz_mi(a))
+    assert not oksuz, f"hicbir senaryoya bagli olmayan kosular: {oksuz}"
+    assert "D1n" in katalog.senaryo("D1")["varyantlar"]
+
+
+# --- Kontrol tekrarlarinin puanlanmasi --------------------------------------
+
+def test_kontrol_tekrarlari_puanlanmis():
+    """kosu_12 ve kosu_13'un cevabi vardi ama hic puanlanmamisti."""
+    from data_loader import kontrol_tekrarlari
+
+    tekrarlar = kontrol_tekrarlari()
+    if not tekrarlar:
+        pytest.skip("kontrol tekrari yok")
+    for kosu_id, kayitlar in tekrarlar.items():
+        assert kayitlar[0]["puan"] is not None, (
+            f"{kosu_id} puanlanmamis. Uretmek icin: "
+            "python scripts/ajan_tekrarlari_puanla.py"
+        )
+
+
+def test_tekrar_puanlari_yalnizca_tekrari_olan_kosulari_kapsiyor():
+    """Tam cevap anahtariyla puanlandiginda tekrari olmayan 9 kosu
+    "missing" sayilip 0 aliyor ve ortalama 1.00 yerine 0.31 cikiyordu."""
+    import json as _json
+
+    yol = ROOT / "reports/ajan_denemesi/kontrol_tekrarlari/llm_score_tekrarlar.json"
+    if not yol.is_file():
+        pytest.skip("tekrar puan dosyasi yok")
+    puan = _json.loads(yol.read_text(encoding="utf-8"))
+    from data_loader import kontrol_tekrarlari
+
+    assert {r["run_id"] for r in puan["runs"]} == set(kontrol_tekrarlari())

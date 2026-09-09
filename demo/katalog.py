@@ -61,8 +61,24 @@ def _defter() -> list[dict[str, str]]:
 
 
 def _kod(kosu: str) -> str:
-    """'D2b final_best' -> 'D2b', 'E3b seed42' -> 'E3b'."""
-    return kosu.split()[0]
+    """Kosu adindan SENARYO kodunu cikarir.
+
+    'D2b final_best' -> 'D2b', 'E3b seed42' -> 'E3b', 'D4 last_pt' -> 'D4'.
+
+    Ayrica MODEL AILESI son eki cozulur: `D1n`, D1 bozulmasinin farkli bir
+    baslangic modeli (yolo26n) uzerindeki kaydidir - ayri bir senaryo degil,
+    D1'in varyantidir. Cozulmedigi surece D1n hicbir senaryoya baglanmiyor
+    ve katalogda oksuz kaliyordu.
+
+    Son ek yalnizca geriye kalan parca GERCEK bir katalog kodu ise soyulur;
+    boylece ileride katalogda adi 'D1n' olan bir senaryo tanimlanirsa o
+    kazanir.
+    """
+    taban = kosu.split()[0]
+    kodlar = {s["kod"] for s in _ham_katalog()}
+    if taban not in kodlar and taban.endswith("n") and taban[:-1] in kodlar:
+        return taban[:-1]
+    return taban
 
 
 def kosulari(kod: str) -> dict[str, Any]:

@@ -120,18 +120,32 @@ def test_her_bolum_render_ediliyor(bolum: str):
 def test_her_senaryo_render_ediliyor(senaryo: str):
     """Katalogdaki her senaryo; biri bile cokerse sunumda o senaryo acilamaz.
 
-    Secim artik acilir liste degil DUGME: kart HTML'i tiklanabilir degildir,
-    gorsel olarak kart davranis olarak dugme olan bir yapi kullaniciyi
+    Secim acilir liste degil DUGME: kart HTML'i tiklanabilir degildir ve
+    gorsel olarak kart, davranis olarak dugme olan bir yapi kullaniciyi
     yaniltirdi.
+
+    ONEMLI: secili senaryonun dugmesi DEVRE DISI olur. Ona tiklamak hicbir
+    sey yapmaz, yani test o senaryo icin bos gecerdi. Bu durumda dugmeye
+    tiklamak yerine BASKA bir senaryoya gecip geri donulur - boylece her
+    senaryonun ayrinti ekrani gercekten render edilir.
     """
     app = _bolum(_bolum_adi("Senaryo"))
     dugme = next((d for d in app.button if d.key == f"sec_{senaryo}"), None)
-    if dugme is None:
-        # Secili senaryonun dugmesi devre disi birakilir; zaten acik demektir.
-        assert not _sorunlar(app), f"{senaryo}: {_sorunlar(app)}"
-        return
+    assert dugme is not None, f"{senaryo}: secim dugmesi yok"
+
+    if getattr(dugme, "disabled", False):
+        # Zaten secili: once baskasina gec, sonra bu senaryoya geri don.
+        baska = next(d for d in app.button
+                     if d.key != f"sec_{senaryo}" and not getattr(d, "disabled", False))
+        baska.click().run()
+        assert not _sorunlar(app), f"{senaryo} (ara adim): {_sorunlar(app)}"
+        dugme = next(d for d in app.button if d.key == f"sec_{senaryo}")
+
     dugme.click().run()
     assert not _sorunlar(app), f"{senaryo}: {_sorunlar(app)}"
+    # Ayrinti ekrani gercekten acildi mi?
+    metin = " ".join(str(m.value) for m in app.markdown)
+    assert senaryo in metin, f"{senaryo}: ayrinti ekrani acilmadi"
 
 
 @pytest.mark.parametrize("kosu", _kosular())

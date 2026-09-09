@@ -24,7 +24,13 @@ import streamlit as st
 
 import gorseller
 import stil
-from data_loader import error_galleries, gorsel_coz, gorsel_kaynagi, images_for
+from data_loader import (
+    error_galleries,
+    gorsel_coz,
+    gorsel_kaynagi,
+    images_for,
+    referans_galerisi,
+)
 
 SIRALAMA = {
     "toplam hata skoru": "score",
@@ -89,7 +95,7 @@ def _aciklama(kayit: dict, gt: dict | None, saglikli: dict | None) -> str:
         if fp != s_fp:
             yon.append(f"fazladan kutu {s_fp} → {fp}")
         parcalar.append(
-            "<b>Sağlıklı modele göre:</b> " + (", ".join(yon) if yon
+            "<b>Referansa göre:</b> " + (", ".join(yon) if yon
                                                else "aynı hata sayıları")
             + "."
         )
@@ -140,7 +146,12 @@ def goster() -> None:
     galeri = galeriler[senaryo]
     kayitlar = list(galeri["entries"])
 
-    saglikli_galeri = galeriler.get("v00_saglikli") or {}
+    # Gorsel referans SAYISAL referansla AYNI olmali. Sabit
+    # `v00_saglikli` kullanmak D1n'i (referansi v00n) ve last_pt
+    # kosularini (referansi v00'in last.pt'si) yanlis tabana gore
+    # gosteriyordu: ekranda sayilar bir referansa, goruntuler baska
+    # bir referansa gore okunuyordu.
+    ref_ad, saglikli_galeri = referans_galerisi(senaryo)
     saglikli = {e.get("source"): e for e in (saglikli_galeri.get("entries") or [])}
 
     d, e, f = st.columns(3)
@@ -218,12 +229,12 @@ def goster() -> None:
         if eslesen and saglikli_klasor:
             a, b = st.columns(2)
             with a:
-                stil.ust_baslik("sağlıklı referans modeli")
+                stil.ust_baslik(f"referans modeli — {ref_ad}")
                 s_yol = gorsel_coz(saglikli_klasor / eslesen["image"])
                 if s_yol is not None:
                     st.image(str(s_yol), width="stretch")
                 else:
-                    st.info("Sağlıklı modelin bu karesi bulunamadı.")
+                    st.info(f"{ref_ad} referansının bu karesi bulunamadı.")
                 stil.yorum(
                     f"FN {eslesen.get('false_negatives')} · "
                     f"FP {eslesen.get('false_positives')} · "
