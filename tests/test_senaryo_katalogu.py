@@ -355,3 +355,47 @@ def test_arsivlenmis_cevaplar_guncel_sayilmiyor():
     for kosu_id, kayitlar in kontrol_tekrarlari().items():
         for k in kayitlar:
             assert "_onceki" not in k["dosya"], f"{kosu_id}: {k['dosya']}"
+
+
+def test_ajan_sinirlamasi_deneyle_senkron():
+    """Sonuclar sayfasindaki ajan sinirlamasi DENEYDEN turetilmeli.
+
+    Bu satir elle yaziliydi: "Ajan denemesi 11 kosuluk tek turdur. Kosu
+    basina tekrar yok." 2026-09-09 tekrarli deneyi calistirildiginda cumle
+    YANLIS hale geldi ama metin geride kaldi - ekranda hala tekrar olmadigi
+    yaziyordu. Projenin imza hatasi: bir sayi iki yerde yasiyor.
+    """
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from bolumler.sonuclar import _ajan_orneklem_notu
+    from data_loader import ajan_deneyi
+
+    metin = _ajan_orneklem_notu(11)
+    deney = ajan_deneyi()
+    if deney is None:
+        assert "tekrar yok" in metin, (
+            "deney yokken eski durum dogru anlatilmali")
+        return
+
+    p = deney["puan"]
+    tekrar = p["gozlem"] // max(p["kosu"], 1)
+    assert "tekrar yok" not in metin, (
+        "deneyde tekrar var; metin hala 'tekrar yok' diyor")
+    assert "tek turdur" not in metin
+    for sayi in (str(p["kosu"]), str(tekrar), str(p["gozlem"])):
+        assert sayi in metin, f"metin {sayi} sayisini tasimiyor: {metin}"
+
+
+def test_ajan_sonraki_adim_tamamlanani_istemiyor():
+    """Tamamlanmis bir is "sonraki adim" olarak listelenmemeli."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from bolumler.sonuclar import _ajan_sonraki_adim
+    from data_loader import ajan_deneyi
+
+    metin = _ajan_sonraki_adim()
+    if ajan_deneyi() is not None:
+        assert "koşu başına tek deneme" not in metin, (
+            "tekrarli deney yapildi; bu madde artik sonraki adim degil")

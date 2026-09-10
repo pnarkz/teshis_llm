@@ -140,6 +140,44 @@ def _derecelendirilemeyenler(sonuclar: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(satirlar)
 
 
+def _ajan_orneklem_notu(eski_deneme: int) -> str:
+    """Ajan orneklemi hakkindaki sinirlama - DENEYDEN turetilir.
+
+    Bu satir elle yaziliydi ("koşu başına tekrar yok") ve 2026-09-09
+    tekrarli deneyi calistirildiginda YANLIS hale geldi; metin geride
+    kaldigi icin ekranda hala tekrar olmadigi yaziyordu. Artik deneyin
+    kendisinden okunuyor.
+    """
+    from data_loader import ajan_deneyi
+
+    deney = ajan_deneyi()
+    if not deney:
+        return (f"**Ajan denemesi {eski_deneme} koşuluk tek turdur.** Koşu "
+                "başına tekrar yok; ajanın 'sorun uydurmama' oranı için "
+                "verilebilecek aralık çok geniştir.")
+    p = deney["puan"]
+    tekrar = p["gozlem"] // max(p["kosu"], 1)
+    kontrol = (p.get("rol_bazli") or {}).get("kontrol") or {}
+    return (
+        f"**Ajan deneyi {p['kosu']} koşu × {tekrar} tekrar = {p['gozlem']} "
+        f"gözlem.** Tekrarlar model kararlılığını ölçer, senaryo evrenindeki "
+        "belirsizliği değil: 9 bozulma senaryosu ve tek bir model üzerinden "
+        "hesaplanan oran bu senaryoların dışına genellenemez."
+        + (f" Kontrol koşularında {kontrol['gozlem']} gözlemin tamamı doğru."
+           if kontrol.get("dogru_teshis") == 1.0 else "")
+    )
+
+
+def _ajan_sonraki_adim() -> str:
+    from data_loader import ajan_deneyi
+
+    if ajan_deneyi():
+        return ("Ajan deneyinin başka bir model ailesiyle tekrarı — şu anki "
+                "sonuç tek bir modele ait.")
+    return ("Ajan denemesinin tekrarı — koşu başına tek deneme, doğruluk "
+            "oranına aralık vermeye yetmiyor.")
+
+
 def _sinirlamalar(sonuclar: pd.DataFrame) -> list[str]:
     """Sayilari defterden turetilen sinirlama listesi."""
     adlar = [a for a in (str(r["scenario"]) for _, r in sonuclar.iterrows())
@@ -158,9 +196,11 @@ def _sinirlamalar(sonuclar: pd.DataFrame) -> list[str]:
     az = [f"{a} (n={n})" for a, n in VAL_DIAGNOSTIC_BBOX_N.items() if n < 30]
 
     return [
-        "**Tek model ailesi, koşu başına tek deneme.** Ölçülen her skor bir "
-        "nokta tahminidir; koşu tekrarı olmadığı için güven aralığı "
-        "hesaplanamaz.",
+        "**Tek model ailesi, senaryo başına tek eğitim koşusu.** Ölçülen her "
+        "metrik bir nokta tahminidir; aynı senaryo yeniden eğitilmediği için "
+        "senaryo metriğine güven aralığı verilemez. (Ajan deneyinin tekrarı "
+        "var; o ayrı bir ölçüdür — model kararlılığını ölçer, senaryo "
+        "evrenindeki belirsizliği değil.)",
         f"**Gürültü tabanı {ana_olcek} bozulmasız koşudan geliyor.** Az "
         "gözlemle band gerçek yayılımı olduğundan küçük gösterir; eşikler "
         "muhtemelen hâlâ dar.",
@@ -174,9 +214,7 @@ def _sinirlamalar(sonuclar: pd.DataFrame) -> list[str]:
         "ayrılamıyor.",
         "**Kendi ölçeğinde eşiği olmayan koşular:** "
         f"{', '.join(esiksiz) or 'yok'}. Bunlar derecelendirilmez.",
-        f"**Ajan denemesi {deneme} koşuluk tek turdur.** Koşu başına tekrar "
-        "yok; ajanın 'sorun uydurmama' oranı için verilebilecek aralık çok "
-        "geniş.",
+        _ajan_orneklem_notu(deneme),
         "**Final test seti hiç kullanılmadı** ve bu bilinçli bir karardır. "
         "Yani buradaki hiçbir sayı 'nihai test performansı' değildir.",
         "**Çalışma zamanı servisi (Aşama 2) tamamlanmadı.** Proje bir ölçüm "
@@ -362,7 +400,17 @@ def goster() -> None:
     a, b = st.columns([2, 3])
     with a:
         stil.ust_baslik("kanıt gücü dağılımı")
-        st.bar_chart(dagilim, height=200, color=stil.ADAY)
+        # st.bar_chart DIKEY cizip etiketleri 90 derece dondururken
+        # "gürültü içinde" gibi uzun etiketler okunmuyordu. Yatay cubuk
+        # etiketi duz yazar; sayi da cubugun ucunda durur.
+        import grafik
+
+        st.altair_chart(
+            grafik.yatay_bar(
+                dagilim.reset_index(names="seviye"), "seviye", "koşu",
+                alan_adi="koşu sayısı", etiket=True, sirala="-x"),
+            width="stretch",
+        )
     with b:
         stil.ust_baslik("derecelendirilmeyen koşular")
         st.dataframe(derece_disi, hide_index=True, width="stretch")
@@ -396,8 +444,7 @@ def goster() -> None:
         "`final_best.pt` ve `yolo26n` ölçekleri için sağlıklı referans "
         "koşuları — D2b final_best şu an karşılaştırılamaz durumda.",
         "Her senaryo için çoklu seed: nokta tahmini yerine dağılım.",
-        "Ajan denemesinin tekrarı — koşu başına tek deneme, doğruluk "
-        "oranına aralık vermeye yetmiyor.",
+        _ajan_sonraki_adim(),
         "Çalışma zamanı servisi (Aşama 2): ölçüm altyapısının canlı bir "
         "izleme hattına bağlanması.",
     ):

@@ -383,9 +383,11 @@ def goster() -> None:
         kosu_id = st.selectbox(
             "Koşu", kosular, index=varsayilan,
             format_func=lambda k: (
+                # "sunum icin onerilen" etiketi kaldirildi: hangi kosuyu
+                # gostereceginin sunumu yapan kisinin bilmesi yeter,
+                # ekranda yazmasi izleyiciye bir sey anlatmiyor - ustelik
+                # "bu kosu ozel secilmis" izlenimi veriyordu.
                 f"{k}  ·  {KAYIT_ROZETI[ajan_kaydi_var_mi(k)][0]}"
-                + ("  ·  sunum için önerilen"
-                   if k in ajan_katmani.ONERILEN_CANLI else "")
             ),
         )
     with b:
@@ -395,14 +397,12 @@ def goster() -> None:
                   "ücretsiz katman sınırlarına tabidir (20 istek/gün, "
                   "5 istek/dk)."),
         )
-    if kosu_id in ajan_katmani.ONERILEN_CANLI:
-        with st.expander("Sunum notu — bu koşu neden önerildi? (gerçeği açar)"):
-            st.markdown(
-                f"**{kosu_id}:** {ajan_katmani.ONERILEN_CANLI[kosu_id]}\n\n"
-                "Bu not yalnızca sunumu yapan içindir ve ajana gönderilen "
-                "istekte yer almaz. Kapalı tutulursa izleyici de ajanla aynı "
-                "bilgiyle başlar."
-            )
+    # "Sunum notu" bolumu kaldirildi. Ekranda durmasi gereksizdi: notun tek
+    # okuyucusu sunumu yapan kisi ve o zaten neyi gosterecegini biliyor.
+    # Ustelik acildiginda gercek senaryoyu sizdiriyordu - sayfanin geri
+    # kalani korlugu tam da bunun icin koruyor.
+    # ajan_katmani.ONERILEN_CANLI duruyor; canli kosu icin hangi kosularin
+    # uygun oldugunu belirlemekte kullaniliyor.
 
     senaryo = harita.get(kosu_id, "?")
     anahtar = f"acik_{kosu_id}"
