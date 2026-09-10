@@ -168,12 +168,27 @@ def ne_gozlendi(senaryo: str) -> dict[str, Any]:
             "referans": None if ref_deger is None else round(ref_deger, 4),
             "fark": None if fark is None else round(fark, 4),
             "gurultu_esigi": round(esik, 4) if esik is not None else None,
+            # "asiyor" BUYUKLUK sorusudur: fark, bozulmasiz kosular arasindaki
+            # yayilimin disinda mi? Yon ayri tutulur - ikisi karistirilirsa
+            # YUKSELEN bir metrik bozulma kaniti gibi okunur.
             "asiyor": (abs(fark) > esik) if (fark is not None and esik) else None,
+            "yon": None if not fark else ("dusus" if fark < 0 else "yukselis"),
         }
+    asan = [m for m, d in metrikler.items() if d["asiyor"]]
     return {
         "metrikler": metrikler,
         "kontrol_kosu_sayisi": len(karsi["kontroller"]),
-        "asan_metrikler": [m for m, d in metrikler.items() if d["asiyor"]],
+        "asan_metrikler": asan,
+        # Esigi asan farklar YONE gore ayrilir.
+        #
+        # Bir metrigin beklenenin TERSINE yukselmesi bozulma kaniti degildir.
+        # D1'de mAP50_95 +0.0240 yukselmisti (esik 0.0201) ve bu, sayfanin
+        # hukum cumlesinde "mAP50_95 gurultu esigini asiyor" diye, kanit
+        # gucunde ise "zayif bulgu" diye gorunuyordu - ikisi de dususmus gibi.
+        # Ayni hata once hipotez tablosunda, sonra etki haritasinda cikti;
+        # bu, kuralin yasadigi UCUNCU yerdi.
+        "asan_dusen": [m for m in asan if metrikler[m]["yon"] == "dusus"],
+        "asan_yukselen": [m for m in asan if metrikler[m]["yon"] == "yukselis"],
         "referans_senaryo": ref_ad,
         "karsilastirma_turu": karsi["tur"],
         "karsilastirma_aciklamasi": karsi["aciklama"],
@@ -211,7 +226,11 @@ def kanit_gucu(senaryo: str) -> dict[str, Any]:
     if tur == "eslenik":
         return {"seviye": "eslenik olcum", "aciklama": gozlem["karsilastirma_aciklamasi"]}
 
-    asan = gozlem["asan_metrikler"]
+    # Derecelendirme YALNIZCA esigi asan DUSUSLERE bakar. Bir metrigin
+    # beklenenin tersine yukselmesi bozulmanin kaniti degildir; ayri
+    # anlatilir.
+    asan = gozlem["asan_dusen"]
+    yukselen = gozlem["asan_yukselen"]
     n = gozlem["kontrol_kosu_sayisi"]
 
     # Kontrol kosusu OLCUM ARACIDIR, olcum nesnesi degil. Derecelendirilirse
@@ -219,10 +238,11 @@ def kanit_gucu(senaryo: str) -> dict[str, Any]:
     # iki gozlemin araligi daralir ve kosu "uc deger" gorunur. C2 seed21 tam
     # boyle "guclu bozulma kaniti" cikmisti - icinde hicbir bozulma yokken.
     if bozulmasiz_mi(senaryo):
+        hepsi = gozlem["asan_metrikler"]
         ek = (
             " Aynı ölçütle tartılsaydı şu metriklerde 'eşiği aşıyor' "
-            f"çıkardı: {', '.join(asan)}. Bu, ölçütün kendisinin ne kadar "
-            "oynak olduğunu gösterir." if asan else
+            f"çıkardı: {', '.join(hepsi)}. Bu, ölçütün kendisinin ne kadar "
+            "oynak olduğunu gösterir." if hepsi else
             " Aynı ölçütle tartıldığında hiçbir metrikte eşiği aşmıyor."
         )
         return {
@@ -242,27 +262,34 @@ def kanit_gucu(senaryo: str) -> dict[str, Any]:
                 "edilemiyor: başka bir ölçeğin eşiği ödünç alınamaz."
             ),
         }
+    ters_not = (
+        f" Ayrıca {', '.join(yukselen)} eşiği aşan bir YÜKSELİŞ gösteriyor: "
+        "beklenen yönün tersi, bozulma kanıtı değil." if yukselen else ""
+    )
     if not asan:
         return {
             "seviye": "gurultu icinde",
             "aciklama": (
                 "Hiçbir genel metrik, bozulmasız koşular arasında gözlenen "
-                f"yayılımı aşmıyor ({n} kontrol koşusu). Bu senaryonun genel "
-                "metriklerine dayanan bir iddia kurulamaz."
+                f"yayılımı aşan bir DÜŞÜŞ göstermiyor ({n} kontrol koşusu). "
+                "Bu senaryonun genel metriklerine dayanan bir iddia "
+                "kurulamaz." + ters_not
             ),
         }
     if len(asan) == 1:
         return {
             "seviye": "zayif",
             "aciklama": (
-                f"Yalnızca {asan[0]} gürültü eşiğini aşıyor. Tek metriğe dayanan "
-                "bir bulgu, kırılım kanıtıyla desteklenmedikçe zayıftır."
+                f"Yalnızca {asan[0]} gürültü eşiğini aşan bir düşüş gösteriyor. "
+                "Tek metriğe dayanan bir bulgu, kırılım kanıtıyla "
+                "desteklenmedikçe zayıftır." + ters_not
             ),
         }
     return {
         "seviye": "guclu",
         "aciklama": (
-            f"{len(asan)} genel metrik gürültü eşiğini aşıyor: {', '.join(asan)}."
+            f"{len(asan)} genel metrik gürültü eşiğini aşan bir düşüş "
+            f"gösteriyor: {', '.join(asan)}." + ters_not
         ),
     }
 

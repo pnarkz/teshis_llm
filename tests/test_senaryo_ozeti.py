@@ -125,3 +125,54 @@ def test_ozet_elle_tutulan_senaryo_sozlugu_gerektirmiyor():
     # Anlatim disindaki her sey turetilmeli: modulde senaryo koduna gore
     # sabitlenmis metin bloklari olmamali.
     assert kaynak.count('"D1"') == 0, "modul senaryo koduna gore metin tutuyor"
+
+
+def test_yukselen_metrik_bozulma_kaniti_sayilmiyor():
+    """Esigi asan bir YUKSELIS, esigi asan bir dususle ayni sey degildir.
+
+    D1'de mAP50_95 referansa gore +0.0240 YUKSELDI ve esik 0.0201'di. Kural
+    mutlak degere baktigi icin bu, uc ayri yerde bozulma kaniti gibi
+    gorundu: hipotez tablosunda "kismen desteklendi", etki haritasinda
+    esigi asan renkli hucre, ve burada "zayif bulgu" + "mAP50_95 gurultu
+    esigini asiyor" cumlesi.
+
+    Kural artik tek kaynakta yone gore ayriliyor.
+    """
+    g = so.ne_gozlendi("D1")
+    assert g["metrikler"]["mAP50_95"]["fark"] > 0, "D1 mAP50_95 dusmus olmali degil"
+    assert g["metrikler"]["mAP50_95"]["asiyor"], "buyukluk hala esigi asiyor"
+    assert g["metrikler"]["mAP50_95"]["yon"] == "yukselis"
+
+    assert "mAP50_95" in g["asan_metrikler"], (
+        "asan_metrikler BUYUKLUK sorusudur, degismemeli"
+    )
+    assert "mAP50_95" not in g["asan_dusen"], (
+        "yukselen bir metrik 'esigi asan dusus' listesine giremez"
+    )
+    assert "mAP50_95" in g["asan_yukselen"]
+
+    guc = so.kanit_gucu("D1")
+    assert guc["seviye"] == "gurultu icinde", (
+        f"D1'de esigi asan hicbir DUSUS yok; seviye 'gurultu icinde' olmali, "
+        f"'{guc['seviye']}' gelmis"
+    )
+    assert "YÜKSELİŞ" in guc["aciklama"], (
+        "beklenmedik yondeki etki aciklamada gorunmeli, gizlenmemeli"
+    )
+
+
+def test_dusen_senaryolar_etkilenmiyor():
+    """Duzeltme yalnizca yukselisi ayirir; gercek dususleri zayiflatmaz."""
+    for senaryo, beklenen in (("D2a", "guclu"), ("D4", "guclu")):
+        g = so.ne_gozlendi(senaryo)
+        assert g["asan_dusen"], f"{senaryo}: esigi asan dusus kaybolmus"
+        assert g["asan_dusen"] == [m for m in g["asan_metrikler"]
+                                   if g["metrikler"][m]["yon"] == "dusus"]
+        assert so.kanit_gucu(senaryo)["seviye"] == beklenen
+
+
+def test_kontrol_kosusu_yukselisi_de_derecelendirilmiyor():
+    """C2 seed21'in iki metrigi YUKSELEREK esigi asiyor - yine de bulgu degil."""
+    g = so.ne_gozlendi("C2 seed21")
+    assert g["asan_yukselen"] and not g["asan_dusen"]
+    assert so.kanit_gucu("C2 seed21")["seviye"] == "kontrol kosusu"

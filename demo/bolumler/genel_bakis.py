@@ -266,8 +266,12 @@ def goster() -> None:
     )
     deney = ajan_deneyi()
     kartlar = [
+        # Alt metin OLCULEBILEN sayiyi da verir: Karsilastirma seciciside
+        # kosusu olmayan senaryolar gorunmez ve iki sayfa arasindaki fark
+        # aciklanmadan kalirdi.
         ("Araştırma kapsamı", len(katalog.senaryolar()),
-         "senaryo · veri, eğitim, çıkarım"),
+         f"senaryo · {len([x for x in katalog.senaryolar() if x['ana_kosu']])}"
+         "'ü ölçülebildi"),
         ("Değerlendirme", olculebilir,
          f"koşu · {_kontrol_sayisi(sonuclar)} kontrol dahil"),
         ("Kilitli tanı seti",

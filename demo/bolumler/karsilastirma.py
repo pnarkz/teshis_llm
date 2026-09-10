@@ -110,21 +110,30 @@ def _fark_bandi_verisi(gozlem: dict) -> pd.DataFrame:
 
 def _sonuc_cumlesi(senaryo: str, gozlem: dict, yildiz_notu: str) -> str:
     """Sayfanin tek cumlelik hukmu - olcumden turetilir."""
-    asan = gozlem["asan_metrikler"]
+    # DUSUS ve YUKSELIS ayri anlatilir. Ikisi tek listede toplanirsa
+    # beklenenin tersine yukselen bir metrik "esigi asiyor" diye, yani
+    # bozulma kaniti gibi okunur - D1'de tam olarak bu oluyordu.
+    dusen = gozlem["asan_dusen"]
+    yukselen = gozlem["asan_yukselen"]
     n = gozlem["kontrol_kosu_sayisi"]
     if not gurultu_esigi_gecerli_mi(senaryo):
         return esik_yoklugu_aciklamasi(senaryo)
     if not n:
         return esik_yoklugu_aciklamasi(senaryo)
-    if not asan:
-        return (f"{senaryo}'nun hiçbir genel metriği gürültü eşiğini aşmıyor: "
-                "genel metriklere dayanan bir etki iddiası kurulamaz.")
-    kalan = [m for m in METRIKLER if m not in asan]
-    cumle = (f"<b>{', '.join(asan)}</b> gürültü eşiğini aşıyor"
-             + (f", <b>{', '.join(kalan)}</b> gürültünün içinde kalıyor" if kalan
-                else "")
-             + ".")
-    return cumle
+
+    ters = (f" <b>{', '.join(yukselen)}</b> ise eşiği aşan bir "
+            "<b>yükseliş</b> gösteriyor — beklenen yönün tersi, bozulma "
+            "kanıtı değil." if yukselen else "")
+    if not dusen:
+        return (f"{senaryo}'nun hiçbir genel metriği gürültü eşiğini aşan bir "
+                "düşüş göstermiyor: genel metriklere dayanan bir etki iddiası "
+                "kurulamaz." + ters)
+    kalan = [m for m in METRIKLER if m not in dusen and m not in yukselen]
+    return (f"<b>{', '.join(dusen)}</b> gürültü eşiğini aşan bir düşüş "
+            "gösteriyor"
+            + (f", <b>{', '.join(kalan)}</b> gürültünün içinde kalıyor"
+               if kalan else "")
+            + "." + ters)
 
 
 # --- Gorsel kanit -----------------------------------------------------------
@@ -496,13 +505,20 @@ def _varyant_etiketi(ana: str, varyant: str) -> str:
     a, b = kimlik(ana), kimlik(varyant)
     if a is None or b is None:
         return "varyant"
-    for alan, ad in (("checkpoint", "checkpoint"),
-                     ("model", "başlangıç modeli"),
-                     ("imgsz_eval", "çözünürlük"),
-                     ("degerlendirme_seti", "değerlendirme kümesi")):
-        if getattr(a, alan) != getattr(b, alan):
-            return f"{ad}: {getattr(b, alan)}"
-    return "seed"
+    # Etiket NE OLDUGUNU degil NE ANLAMA GELDIGINI soyler. "checkpoint: last"
+    # teknik olarak dogruydu ama izleyiciye hicbir sey anlatmiyordu: ayni
+    # egitimin son epoch'uyla raporlanmis hali oldugu gorunmuyordu.
+    if a.checkpoint != b.checkpoint:
+        return ("aynı eğitim, son epoch ile raporlandı"
+                if b.checkpoint == "last"
+                else "aynı eğitim, en iyi epoch ile raporlandı")
+    if a.model != b.model:
+        return f"farklı başlangıç modeli ({b.model})"
+    if a.imgsz_eval != b.imgsz_eval:
+        return f"farklı çıkarım çözünürlüğü ({b.imgsz_eval} px)"
+    if a.degerlendirme_seti != b.degerlendirme_seti:
+        return f"farklı değerlendirme kümesi ({b.degerlendirme_seti})"
+    return "yalnızca rastgelelik tohumu farklı"
 
 
 def goster() -> None:
@@ -514,7 +530,12 @@ def goster() -> None:
     # D4 ile "D4 last_pt" yan yana, ayni seviyedeymis gibi duruyordu.
     import katalog
 
-    senaryolar = [x for x in katalog.senaryolar() if x["ana_kosu"]]
+    hepsi = katalog.senaryolar()
+    senaryolar = [x for x in hepsi if x["ana_kosu"]]
+    # Kosusu olmayan senaryolar seciciye giremez ama SESSIZCE de dusmemeli:
+    # Genel Bakis 14 senaryo sayiyor, burada 13 gorunuyordu ve aradaki fark
+    # aciklanmiyordu.
+    kosusuz = [x for x in hepsi if not x["ana_kosu"]]
     a, b = st.columns([3, 3])
     with a:
         secilen = st.selectbox(
@@ -528,17 +549,29 @@ def goster() -> None:
         senaryo = st.selectbox(
             "Koşu (ana koşu / varyant)", kosular,
             format_func=lambda k: (
-                f"{k}  ·  ana koşu" if k == secilen["ana_kosu"]
+                f"{k}  ·  ana koşu (en iyi epoch)" if k == secilen["ana_kosu"]
                 else f"{k}  ·  {_varyant_etiketi(secilen['ana_kosu'], k)}"
             ),
         )
     if len(kosular) > 1:
         stil.yorum(
-            f"{secilen['kod']} senaryosunun {len(kosular)} kaydı var: bir ana "
-            "koşu ve " + ", ".join(
-                f"{k} ({_varyant_etiketi(secilen['ana_kosu'], k)})"
+            f"<b>{secilen['kod']} senaryosunun {len(kosular)} kaydı var.</b> "
+            "Ayrı senaryolar değil, <b>aynı hipotezin farklı kayıtları</b>: "
+            "ana koşu, o eğitimin en iyi epoch'uyla (best.pt) raporlanmış "
+            "halidir — normalde bildirilen sayı budur. Varyantlar aynı "
+            "hipotezi başka bir kayıtla gösterir: " + ", ".join(
+                f"<b>{k}</b> ({_varyant_etiketi(secilen['ana_kosu'], k)})"
                 for k in secilen["varyantlar"]
-            ) + ". Ayrı senaryo değil, aynı hipotezin farklı kayıtlarıdır."
+            ) + ". Son epoch varyantları özellikle önemli, çünkü bir arıza "
+            "yalnızca son checkpoint'te görünüyor olabilir — E1 tam olarak "
+            "bunu gösteriyor."
+        )
+    if kosusuz:
+        stil.yorum(
+            "Katalogdaki " + str(len(hepsi)) + " senaryodan "
+            + ", ".join(f"<b>{x['kod']}</b>" for x in kosusuz)
+            + " bu listede yok: ölçülebilir bir koşu üretmedi, dolayısıyla "
+            "karşılaştırılacak bir metriği de yok. Ayrıntı: Deney Senaryoları."
         )
 
     o = ozet(senaryo)
