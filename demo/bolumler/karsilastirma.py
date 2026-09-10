@@ -26,6 +26,7 @@ import pandas as pd
 import streamlit as st
 
 import grafik
+import kanit_secimi
 import senaryo_grafikleri as sg
 import stil
 import veri_seti as vs
@@ -174,8 +175,12 @@ def _gorsel_kanit(senaryo: str) -> None:
         )
         return
 
+    # Aday havuzu ve ayrisma hesabi TEK KAYNAKTAN gelir (kanit_secimi).
+    # Burada ayri bir hesap duruyordu ve Senaryolar sayfasindaki secimle
+    # ayristi: ayni kural iki yerde yasayinca biri geride kaldi.
+    secim_paketi = kanit_secimi.adaylar(senaryo)
     saglikli = {e.get("source"): e for e in (saglikli_galeri.get("entries") or [])}
-    kayitlar = [k for k in galeri["entries"] if k.get("source") in saglikli]
+    kayitlar = list(secim_paketi["kayitlar"])
     if not kayitlar:
         st.info(
             f"Bu koşunun en sorunlu kareleri {ref_ad} galerisinde yok; "
@@ -204,17 +209,14 @@ def _gorsel_kanit(senaryo: str) -> None:
             st.info(f"{kaynak} grubunda ortak kare yok.")
             return
 
+    if secim_paketi["olcut"] == "imza":
+        stil.yorum(secim_paketi["not"])
+
     alan, ters = OLCUT[olcut]
-    if alan == "_ayrisma":
-        # Saglikli modele gore en cok BOZULAN kare: iki kaydin hata
-        # sayilarindaki artis. Tek basina "en cok hata" yaniltici olurdu -
-        # zaten zor olan kareler her modelde kotu.
-        for k in kayitlar:
-            s = saglikli[k["source"]]
-            k["_ayrisma"] = (
-                (k.get("false_negatives") or 0) - (s.get("false_negatives") or 0)
-                + (k.get("false_positives") or 0) - (s.get("false_positives") or 0)
-            )
+    for k in kayitlar:
+        # `_ayrisma`, kanit_secimi'nin delta'sidir; IoU bileseni de iceren
+        # tam olcut orada tanimli.
+        k["_ayrisma"] = k["delta"]
     sirali = sorted([k for k in kayitlar if alan in k],
                     key=lambda k: k[alan], reverse=ters)
     if not sirali:
@@ -229,7 +231,7 @@ def _gorsel_kanit(senaryo: str) -> None:
     def _aday_etiketi(i_k):
         i, k = i_k
         s = saglikli[k["source"]]
-        ek = (f"ayrışma +{k['_ayrisma']}" if alan == "_ayrisma"
+        ek = (f"ayrışma {k['_ayrisma']:+.2f}" if alan == "_ayrisma"
               else f"{olcut}: {k.get(alan)}")
         return (f"{i + 1}. {k['source']}  ·  {ek}  ·  kaçırılan "
                 f"{s.get('false_negatives')} → {k.get('false_negatives')}")
