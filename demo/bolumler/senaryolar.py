@@ -26,6 +26,7 @@ import pandas as pd
 import streamlit as st
 
 import grafik
+import kanit_secimi
 import katalog
 import senaryo_grafikleri as sg
 import stil
@@ -255,57 +256,23 @@ def _genel_gorunum(s: dict, kosu: str, o: dict, gozlem: dict) -> None:
                  f"<b>Kritik sınırlama:</b> {kritik}</div>" if kritik else ""))
 
 
-def _gorsel_kanit(kosu: str) -> None:
-    galeriler = error_galleries()
-    galeri = galeriler.get(kosu)
-    # Gorsel referans SAYISAL referansla AYNI olmali. Sabit
-    # `v00_saglikli` kullanmak D1n'i (referansi v00n) ve last_pt
-    # kosularini (referansi v00'in last.pt'si) yanlis tabana gore
-    # gosteriyordu: ekranda sayilar bir referansa, goruntuler baska
-    # bir referansa gore okunuyordu.
-    ref_ad, saglikli_galeri = referans_galerisi(kosu)
-    saglikli = {e.get("source"): e for e in (saglikli_galeri.get("entries") or [])}
+_YON_ROZETI = {"bozulma": "kritik", "iyileşme": "guclu", "fark yok": "notr"}
 
-    if galeri:
-        eslesen = [k for k in galeri["entries"] if k.get("source") in saglikli]
-        if eslesen:
-            st.markdown("#### Aynı kare, iki model")
-            olcutler = {
-                "en fazla kaçırılan nesne": "false_negatives",
-                "en fazla fazladan kutu": "false_positives",
-                "en düşük IoU": "mean_iou",
-            }
-            secim = st.radio("Kare seçimi", list(olcutler), horizontal=True,
-                             key=f"kare_{kosu}")
-            alan = olcutler[secim]
-            kayit = sorted([k for k in eslesen if alan in k],
-                           key=lambda k: k[alan],
-                           reverse=alan != "mean_iou")[0]
-            es = saglikli[kayit["source"]]
-            a, b = st.columns(2)
-            for sutun, baslik, kyt, klasor in (
-                (a, f"referans modeli — {ref_ad}", es,
-                 saglikli_galeri.get("folder")),
-                (b, f"{kosu} modeli", kayit, galeri["folder"]),
-            ):
-                with sutun:
-                    stil.ust_baslik(baslik)
-                    yol = gorsel_coz(klasor / kyt["image"]) if klasor else None
-                    if yol:
-                        st.image(str(yol), width="stretch")
-                    else:
-                        st.info("Bu karenin görseli bulunamadı.")
-                    stil.yorum(
-                        f"kaçırılan {kyt.get('false_negatives')} · fazladan "
-                        f"{kyt.get('false_positives')} · "
-                        f"IoU {kyt.get('mean_iou', 0):.2f}"
-                    )
-            stil.yorum(
-                "Yeşil = gerçek etiket, kırmızı = modelin tahmini; yeşilin "
-                "yanında kırmızı yoksa o nesne kaçırılmıştır. Bu karede "
-                f"kaçırma <b>{es.get('false_negatives')} → "
-                f"{kayit.get('false_negatives')}</b>."
-            )
+
+def _gorsel_kanit(kosu: str) -> None:
+    # Kare secimi artik SENARYOYA BAGLI: hangi karenin bu bozulmayi
+    # gosterebilecegi ve hangisinde kosunun referanstan gercekten sapdigi
+    # kanit_secimi.py'de tek yerden hesaplanir. Onceki surum kareleri genel
+    # zorluk skoruyla siraliyordu ve 26 galerinin 24'unde ayni kare one
+    # cikiyordu - yani "gorsel kanit" senaryolar arasinda hicbir sey ayirt
+    # etmiyordu.
+    secim = kanit_secimi.adaylar(kosu)
+    kayitlar = secim["kayitlar"]
+    ref_ad = secim["referans_adi"]
+
+    if secim["olcut"] == "yok" and not kayitlar:
+        if not error_galleries().get(kosu):
+            st.info("Bu koşu için hata galerisi üretilmemiş.")
         else:
             st.info(
                 f"Bu koşunun en sorunlu kareleri {ref_ad} galerisinde "
@@ -313,8 +280,74 @@ def _gorsel_kanit(kosu: str) -> None:
                 "üretildiği için listeler her zaman örtüşmez. Eşleşmiş çift "
                 "bulunmadığı için yan yana karşılaştırma yapılmıyor."
             )
-    else:
-        st.info("Bu koşu için hata galerisi üretilmemiş.")
+    elif kayitlar:
+        st.markdown("#### Aynı kare, iki model")
+
+        anahtar = f"kanit_sira_{kosu}"
+        sira = st.session_state.get(anahtar, 0) % len(kayitlar)
+        a, b = st.columns([1, 3])
+        with a:
+            # Tek bir kare "kanit" degildir; izleyicinin ayni olcutle
+            # secilmis baska kareleri de gorebilmesi gerekir.
+            if st.button("Kanıtı değiştir ↻", key=f"kanit_btn_{kosu}",
+                         width="stretch",
+                         disabled=len(kayitlar) < 2):
+                sira = (sira + 1) % len(kayitlar)
+                st.session_state[anahtar] = sira
+        with b:
+            stil.yorum(
+                f"kanıt <b>{sira + 1}</b> / {len(kayitlar)} · sıralama: "
+                + ("bu senaryonun imzasına uyan kareler, referanstan farka göre"
+                   if secim["olcut"] == "imza"
+                   else "referanstan farka göre")
+            )
+
+        kayit = kayitlar[sira]
+        es = kayit["referans"]
+        c, d = st.columns(2)
+        for sutun, baslik, kyt, klasor in (
+            (c, f"referans modeli — {ref_ad}", es,
+             secim["referans_galerisi"].get("folder")),
+            (d, f"{kosu} modeli", kayit, secim["galeri"]["folder"]),
+        ):
+            with sutun:
+                stil.ust_baslik(baslik)
+                yol = gorsel_coz(klasor / kyt["image"]) if klasor else None
+                if yol:
+                    st.image(str(yol), width="stretch")
+                else:
+                    st.info("Bu karenin görseli bulunamadı.")
+                stil.yorum(
+                    f"kaçırılan {kyt.get('false_negatives')} · fazladan "
+                    f"{kyt.get('false_positives')} · "
+                    f"IoU {kyt.get('mean_iou', 0):.2f}"
+                )
+
+        # Karenin YONU ayrica yazilir. Kosunun referanstan daha AZ hata
+        # yaptigi bir kare bu bozulmanin kaniti degildir; gizlenmez ama
+        # kanit diye de sunulmaz (projenin yon ayrimi kurali).
+        if secim["kendi_referansi"]:
+            durum = stil.rozet("kendi referansı", "referans") + (
+                " &nbsp;Bu koşu kendi ölçeğinin sağlıklı referansıdır; "
+                "karşılaştırılacak ayrı bir taban yok."
+            )
+        else:
+            durum = stil.rozet(kayit["yon"], _YON_ROZETI[kayit["yon"]]) + (
+                f" &nbsp;Bu karede koşu, referanstan <b>{kayit['delta']:+.2f}</b> "
+                "birim daha fazla hata yaptı (kaçırma + fazladan kutu + IoU "
+                "kaybı). "
+                + ("Negatif değer, bu karede koşunun referanstan <b>daha iyi</b> "
+                   "olduğunu söyler: bu kare bozulmanın kanıtı değildir."
+                   if kayit["yon"] == "iyileşme" else "")
+            )
+        stil.kutu(
+            "Yeşil = gerçek etiket, kırmızı = modelin tahmini; yeşilin "
+            "yanında kırmızı yoksa o nesne kaçırılmıştır. Bu karede kaçırma "
+            f"<b>{es.get('false_negatives')} → {kayit.get('false_negatives')}</b>."
+            f"<div style='margin-top:.5rem'>{durum}</div>"
+        )
+        if secim["not"]:
+            stil.yorum(secim["not"])
 
     veri = sg.karisiklik_verisi(kosu)
     if veri is not None:
