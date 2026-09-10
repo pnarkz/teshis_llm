@@ -338,7 +338,8 @@ teshis/
   ajan/              LLM araçları, teşhis döngüsü, çıktı şeması, puanlama
 senaryolar/          Deney tanımları ve parametreler (YAML)
 scripts/             Komut satırı girişleri (ince); uygulama teshis/ altında
-demo/                Streamlit konsolu; bolumler/ içinde yedi ekran
+demo/                Streamlit konsolu; bolumler/ içinde yedi ekran,
+                     kanit_secimi.py görsel kanıt seçimi
 tests/               Davranış ve sözleşme testleri
 docs/                Yöntem, kod haritası, bulgular, sunum
 reports/             Ölçümler ve ajan deneyleri
@@ -372,7 +373,7 @@ python -m pip install -r requirements-dev.txt -r requirements-demo.txt
 python -m pytest -q
 ```
 
-Depoda **577 test** var. Taze bir klonda da geçer: kilitli tanı setine bağlı
+Depoda **592 test** var. Taze bir klonda da geçer: kilitli tanı setine bağlı
 testler otomatik olarak atlanır (`ultralytics` kurulu olmadan da tam paket
 çalışır).
 
@@ -385,6 +386,7 @@ geri konduğunda testin gerçekten çöktüğü kontrol edildi. Örnekler:
 - Aynı koşunun birden fazla geçerli tekrarının birbirinin üzerine yazması
 - Eşiği aşan bir **yükselişin** bozulma kanıtı sayılması
 - Görsel kanıt ölçütünün senaryoları ayırt edememesi
+- Görsel kanıt karesinin senaryonun bozduğu sınıfı/bandı hiç içermemesi
 - Sunum metnindeki sayıların ölçümden ayrışması
 
 ---

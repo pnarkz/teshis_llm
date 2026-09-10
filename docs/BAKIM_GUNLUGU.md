@@ -9,6 +9,73 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-09-10 (2) — Gorsel kanit senaryodan bagimsizdi: her koside ayni kare
+
+**Sorun.** Hata galerileri kareleri senaryodan BAGIMSIZ bir zorluk skoruyla
+siralar (`FN + FP + 1-IoU`, bkz. `teshis/degerlendirme/hata_galerisi.py`).
+Senaryolar sayfasindaki "Gorsel kanit" sekmesi kareyi dogrudan o siralamadan
+aliyordu. Olculdu: **26 galerinin 24'unde en ustteki kare ayni**
+(`hituav__1_130_30_0_03841.jpg`) - cunku o kare en kalabalik olani ve hangi
+bozulma uygulanirsa uygulansin basa cikiyor.
+
+Sonuc: sekme senaryolari birbirinden ayirt etmiyordu. D3b (tasit/insan
+karisikligi) icin gosterilen kare karisikligi degil yalnizca sahnenin
+kalabalik oldugunu gosteriyordu; secilen karede iki karistirilan sinifin
+birlikte bulunmasi bile aranmiyordu.
+
+**Ikinci ve asil sorun: ayni kural iki yerde yasiyordu.** Karsilastirma
+sayfasi bu hatayi bir kez zaten kapatmisti (`OLCUT` icindeki "ayrisma"
+varsayilani). Senaryolar sayfasi o duzeltmeden habersizdi ve kendi eski
+olcutlerini tasiyordu. Projenin tekrarlayan hata sekli.
+
+**Degisiklik.**
+
+1. Yeni modul [demo/kanit_secimi.py](../demo/kanit_secimi.py) kanit secimini
+   TEK KAYNAK haline getirir. Iki kural uygular:
+
+   - **Imza filtresi** - "bu kare bu bozulmayi GOSTEREBILIR mi?" Senaryonun
+     hangi sinifa, boyut bandina veya kaynaga dokundugu `senaryolar/*/*.yaml`
+     icinde zaten yaziyor; imza oradan TURETILIR, elle ikinci bir tablo
+     yazilmaz. Sinif TAKASI senaryolarinda (D3, D3b) karede her iki sinifin
+     da bulunmasi aranir - karisiklik ancak boyle gorunur.
+   - **Fark siralamasi** - "bu karede kosu referanstan FARKLI mi davrandi?"
+     Siralama mutlak hata skoruna degil, kosunun KENDI referansina gore
+     farka bakar. Iki model de ayni olcude basarisizsa delta ~ 0 olur ve
+     kare listenin altina duser; "herkeste ayni" kalabalik kareler tam
+     olarak boyle elenir.
+
+2. [demo/bolumler/senaryolar.py](../demo/bolumler/senaryolar.py) bu modulu
+   kullanir ve **"Kanit degistir"** dugmesi eklendi: ayni olcutle secilmis
+   diger kareler tek tikla dolasilir, kacinci kanita bakildigi yazilir
+   (`kanit 2 / 6`).
+
+3. [demo/bolumler/karsilastirma.py](../demo/bolumler/karsilastirma.py)
+   kendi ayrisma hesabini birakip ayni modulu kullanir. Iki sayfa artik
+   ayni havuzdan, ayni kuralla secim yapar.
+
+4. **Yon ayrimi kare duzeyine tasindi.** Kosunun referanstan DAHA AZ hata
+   yaptigi bir kare bozulma kaniti olarak sunulmaz; gizlenmez de - ekranda
+   `iyilesme` rozetiyle ve "bu kare bozulmanin kaniti degildir" notuyla
+   birlikte gosterilir. Bu, `senaryo_ozeti.asan_yone_gore` kuralinin gorsel
+   taraftaki karsiligidir.
+
+**Kapatilamayan sey ACIKCA yaziliyor.** D3'un imzasi UAP/UAI'dir; bu iki
+sinif kilitli tani setinde 15 ve 17 kutuyla temsil edilir ve o kareler genel
+zorluk skoruna gore ilk 50'ye HIC girmez. Yani D3 icin imzaya uyan kare
+galeride yoktur. Bu durumda secim sessizce genel siralamaya dusmez: ekranda
+"bu bozulmanin dogrudan kaniti degildir, kaniti asagidaki karisiklik farki
+grafigidir" yazar.
+
+**Testler.** [tests/test_kanit_secimi.py](../tests/test_kanit_secimi.py) -
+14 test. Mutasyonla dogrulandi: eski davranis geri konuldugunda
+(imza filtresi yok + mutlak skorla siralama) `test_senaryolar_ayni_kareyi_
+gostermiyor` kosularin %84'unun ayni kareyi gosterdigini bulup coker.
+
+**Acik kalan.** Galeriler hala senaryodan bagimsiz uretiliyor; imza filtresi
+yalnizca URETILMIS ilk 50 kare icinde secim yapabiliyor. Nadir sinif
+senaryolari (D3) icin gercek gorsel kanit, galerilerin senaryo imzasina gore
+yeniden uretilmesini gerektirir (GPU + agirliklar + kilitli tani seti).
+
 ### 2026-09-10 — Konsol sunuma hazirlandi; ayni yon hatasinin dordu de kapandi
 
 **Sorun (1) — bilgi hiyerarsisi.** Genel Bakis bir rapor gibi kurgulanmisti:
