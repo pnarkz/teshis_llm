@@ -120,3 +120,73 @@ def test_senaryo_klasorlerinde_gorseller_tek_tip():
             if alt.is_dir() and "val_diagnostic" in alt.name:
                 hatali.append(f"{klasor.name}/{alt.name}")
     assert not hatali, f"Eski adlandirmada kalan alt dizinler: {hatali}"
+
+
+# --- README'nin tasidigi sayilar --------------------------------------------
+
+def test_readme_ajan_tablosu_deneyle_uyusuyor():
+    """README'deki rol bazli tablo gercek deney sonucuyla eslesmeli.
+
+    Bu tablo projenin en cok alintilanacak sayilarini tasiyor. Elle yazili
+    oldugu icin deney yeniden kosuldugunda sessizce bayatlar - bu projede
+    tam olarak boyle hatalar birikti ("ajan denemesinde tekrar yok" cumlesi
+    tekrarli deney kosulduktan sonra bile ekranda duruyordu).
+    """
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from data_loader import ajan_deneyi
+
+    deney = ajan_deneyi()
+    if deney is None:
+        pytest.skip("henuz calistirilmis bir ajan deneyi yok")
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    p = deney["puan"]
+    tekrar = p["gozlem"] // max(p["kosu"], 1)
+    assert f"{p['kosu']} koşu × {tekrar} tekrar = **{p['gozlem']} gözlem**" in readme, (
+        f"README ajan deneyinin buyuklugunu yanlis yaziyor; dogrusu "
+        f"{p['kosu']} kosu x {tekrar} tekrar = {p['gozlem']} gozlem"
+    )
+    for rol, d in (p.get("rol_bazli") or {}).items():
+        for alan in ("dogru_teshis", "tespit_farkindalikli"):
+            assert f"{d[alan]:.3f}" in readme, (
+                f"README'de {rol} rolunun {alan} degeri ({d[alan]:.3f}) yok"
+            )
+
+
+def test_readme_senaryo_kosu_aritmetigi_dogru():
+    """"14 senaryo / 26 kosu" ve toplami README'de turetilenle ayni olmali."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    import katalog
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    h = katalog.senaryo_kosu_haritasi()
+    assert f"{h['senaryo_sayisi']} senaryo · {h['toplam']} koşu" in readme
+    assert (f"{h['senaryo_kosusu']} senaryo koşusu + {h['altyapi_kosusu']} "
+            f"altyapı koşusu\n= {h['toplam']}") in readme.replace("  ", " ") or (
+        f"{h['senaryo_kosusu']} senaryo koşusu + {h['altyapi_kosusu']} altyapı koşusu"
+        in readme), "README'deki senaryo/kosu aritmetigi turetilenle uyusmuyor"
+
+
+def test_readme_test_sayisi_guncel():
+    """README kac test oldugunu soyluyorsa dogru soylemeli."""
+    import subprocess
+    import sys
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    m = re.search(r"\*\*(\d+) test\*\*", readme)
+    if not m:
+        pytest.skip("README test sayisi vermiyor")
+    yazan = int(m.group(1))
+    sonuc = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q"],
+        cwd=ROOT, capture_output=True, text=True)
+    toplanan = re.search(r"(\d+) tests? collected", sonuc.stdout)
+    assert toplanan, "test sayisi okunamadi"
+    gercek = int(toplanan.group(1))
+    assert abs(gercek - yazan) <= 5, (
+        f"README '{yazan} test' diyor ama pakette {gercek} test var"
+    )

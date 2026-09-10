@@ -9,6 +9,146 @@ kronolojik kaydıdır. Her mühendislik değişikliğinden sonra buraya yeni bir
 madde eklenir; böylece hangi sorunun ne zaman ve nasıl giderildiği README
 üzerinden takip edilebilir. En yeni kayıt en üstte durur.
 
+### 2026-09-10 — Konsol sunuma hazirlandi; ayni yon hatasinin dordu de kapandi
+
+**Sorun (1) — bilgi hiyerarsisi.** Genel Bakis bir rapor gibi kurgulanmisti:
+alti gosterge, alti adimli sema, butun kosularin etki haritasi, kanit gucu
+dagilimi, derecelendirilmeyenler tablosu ve uc ajan skoru, hepsi ayni gorsel
+agirlikta. Ilk grafige varmadan once epey okuma gerekiyordu.
+
+**Duzenleme.** Sayfa dort gostergeye, uc asamali semaya ve TEK bir ana
+grafige indirildi; ardindan butun kosularin haritasi geliyor (ozelden genele)
+ve iki kapanis sayisiyla bitiyor. Ana grafik yeni: D4'un boyut bandi recall'u,
+gurultu bandi SERIT olarak cizili. Iki iddiayi birden tasiyor - kirilim gizli
+kaybi acar (0-16 px'de 0.7446 -> 0.2922) ve bir fark ancak gurultuyu asarsa
+etkidir (diger uc bant seridin icinde).
+
+Genel Bakis'taki "uc ana bulgu" ve "derecelendirilmeyen kosular" Sonuclar'da
+zaten daha iyi haliyle vardi; uc ajan skoru ise Ajan sayfasindaki
+`_denemenin_butunu` ile birebir ayniydi. Kopyalar silindi.
+
+**Sorun (2) — yukselis dusus sayiliyordu.** `ne_gozlendi` bir metrigin esigi
+asip asmadigini MUTLAK degerle hesapliyordu. Sonuc: referansa gore YUKSELEN
+bir metrik, ayni buyuklukteki bir dususle ayni muameleyi goruyordu. D1'de
+mAP50_95 +0.0240 yukselmis (esik 0.0201) ve ekranda "esigi asiyor - zayif
+bulgu" yaziyordu; okuyan kisi bunu bozulma kaniti sanardi.
+
+Ayni hata DORT ayri yerde vardi: hipotez tablosu, etki haritasi, sayfanin
+hukum cumlesi ve ayrintilar tablosunun karar sutunu. Projenin imza hatasi
+tam olarak bu: bir kural birden fazla yerde yasiyor.
+
+**Duzenleme.** Tek fonksiyona indirildi:
+`senaryo_ozeti.asan_yone_gore(metrikler)` esigi asanlari (dusen, yukselen)
+diye ayirir ve ayrimi `fark`in ISARETINDEN turetir. Derecelendirme yalnizca
+dususlere bakar; yukselis gizlenmez, ayrica soylenir. D1 artik "gurultu
+icinde"; D2a ve D4 "guclu" kalir. Regresyon testi mutasyonla dogrulandi.
+
+Ayrim `fark` isaretinden turetiliyor cunku Streamlit `demo/` altini sicak
+yeniler ama `teshis/` paketini yenilemez: sayfa kodu guncelken modul eski
+kalabiliyor ve hesaplanmis bir alani okuyan cagiran taraf KeyError ile
+cokuyordu.
+
+**Sorun (3) — gorsel kanit hep ayni kareyi gosteriyordu.** "En fazla
+kacirilan nesne" olcutu on senaryonun DOKUZUNDA ayni kareyi seciyordu
+(`hituav__1_130_30_0_03841`). O kare zaten en kalabalik olani ve hangi
+bozulma uygulanirsa uygulansin basa cikiyor - yani olcut "bu bozulma neyi
+bozdu" sorusunu degil "hangi kare zaten zor" sorusunu cevapliyordu.
+
+**Duzenleme.** Varsayilan "saglikli modelden en cok ayrisan" oldu: saglikli
+modele gore hata ARTISI. Ayni on senaryoda ALTI farkli kare seciyor. Ilk
+sekiz aday secilebiliyor ve kaynak grubu filtresi eklendi. Test varsayilanin
+geri degistirilmesini yakalar.
+
+**Sorun (4) — bayat sinirlama.** Sonuclar sayfasi "Ajan denemesi 11 kosuluk
+tek turdur, kosu basina tekrar yok" diyordu; tekrarli deney calistirildiktan
+SONRA bile. Metin elle yaziliydi. Artik deneyden turetiliyor ve testle bagli.
+
+**Diger.** Veri sayfasindaki bes grafik+tablo cifti teke indi (cubuklar
+degeri ucunde tasiyor, tablolar acilir bolumde); egitim kunyesinin dort
+kimlik alani one cikti. Deney Senaryolari sayfasi senaryo-kosu esleme
+tablosunu gosteriyor (20 senaryo kosusu + 6 altyapi kosusu = 26). Hata
+Analizi secicisinde kosular adiyla gorunuyor. Kok font 18px'e cikarildi ve
+sekme araligi acildi (projeksiyon). Ajan sayfasindaki "sunum icin onerilen"
+etiketi ve "Sunum notu" bolumu kaldirildi - not acildiginda gercek senaryoyu
+sizdiriyordu.
+
+`docs/SUNUM_SENARYOSU.md` eklendi: bir saatlik sunum senaryosu, alan disindan
+dinleyiciler icin temel kavram sozlugu, kullanilan kutuphaneler ve sayfa
+sayfa ne gosterilecegi.
+
+### 2026-09-09 — Ilk tekrarli ajan deneyi: ustverili kosucu ve 39 gozlem
+
+**Sorun.** Eski ana denemede kayitli olan tek sey nihai cevapti. Hangi
+cevabin hangi kod haliyle uretildigi kesin bilinmiyordu ve 102 arac
+cagrisinin HICBIRININ cevabi saklanmamisti - yani "ajan neyi gorup boyle
+dedi" sorusu cevaplanamiyordu. Kosu basina tekrar da yoktu.
+
+**Duzenleme.** `scripts/ajan_deney.py` her gozlemi degismez bir deney kimligi
+(`<UTC>__<git sha>`) altinda su ustveriyle yazar: model, arac surumu, Git
+commit'i ve calisma agacinin temiz olup olmadigi, calisma parametreleri, HAM
+model cevabi ile ayristirilmis cevap AYRI AYRI, ve her arac cagrisinin
+cevabinin snapshot'i. Plan-once-calistir mantigiyla calisir, kuru provayi
+destekler (KURU__ onekli, Git disinda) ve yarim kalan bir deneyde yalnizca
+EKSIK gozlemleri kosar.
+
+`scripts/ajan_deney_puanla.py` puanlamayi ayri bir surece alir: cevap
+anahtari uretim tarafina hicbir zaman girmez. Puanlama GOZLEM basinadir;
+kosu kimligine gore puanlamak ayni kosunun birden fazla tekrarini tek satira
+indiriyordu. Ayni uretim iki dosyada bulunursa icerik ozetiyle
+tekillestirilir; gecersiz kayitlar SILINMEZ, gerekcesiyle dislanir. Sonuclar
+ROL BAZLI raporlanir ve birlestirilmez.
+
+**Kosu sirasinda bulunan iki hata.** (1) Devam mantigi "kac gozlem var" diye
+sayiyordu; bir gozlem gecici bir 503 ile dustugunde o sira KALICI olarak bos
+kaliyor ve `--devam` bunu bir daha duzeltmiyordu - deney planlanandan az
+tekrarla sessizce bitiyordu. Artik her sira ayri kontrol edilir. (2) 503
+yeniden denenmiyordu; kota hatasindan ayri bir yolda, ustel geri cekilmeyle
+denenir. Ayrica gunluk kota bittiginde calisma temiz bir ozetle durur -
+onceden kalan butun gozlemleri sirayla deneyip ayni hatayi onlarca kez
+basiyordu.
+
+**Sonuc (`20260909T120445Z__a15487c9`).** 13 kosu x 3 tekrar = 39 gozlem.
+Rol bazli, birlestirilmeden: saglikli referans 1.000 (n=3), kontrol 1.000
+(n=9), bozulma senaryosu kati 0.389 / tespit-farkindalikli 0.722 (n=27).
+
+Iki bulgu one cikiyor. **13 kosunun 13'u de uc tekrarinda ayni hukmu verdi** -
+sozel ifade degisiyor, hukum degismiyor; yani eski denemenin tekrarsiz
+olmasi, en azindan bu model ve bu araclarla, sonuclarini orneklem
+gurultusune acmamisti. **Kontrol kosularinda 9/9**, Wilson %95
+[0.701, 1.000]; eski denemede dort kontrolun birinde uydurmustu. Bu bir
+"model gelisti" bulgusu DEGILDIR: `araclar.py` artik her alt grup farkina
+`gurultu_bandi` ve `band_orani` ekliyor. Yanlis pozitifi onleyen sey ona
+gurultu tabanini gostermek - projenin ana tezinin ajan tarafindaki
+karsiligi. Iki oran farkli araclarla olculdugu icin BIRLESTIRILEMEZ.
+
+**Puanlama duzeltmesi (veriye bakildiktan SONRA, acikca).** `_normalize`
+Turkce diakritikleri katlamiyordu: D4 icin "kucuk_nesne_tespit_kaybi" 1.0
+alirken "Cok kucuk nesnelerde belirgin duyarlilik kaybi" 0.0 aliyordu -
+ikisi de ayni seyi soyluyordu. Katlama eklendi; etkisi olculdu ve 39
+gozlemin YALNIZCA BIRI degisti (kosu_08 g01, 0.0 -> 1.0). D2a ve D5 hala
+0.0 - oralarda model belirtiyi tarif edip nedeni adlandirmamis.
+
+### 2026-09-09 — Eslenik olcum metni tek kaynaktan; hipotez hukumleri kapsamina cekildi
+
+**Sorun.** E4 ve D6a "eslenik olcum"dur: aday ile referans AYNI agirlik
+dosyasini kullanir, yalnizca cikarim ayari degisir. Egitim rastgeleligi
+devrede olmadigi icin bu kosularda gurultu esigi uygulanmaz. Bu istisna uc
+ekranda ayri ayri yazilmisti ve E4 sayfasinda cozunurluk "sabit" gorunuyordu
+- oysa DEGISEN buydu. Sebep: sayfa `referans_senaryo()` cagiriyordu, o da
+eslenik olculer icin None doner.
+
+Hipotez tablosu ayrica "hipotez desteklendi" diyordu; hesaplanan sey ise
+"fark gurultu bandini asti mi" idi. D1'de mAP50_95'teki YUKSELIS "kismen
+desteklendi" olarak okunuyordu.
+
+**Duzenleme.** Metin `gurultu_esigi_gecerli_mi()` ve
+`esik_yoklugu_aciklamasi()` uzerinden tek yerden uretilir. Etiketler artik
+yalnizca hesaplanani soyluyor: "Esigi asan dusus", "Beklenmedik yonde etki",
+"Gurultuyu asan etki yok", "Eslenik olcum", "Olculemedi".
+
+Ayrica senaryo ile kosu ayrildi (`demo/katalog.py`): senaryo bir hipotez,
+kosu onun bir kaydidir. Karsilastirma once senaryo, sonra kosu sorar.
+
 ### 2026-09-09 — Senaryo uygulamalari sunumda bulunabilir modullere ayrildi
 
 **Sorun.** `teshis/veri/bozulmalar.py` yalnizca D1'i iceriyordu; diger

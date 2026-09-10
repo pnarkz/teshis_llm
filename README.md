@@ -1,90 +1,79 @@
-# Termal Teshis Ajani
+# Termal Teşhis Ajanı
 
-Termal drone goruntulerinde YOLO nesne tespit modelinin **kontrollu veri
-arizalari** altinda nasil bozuldugunu olcer; sonra bir LLM ajanina bu
-olcumleri vererek bozulmanin nedenini **kanita dayali** teshis edip
-edemedigini sinar.
+Termal drone görüntüleriyle çalışan bir YOLO nesne tespit modelini
+**kontrollü biçimde bozar**, bozulmanın ölçümlere nasıl yansıdığını ölçer;
+sonra bir LLM ajanına bu ölçümleri **anonim** vererek nedeni kanıta dayalı
+teşhis edip edemediğini sınar.
 
-**Arastirma sorusu:** Termal nesne tespit sistemi hangi veri, etiket ve
-dagilim kosullarinda bozulur; bir LLM bu bozulmayi yeterli kanitla teshis
-edebilir mi?
+**Araştırma sorusu:** Termal nesne tespit sistemi hangi veri, etiket ve
+dağılım koşullarında bozulur; bir dil modeli bu bozulmayı yeterli kanıtla
+teşhis edebilir mi — ve ürettiği gerekçe savunulabilir mi?
 
-Sinif sozlesmesi degismez: `0 tasit`, `1 insan`, `2 UAP`, `3 UAI`.
+Amaç daha iyi bir model eğitmek değil. Amaç, bir modelin **hangi koşullarda
+güvenilirliğini kaybettiğini** ve bunun **ölçülebilir bir izi olup
+olmadığını** göstermek.
 
----
-
-## Belgeler
-
-Sunumda kod bulmak icin: **[Kod haritasi — senaryo, uygulama ve sonuc](docs/KOD_HARITASI.md)**.
-
-| Belge | Icerik |
-|---|---|
-| [docs/BULGULAR.md](docs/BULGULAR.md) | **Tum senaryo sonuclari.** Otoriter karsilastirma tablosu ve her senaryonun ayrintisi. |
-| [docs/MIMARI.md](docs/MIMARI.md) | Dosya/klasor sozlesmesi: neyin nerede oldugu ve adlandirma kurallari. |
-| [docs/KURALLAR.md](docs/KURALLAR.md) | Degismez kurallar, sabit yollar, deney degismezleri. |
-| [docs/CALISTIRMA.md](docs/CALISTIRMA.md) | Kurulum ve komutlar (yerel + Kaggle). |
-| [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md) | Kronolojik degisiklik kaydi; her duzeltmenin gerekcesi. |
-| [docs/SUNUM.md](docs/SUNUM.md) | Teknik olmayan anlatim ve mentor sunumu. |
-| [docs/SUNUM_SENARYOSU.md](docs/SUNUM_SENARYOSU.md) | Konsolu sayfa sayfa gezerken ne gosterilecek ve ne soylenecek. |
+Sınıf sözleşmesi değişmez: `0 taşıt`, `1 insan`, `2 UAP`, `3 UAI`.
 
 ---
 
-## Yontem ozeti
+## İçindekiler
 
-1. **Saglikli referans (v00):** veri hic bozulmadan, senaryolarla ayni
-   protokolde egitilir.
-2. **Karsilastirilabilirlik:** bir fark ancak aday ile referans **dort kimlik
-   alaninda da** ayni ise bozulmaya atfedilebilir — baslangic modeli,
-   degerlendirme kumesi, cikarim cozunurlugu, checkpoint. Her olcegin kendi
-   referansi ve kendi gurultu esigi vardir; baska olcegin esigi odunc
-   alinmaz (`teshis/degerlendirme/karsilastirilabilirlik.py`).
-3. **Tek degisken:** her senaryoda yalnizca bir veri arizasi uygulanir;
-   egitim protokolu (`senaryolar/egitim_protokolu.yaml`) sabittir.
-4. **Kilitli olcum seti:** kosular `val_diagnostic` setinde olculur
-   (1.056 goruntu, 4.014 bbox). Tek istisna D6a'dir: sizintinin olcumu ne
-   kadar iyimser yaptigini gostermek icin **kasitli olarak** sizintili kume
-   uzerinde degerlendirilir ve bu yuzden digerleriyle ayni tabloda okunmaz.
-   Test seti final asamaya kadar kullanilmaz.
-5. **Gurultu tabani:** hicbir sey bozulmadan, yalnizca seed degistirilerek
-   egitilen kontrol kosulari arasindaki yayilim olculur. Bu bandin altinda
-   kalan bir fark, buyuklugu ne olursa olsun rastgelelikten ayirt edilemez.
-6. **Kirilimli okuma:** toplam mAP bazi bozulmalari tamamen gizler; sinif,
-   nesne boyutu ve veri kaynagi kirilimlariyla birlikte okunur.
-7. **Kor teshis:** ajan senaryo adlarini gormez, yalnizca anonim `kosu_NN`
-   metriklerini arac cagirarak okur.
+- [Ne bulduk](#ne-bulduk)
+- [Hızlı başlangıç](#hızlı-başlangıç)
+- [Yöntem: bir farkı ne zaman "etki" sayıyoruz](#yöntem-bir-farkı-ne-zaman-etki-sayıyoruz)
+- [Senaryolar ve koşular](#senaryolar-ve-koşular)
+- [LLM teşhis ajanı](#llm-teşhis-ajanı)
+- [Neyi söyleyemiyoruz](#neyi-söyleyemiyoruz)
+- [Kullanılan araçlar](#kullanılan-araçlar)
+- [Proje yapısı](#proje-yapısı)
+- [Belgeler](#belgeler)
+- [Testler](#testler)
 
-## Tamamlanan senaryolar
+---
 
-| Kod | Bozulma | Bulgunun ozeti |
-|---|---|---|
-| D1 | Sinif yetersizligi (insan karelerinin %90'i) | main_model kurgusunda **etkisiz** (z=-1,22); yolo26n kurgusunda **guclu** (z=-18,58) |
-| D2a | Lokalizasyon etiket gurultusu | mAP50-95 en cok duser (-0.0544) |
-| D2b | Eksik etiket (%25) | precision -0.1087, recall artar: model fazladan kutu uretir |
-| D3 | UAP/UAI sinif karisikligi | precision -0.2047; nadir sinif cokuyor ama n=15/17 |
-| D3b | tasit/insan sinif karisikligi | bol veride bozulma **sogurulur** (capraz hata 2 -> 4 kutu) |
-| D4 | Kucuk nesne sinyal kaybi | yalnizca <16px bandi coker (-0.4524, z=-21,9); diger bantlar degismez |
-| D5 | Kaynak/alan kaymasi | `best.pt`'de gorunmez; `last.pt`'de egitilmeyen kaynaklar coker |
-| D6a | Split sizintisi | sizintili val mAP50-95'i +0.0287 sisirir — bircok gercek bozulmadan buyuk |
-| D6b | Tekrar agirligi | temsil payi ile performans arasinda monotonik iliski; temsil edilmeyen sinif coker |
+## Ne bulduk
 
-Ayrintilar ve sayilar icin: **[docs/BULGULAR.md](docs/BULGULAR.md)**
+**1. Farklı arızalar farklı metrik imzası bırakıyor.** "Model kötü
+çalışıyor" demek yetmiyor; **precision mı recall mı bozulduğu arızanın
+türünü söylüyor.**
 
-## Projenin uc ana dersi
+| Arıza | Precision | Recall | Ayırt edici imza |
+|---|---|---|---|
+| Yanlış çıkarım çözünürlüğü (E4) | **değişmiyor** | **çöküyor** | Bulduğunu doğru buluyor, ama bulamıyor |
+| Eksik/karışık etiket (D2b, D3) | **çöküyor** | değişken | Olmayan şeye "var" diyor |
+| Küçük nesne sinyali silinmiş (D4) | düşüyor | düşüyor | Kayıp küçük boyut bandında yoğunlaşıyor |
 
-1. **Karsilastirma tabani yanlissa tum sonuclar yanlistir.** Fine-tune
-   edilmemis bir modele gore olcum yapmak, bozulma etkisi ile fine-tune
-   etkisini birbirine karistirir (Bakim Gunlugu 2026-08-26). Ayni hata daha
-   sinsi bir bicimde tekrarladi: farkli checkpoint veya farkli baslangic
-   modeliyle uretilmis **saglikli** kosular tek bir referansla tartilinca
-   "guclu bozulma kaniti" gorundu (2026-09-07).
-2. **Toplam mAP yalan soyleyebilir.** D3b, D4 ve D5'in tamami toplam
-   metriklerde gorunmez; yalnizca dogru kirilimla ortaya cikar.
-3. **Olcum setinin temizligi ve cesitliligi metodolojinin merkezindedir.**
-   D5 kaynak cesitliligini, D6a ise sizintiyi gosterir.
+**2. Toplam mAP yerel bir çöküşü tamamen gizleyebiliyor.** D4'te en küçük
+nesne bandında recall `0.7446 → 0.2922` düşüyor (gürültü bandının **44
+katı**), ama toplam mAP50 farkı bunun yanında küçük kalıyor. Yalnızca genel
+metriğe bakan bir denetim bu arızayı görmez.
 
-## Hizli baslangic
+**3. Gürültü ölçülmeden "etki" iddiası kurulamaz.** Aynı veri, aynı
+protokol, yalnızca farklı rastgelelik tohumu ile eğitilen modeller arasında
+bile belirgin fark var. Bu taban ölçülünce **yedi iddia zayıfladı** ve bir
+senaryo (D6b) bulgu olmaktan çıktı.
 
-### Sunum konsolu (baska bir makinede de calisir)
+**4. Ajan, kanıt gösterildiğinde sorun uydurmuyor.** Hiçbir bozulma
+içermeyen kontrol koşularının **9 gözleminin 9'unda da** "anlamlı değişim
+yok" dedi (Wilson %95 `[0.701, 1.000]`). Bu bir "model gelişti" bulgusu
+değil: araçlar artık her alt grup farkına gürültü bandını ekliyor. Yanlış
+pozitifi önleyen şey modelin kendisi değil, **ona gürültü tabanını
+göstermek** — projenin ana tezinin ajan tarafındaki karşılığı.
+
+**5. Ajanın hükmü kararlı, ama doğru nedeni bulmakta zayıf.** 13 koşunun
+13'ü de üç tekrarında **aynı** hükmü verdi; sözel ifade değişiyor, hüküm
+değişmiyor. Buna karşılık bozulma senaryolarında katı doğruluk 0.389.
+Baskın hata türü uydurmak değil, **belirtiyi neden sanmak** (D2a) ve
+**kaçırmak** (D5).
+
+Ayrıntı ve bütün sayılar: **[docs/BULGULAR.md](docs/BULGULAR.md)**
+
+---
+
+## Hızlı başlangıç
+
+### Sunum konsolu — projenin ana çıktısı
 
 ```bash
 git clone https://github.com/pnarkz/teshis_llm.git
@@ -93,165 +82,330 @@ python -m pip install -r requirements-demo.txt
 python -m streamlit run demo/app.py
 ```
 
-Konsol **yalnizca depoyla gelen olcum ciktilarini okur**; egitim veya test
-calistirmaz. Model agirliklari (`*.pt`), kilitli tani seti
-(`val_diagnostic/`) ve tam gorsel arsivi (`reports/` altinda 233 MB) Git
-disidir - taze bir klonda bunlar bulunmaz ve BULUNMAK ZORUNDA DEGILDIR:
+Yedi bölüm: Genel Bakış · Veri ve Sağlıklı Model · Deney Senaryoları ·
+Karşılaştırma ve Gürültü · Hata Analizi · LLM Teşhis Ajanı · Sonuçlar ve
+Sınırlamalar.
+
+Konsol **yalnızca depoyla gelen ölçüm çıktılarını okur**; eğitim veya test
+çalıştırmaz. Model ağırlıkları (`*.pt`), kilitli tanı seti
+(`val_diagnostic/`) ve tam görsel arşivi (`reports/` altında 233 MB) Git
+dışıdır — taze bir klonda bunlar **bulunmak zorunda değildir**:
 
 | Eksik olan | Konsol ne yapar |
 |---|---|
-| `val_diagnostic/` | Etiketli ornek galerisi `demo/assets/ornekler` altindaki tasinabilir alt kumeyi kullanir ve bunu ekranda yazar |
-| `reports/**/images` | Hata galerisi `demo/assets/sunum_gorselleri` altindaki kucultulmus seti kullanir ve bunu ekranda yazar |
-| `val_batch*.jpg` | "Ornek tahminler" bolumu kendini atlar |
-| `*.pt` agirliklari | Hicbir sey; konsol model calistirmaz |
+| `val_diagnostic/` | Etiketli örnek galerisi `demo/assets/ornekler` altındaki taşınabilir alt kümeyi kullanır ve bunu ekranda yazar |
+| `reports/**/images` | Hata galerisi `demo/assets/sunum_gorselleri` altındaki küçültülmüş seti kullanır ve bunu ekranda yazar |
+| `val_batch*.jpg` | "Örnek tahminler" bölümü kendini atlar |
+| `*.pt` ağırlıkları | Hiçbir şey; konsol model çalıştırmaz |
 
-Kenar cubugundaki **Sistem durumu** paneli hangi ciktinin bulundugunu tek
-bakista soyler.
+Kenar çubuğundaki **Sistem durumu** paneli hangi çıktının bulunduğunu tek
+bakışta söyler.
 
-### Canli ajan (istege bagli)
+**Sunum yapacaksanız:** [docs/SUNUM_SENARYOSU.md](docs/SUNUM_SENARYOSU.md)
+bir saatlik dakika dakika akış, alan dışından dinleyiciler için temel kavram
+sözlüğü ve sayfa sayfa ne söyleneceğini içerir.
+
+### Canlı ajan (isteğe bağlı)
 
 ```bash
 python -m pip install "google-genai>=1.0"
 ```
 
-`GEMINI_API_KEY` bir **ortam degiskeni** olarak tanimlanir; hicbir zaman
-depoya yazilmaz. PowerShell'de:
+`GEMINI_API_KEY` bir **ortam değişkeni** olarak tanımlanır; hiçbir zaman
+depoya yazılmaz. PowerShell'de:
 
 ```powershell
 $env:GEMINI_API_KEY = "..."
 ```
 
-Ajan bolumu anahtarsiz da calisir - kayitli kosu modu varsayilandir ve API
-harcamaz. Canli mod secildiginde once bir on kontrol calisir ve hangi
-kosulun eksik oldugunu yazar.
+Ajan bölümü anahtarsız da çalışır — kayıtlı koşu modu varsayılandır ve API
+harcamaz. Canlı mod seçildiğinde önce bir ön kontrol çalışır ve hangi
+koşulun eksik olduğunu yazar.
 
-### Egitim ve olcum (GPU gerekir)
+### Yeni bir ajan deneyi koşmak
+
+```bash
+python scripts/ajan_deney.py --plan --tekrar 3          # önce planı gör
+python scripts/ajan_deney.py --calistir --tekrar 3      # deneyi başlat
+python scripts/ajan_deney.py --durum --tekrar 3         # nerede kaldı (API'ye gitmez)
+python scripts/ajan_deney.py --devam --tekrar 3 --deney <kimlik>
+python scripts/ajan_deney_puanla.py                     # puanlama ayrı adımdır
+```
+
+`--kuru-calistirma` API harcamadan tam prova yapar; çıktısı `KURU__` önekli
+bir klasöre yazılır ve Git dışındadır — prova deney değildir.
+
+### Eğitim ve ölçüm (GPU gerekir)
 
 ```bash
 python -m pip install -e ".[egitim]"
-cp config.example.yaml config.local.yaml   # kendi veri yollarinizi yazin
+cp config.example.yaml config.local.yaml   # kendi veri yollarınızı yazın
 ```
 
-`config.local.yaml` Git disidir; yollar goreli yazilabilir ve proje kokune
-gore cozulur.
+`config.local.yaml` Git dışıdır; yollar göreli yazılabilir ve proje köküne
+göre çözülür. Bir senaryonun nasıl uygulandığı ve hangi komutla koşulduğu:
+**[docs/KOD_HARITASI.md](docs/KOD_HARITASI.md)**.
 
-### Testler
+---
+
+## Yöntem: bir farkı ne zaman "etki" sayıyoruz
+
+Projenin bütün ağırlığı bu beş kuralda.
+
+**1. Sağlıklı referans (v00).** Veri hiç bozulmadan, senaryolarla **birebir
+aynı protokolde** eğitilir. Bozulma karşılaştırmalarının tabanı her zaman
+budur — fine-tune edilmemiş modele göre ölçüm yapmak, bozulma etkisiyle
+fine-tune etkisini birbirine karıştırır.
+
+**2. Karşılaştırılabilirlik.** Bir fark ancak aday ile referans **dört
+kimlik alanında da** aynıysa bozulmaya atfedilebilir: başlangıç modeli,
+değerlendirme kümesi, çıkarım çözünürlüğü, checkpoint. Her ölçeğin kendi
+referansı ve kendi gürültü eşiği vardır; **başka ölçeğin eşiği ödünç
+alınmaz** (`teshis/degerlendirme/karsilastirilabilirlik.py`).
+
+**3. Tek değişken.** Her senaryoda yalnızca bir arıza uygulanır; eğitim
+protokolü (`senaryolar/egitim_protokolu.yaml`) sabittir.
+
+**4. Gürültü tabanı.** Hiçbir şey bozulmadan, yalnızca seed değiştirilerek
+eğitilen kontrol koşuları arasındaki yayılım ölçülür. Bu bandın altında
+kalan bir fark, **büyüklüğü ne olursa olsun** rastgelelikten ayırt edilemez.
+Kontrol koşuları **ölçüm aracıdır, ölçüm nesnesi değildir** — hiçbir yerde
+bulgu olarak derecelendirilmezler.
+
+**5. Kırılımlı okuma.** Toplam mAP bazı bozulmaları tamamen gizler; sınıf,
+nesne boyutu ve veri kaynağı kırılımlarıyla birlikte okunur.
+
+### Kilitli ölçüm seti
+
+Bütün koşular `val_diagnostic` setinde ölçülür: **1.056 görüntü, 4.014
+bbox**. Bir kez seçilip kilitlenmiştir. Tek istisna **D6a**'dır: sızıntının
+ölçümü ne kadar iyimser yaptığını göstermek için **kasıtlı olarak** sızıntılı
+küme üzerinde değerlendirilir ve bu yüzden diğerleriyle aynı tabloda okunmaz.
+
+**Test seti hiç kullanılmadı** ve bu bilinçli bir karardır. Buradaki hiçbir
+sayı "nihai test performansı" değildir.
+
+### Yön ayrımı
+
+Bir metriğin beklenenin **tersine yükselmesi** bozulma kanıtı değildir,
+eşiği aşsa bile. Derecelendirme yalnızca eşiği aşan **düşüşlere** bakar;
+yükseliş gizlenmez, ayrıca söylenir. Tek kaynak:
+`senaryo_ozeti.asan_yone_gore`.
+
+---
+
+## Senaryolar ve koşular
+
+Bir **senaryo** bir hipotezdir; bir **koşu** o hipotezin bir kaydıdır. Bazı
+hipotezlerin birden fazla kaydı var — aynı eğitimin son epoch'u, farklı bir
+başlangıç modeli ya da başka bir rastgelelik tohumu.
+
+**14 senaryo · 26 koşu.** Aritmetik: **20 senaryo koşusu + 6 altyapı koşusu
+= 26.**
+
+| Kod | Bozulma | Koşuları | Bulgunun özeti |
+|---|---|---|---|
+| D1 | Sınıf yetersizliği (insan karelerinin %90'ı) | D1, D1n | main_model kurgusunda **etkisiz**; yolo26n kurgusunda **güçlü** (z=-18,58) |
+| D2a | Lokalizasyon etiket gürültüsü | D2a | mAP50-95 en çok düşer (-0.0544) |
+| D2b | Eksik etiket (%25) | D2b, D2b final_best | precision -0.1087, recall **artar**: model fazladan kutu üretir |
+| D3 | UAP/UAI sınıf karışıklığı | D3 | precision -0.2047; nadir sınıf çöküyor ama n=15/17 |
+| D3b | taşıt/insan sınıf karışıklığı | D3b | bol veride bozulma **soğurulur** (çapraz hata 2 → 4 kutu) |
+| D4 | Küçük nesne sinyal kaybı | D4, D4 last_pt | yalnızca <16 px bandı çöker (-0.4524, z=-21,9); diğer bantlar değişmez |
+| D5 | Kaynak/alan kayması | D5, D5 last_pt | `best.pt`'de görünmez; `last.pt`'de eğitilmeyen kaynaklar çöker |
+| D6a | Değerlendirme sızıntısı | D6a | sızıntılı val mAP50-95'i +0.0287 şişirir — birçok gerçek bozulmadan büyük |
+| D6b | Tekrar ağırlığı | D6b, D6b last_pt | gürültü tabanı ölçülünce **bulgu olmaktan çıktı** |
+| E1 | Aşırı uyum | E1, E1 last_pt | aşırı uyum gerçekleşti; `best.pt` onu tamamen gizliyor |
+| E2 | Yetersiz eğitim | E2 | **negatif sonuç:** yakınsamış modelde epoch kesmek underfitting üretmiyor |
+| E3 | Aşırı öğrenme oranı | **koşu yok** | **negatif sonuç:** 100 kat lr kararsızlık değil tam ıraksama üretti |
+| E3b | Ölçülebilir yüksek öğrenme oranı | E3b seed42, E3b seed43 | kararsızlık ölçüldü: seed'e göre mAP50'de 29 kat oynaklık |
+| E4 | Çıkarım çözünürlüğü uyumsuzluğu | E4 imgsz512 | recall'ı çökertir, precision'a dokunmaz — **eşlenik ölçüm** |
+
+**Altyapı koşuları** (hiçbir senaryoya bağlı değil): `v00_saglikli`,
+`v00_saglikli last_pt`, `v00n` (sağlıklı referanslar) ve `C2 seed7`,
+`C2 seed13`, `C2 seed21` (gürültü tabanını veren kontroller).
+
+**E3 hiç koşu üretmedi:** öğrenme oranı yüz kat artırıldığında eğitim
+ıraksadı ve değerlendirilebilir bir model çıkmadı. Bu bir başarısızlık
+değil, ölçümün sınırının kaydı; E3b aynı hipotezi on katla tekrarlıyor.
+
+**Eşlenik ölçüm** (E4, D6a): aday ile referans **aynı ağırlık dosyasını**
+kullanır, yalnızca çıkarım ayarı değişir. Eğitim rastgeleliği devrede
+olmadığı için bu koşularda gürültü eşiği uygulanmaz.
+
+---
+
+## LLM teşhis ajanı
+
+Ajan yalnızca anonim `kosu_NN` kimliği ve ölçüm araçlarını görür. Senaryo
+adı, bozulma açıklaması, veri sürümü, dosya yolları ve cevap anahtarı ona
+**hiçbir biçimde** gönderilmez. Körlük yapısaldır: filtre bir ad listesine
+değil, her koşunun kendi manifestine bakar
+(`teshis/ajan/araclar.py::ajana_uygun_mu`).
+
+Ajan **8 araç** çağırabilir; hangi kanıtı isteyeceğine kendisi karar verir.
+Puanlama, cevap üretildikten **sonra** ayrı bir yerel işlemde yapılır.
+
+### Tekrarlı deney (`20260909T120445Z__a15487c9`)
+
+13 koşu × 3 tekrar = **39 gözlem**. Sonuçlar **rol bazlı** verilir ve
+**toplanmaz**: kontrol koşuları "sorun uyduruyor mu", bozulma senaryoları
+"nedeni bulabiliyor mu" sorusunu ölçer.
+
+| Rol | Koşu | Gözlem | Katı puan | Tespit-farkındalıklı |
+|---|---|---|---|---|
+| Sağlıklı referans | 1 | 3 | 1.000 | 1.000 |
+| Kontrol (yalnızca seed farklı) | 3 | 9 | **1.000** | 1.000 |
+| Bozulma senaryosu | 9 | 27 | 0.389 | 0.722 |
+
+**Katı puan** uygulanan bozulmanın adını arar. **Tespit-farkındalıklı puan**,
+bozulmanın kilitli tanı setinde anlamlı iz bırakmadığı koşularda (D1, D3b,
+D6b) "anlamlı değişim yok" cevabını da doğru sayar.
+
+Her gözlem model adını, araç sürümünü, Git commit'ini, çalışma
+parametrelerini, **ham ve ayrıştırılmış cevabı ayrı ayrı** ve **her araç
+çağrısının cevabının anlık kaydını** taşır.
+
+Bu deney, eski `reports/ajan_denemesi/` sonuçlarıyla **birleştirilmez**:
+ikisi farklı araçlarla ölçüldü. Konsolun ajan sayfası ikisini ayrı gösterir
+ve testler bunu korur.
+
+---
+
+## Neyi söyleyemiyoruz
+
+Bu bölümün amacı bulguları zayıflatmak değil; hangilerinin ne kadar
+dayanıklı olduğunu açıkça söylemek.
+
+- **Senaryo başına tek eğitim koşusu.** Ölçülen her metrik bir nokta
+  tahminidir; aynı senaryo yeniden eğitilmediği için senaryo metriğine güven
+  aralığı verilemez. (Ajan deneyinin tekrarı vardır; o ayrı bir ölçüdür —
+  model kararlılığını ölçer, senaryo evrenindeki belirsizliği değil.)
+- **Gürültü tabanı üç bozulmasız koşudan geliyor.** Az gözlemle band gerçek
+  yayılımı olduğundan küçük gösterir; eşikler muhtemelen hâlâ dar.
+- **Referans tek bir koşudur (v00)** ve sağlıklı koşuların en zayıfıdır.
+  Daha sağlam bir taban onların ortalaması olurdu.
+- **Nadir sınıflarda örnek yetersiz:** UAP (n=15), UAI (n=17). Bu
+  sınıflardaki oranlar genellenemez ve hiçbir yerde tek başına kanıt
+  sayılmaz.
+- **`last.pt` ölçeğinde yalnızca bir bozulmasız koşu var**, yani orada
+  gürültü eşiği hiç hesaplanamıyor.
+- **Ajan sonucu tek bir modele ait** (gemini-3.6-flash) ve 9 bozulma
+  senaryosu üzerinden hesaplandı; bu senaryoların dışına genellenemez.
+- **Final test seti hiç kullanılmadı.**
+- **Çalışma zamanı servisi (Aşama 2) tamamlanmadı.** Proje bir ölçüm ve
+  teşhis altyapısıdır; canlı bir izleme servisi değildir.
+
+---
+
+## Kullanılan araçlar
+
+### Model tarafı
+
+| Ne | Ayrıntı |
+|---|---|
+| Mimari | YOLO nesne tespiti, **Ultralytics** (>=8.3) |
+| Başlangıç ağırlığı | `main_model.pt`, fine-tune edildi |
+| Eğitim / çıkarım çözünürlüğü | 768 px / 768 px |
+| Batch / seed | 8 / 42 |
+| Optimizer | `auto` — Ultralytics bu modda öğrenme oranını ve momentumu **kendi seçer**; beyan edilen `lr0` bağlayıcı değildir |
+| Epoch | 30 planlandı, erken durdurma (sabır 10) ile **11**'de durdu |
+| Sınıflar | taşıt, insan, UAP, UAI |
+| Boyut bantları | <16 px · 16-32 px · 32-64 px · >64 px |
+
+### Yazılım tarafı
+
+| Katman | Kütüphane |
+|---|---|
+| Eğitim ve değerlendirme | `ultralytics`, `numpy`, `PyYAML`, `tqdm` |
+| Ölçüm ve analiz | `pandas` + `teshis/degerlendirme/` (kendi modülleri) |
+| Konsol | `streamlit`, grafikler `altair`, görüntüler `Pillow` |
+| LLM ajanı | `google-genai`, model `gemini-3.6-flash`, fonksiyon çağırma |
+| Testler | `pytest` |
+
+Güven aralıkları, gürültü bandı hesabı ve karşılaştırılabilirlik kuralları
+hazır bir kütüphaneden gelmiyor; `teshis/degerlendirme/` altında bu proje
+için yazıldı ve her biri testle bağlı.
+
+---
+
+## Proje yapısı
+
+```text
+teshis/
+  veri/              Veri tarama, sağlıklı referans, senaryo uygulamaları
+  egitim/            Ortak eğitim koşucusu, protokol, koşu kaydı
+  degerlendirme/     Metrikler, karşılaştırılabilirlik, gürültü, bootstrap, kanıt
+  ajan/              LLM araçları, teşhis döngüsü, çıktı şeması, puanlama
+senaryolar/          Deney tanımları ve parametreler (YAML)
+scripts/             Komut satırı girişleri (ince); uygulama teshis/ altında
+demo/                Streamlit konsolu; bolumler/ içinde yedi ekran
+tests/               Davranış ve sözleşme testleri
+docs/                Yöntem, kod haritası, bulgular, sunum
+reports/             Ölçümler ve ajan deneyleri
+```
+
+Bir senaryonun uygulama dosyası, çalıştırma komutu ve sonuç klasörü tek
+tabloda: **[docs/KOD_HARITASI.md](docs/KOD_HARITASI.md)**.
+
+---
+
+## Belgeler
+
+| Belge | İçerik |
+|---|---|
+| [docs/BULGULAR.md](docs/BULGULAR.md) | **Tüm senaryo sonuçları.** Otoriter karşılaştırma tablosu ve her senaryonun ayrıntısı. |
+| [docs/SUNUM_SENARYOSU.md](docs/SUNUM_SENARYOSU.md) | **Bir saatlik sunum senaryosu.** Temel kavram sözlüğü, kullanılan araçlar, sayfa sayfa ne gösterilecek ve söylenecek. |
+| [docs/SUNUM.md](docs/SUNUM.md) | Teknik olmayan anlatım; konu bazlı. |
+| [docs/KOD_HARITASI.md](docs/KOD_HARITASI.md) | Senaryo → uygulama dosyası → çalıştırma komutu → sonuç klasörü. |
+| [docs/MIMARI.md](docs/MIMARI.md) | Dosya/klasör sözleşmesi ve adlandırma kuralları. |
+| [docs/KURALLAR.md](docs/KURALLAR.md) | Değişmez kurallar, sabit yollar, deney değişmezleri. |
+| [docs/CALISTIRMA.md](docs/CALISTIRMA.md) | Kurulum ve komutlar (yerel + Kaggle). |
+| [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md) | Kronolojik değişiklik kaydı; her düzeltmenin gerekçesi. |
+| [docs/proje-brifingi-v2.1.md](docs/proje-brifingi-v2.1.md) | Projenin ilk şartnamesi. |
+
+---
+
+## Testler
 
 ```bash
 python -m pip install -r requirements-dev.txt -r requirements-demo.txt
 python -m pytest -q
 ```
 
-Taze bir klonda da gecer: kilitli tani setine baglı testler otomatik olarak
-atlanir.
+Depoda **577 test** var. Taze bir klonda da geçer: kilitli tanı setine bağlı
+testler otomatik olarak atlanır (`ultralytics` kurulu olmadan da tam paket
+çalışır).
 
-## Durum
+Testler yalnızca "çalışıyor mu" diye bakmaz; her biri kapatılan somut bir
+hatayı yeniden üretir. Kritik olanlar mutasyonla doğrulandı — eski davranış
+geri konduğunda testin gerçekten çöktüğü kontrol edildi. Örnekler:
 
-- **Tamamlandi:** D serisinin tamami (D1, D2a, D2b, D3, D3b, D4, D5, D6a,
-  D6b), v00 saglikli referans, yolo26n kontrol cifti, ajan arac katmani,
-  tek atislik LLM denemesi (9 kosu), E4 cozunurluk uyumsuzlugu,
-  E2 (negatif sonuc: yakinsamis modelde epoch kesmek underfitting uretmiyor),
-  E1 (asiri uyum gerceklesti; best.pt onu tamamen gizliyor),
-  E3 (negatif sonuc: 100 kat lr kararsizlik degil tam iraksama uretti),
-  E3b (kararsizlik olculdu: seed'e gore mAP50'de 29 kat oynaklik),
-  **C2 negatif kontrolu** (seed 7, 13, 21 — gurultu tabani n=3), ajan
-  denemesi (tek atislik vs fonksiyon cagirma karsilastirmasi).
-- **Devam ediyor:** yok.
-- **Tamamlandi:** ajan denemesi 11/11 puanlandi (`mean_score` 0.833). Ajan
-  saf kontrolde (Baseline, C2) **sorun uydurmadi** (2/2); baskin hata turu
-  yanlis neden atfetmek ve kacirmak. Onceki bulgu gecerli:
-  fonksiyon cagirma ile tek atislik arasinda **olculebilir fark yok**
-  (teshis 0.500 vs 0.444; dokuz kosuda yarim kosu). Arac kullanim orani 1.0.
-- **Yapilmadi:** Asama 2 (calisma zamani servisi), final test kosusu.
+- Gizli rol veya senaryo bilgisinin ajanın gördüğü üç yüzeye sızması
+- Aynı üretimin iki dosyadan iki kez sayılması
+- Aynı koşunun birden fazla geçerli tekrarının birbirinin üzerine yazması
+- Eşiği aşan bir **yükselişin** bozulma kanıtı sayılması
+- Görsel kanıt ölçütünün senaryoları ayırt edememesi
+- Sunum metnindeki sayıların ölçümden ayrışması
 
-- **Sartname boslugu:** Gurultu tabani uc kontrol kosusuna cikarildi ve
-  **yedi iddia zayifladi**; D6b artik hicbir metrikte gurultuyu asmiyor.
-  (Bu sayi artik elle yazilmiyor: demonun karsilastirma sayfasi defterden
-  turetir. Onceden "bes" yaziyordu ve E1 ile E2 atlanmisti.)
-  Kanit sozlesmesi (`kanit.json`) 26/26 kosuda TAM. Yayimlanmis guven
-  araliklari sartnamedeki tabakali bootstrap yerine Wilson ile hesaplandi
-  (~1.5 kat dar). Ayrinti: [docs/BULGULAR.md](docs/BULGULAR.md)
-  'Sartnameye Uyum Denetimi'.
+---
 
-- **Karsilastirilabilirlik (2026-09-07):** Demo butun kosulari tek bir
-  referansla (`v00_saglikli`) karsilastiriyordu ve bu, hicbir bozulma
-  icermeyen kosulari "guclu bozulma kaniti" olarak etiketliyordu
-  (`v00_saglikli last_pt`, `v00n`). Artik her kosu yalnizca KENDI
-  olcegindeki referansla karsilastirilir - ayni baslangic modeli,
-  degerlendirme kumesi, cozunurluk ve checkpoint
-  (`teshis/degerlendirme/karsilastirilabilirlik.py`). Ayni filtre ajan
-  araclarinda zaten vardi; kural iki yerde yasayinca biri geride kaldi.
+## Bu projenin üç ana dersi
 
-- **Esdegerlik metni tek kaynaktan (2026-09-09):** E4 ve D6a "eslenik
-  olcum"dur: aday ile referans AYNI agirlik dosyasini kullanir, yalnizca
-  cikarim ayari degisir. Egitim rastgeleligi devrede olmadigi icin bu
-  kosularda gurultu esigi uygulanmaz. Bu istisna uc ekranda ayri ayri
-  yazilmisti ve E4 sayfasinda cozunurluk "sabit" gorunuyordu - oysa DEGISEN
-  buydu. Metin artik tek yerden uretilir
-  (`karsilastirilabilirlik.gurultu_esigi_gecerli_mi` ve
-  `esik_yoklugu_aciklamasi`).
+**1. Karşılaştırma tabanı yanlışsa tüm sonuçlar yanlıştır.** Fine-tune
+edilmemiş bir modele göre ölçüm yapmak bozulma etkisi ile fine-tune etkisini
+karıştırır. Aynı hata daha sinsi biçimde tekrarladı: farklı checkpoint veya
+farklı başlangıç modeliyle üretilmiş **sağlıklı** koşular tek bir referansla
+tartılınca "güçlü bozulma kanıtı" göründü.
 
-- **Hipotez hukumlerinin kapsami (2026-09-09):** Tablo "hipotez
-  desteklendi" diyordu; hesaplanan sey ise "fark gurultu bandini asti mi"
-  idi. Etiketler artik yalnizca hesaplanani soyler ("Esigi asan dusus",
-  "Beklenmedik yonde etki", "Gurultuyu asan etki yok", "Eslenik olcum",
-  "Olculemedi"). D1'de mAP50_95'teki YUKSELIS "kismen desteklendi" olarak
-  okunuyordu.
+**2. Toplam mAP yalan söyleyebilir.** D3b, D4 ve D5'in tamamı toplam
+metriklerde görünmez; yalnızca doğru kırılımla ortaya çıkar.
 
-- **Senaryo ile kosu ayrimi (2026-09-09):** Katalog bir deney defteri degil;
-  senaryo bir hipotez, kosu ise onun bir kaydidir. Ayrim artik Senaryolar,
-  Karsilastirma ve Sonuclar sayfalarinda ayni sekilde uygulanir
-  (`demo/katalog.py`); Karsilastirma once senaryo, sonra kosu sorar.
+**3. Aynı kural iki yerde yaşarsa biri geride kalır.** Bu projede bulunan
+her ciddi hata bu şekle sahipti. En uç örneği: bir metriğin eşiği aşan
+**yükselişi**, aynı büyüklükteki bir düşüşle karıştırılıyordu — ve aynı
+hata **dört ayrı yerde** vardı. Bir sayı veya kural ikinci kez yazılacaksa,
+türetilmelidir.
 
-- **Yeni deney duzeni (2026-09-09):** Eski ana denemede ustveri yoktu: hangi
-  cevabin hangi kod haliyle uretildigi kesin bilinmiyordu ve **102 arac
-  cagrisinin hicbirinin cevabi saklanmamisti**. Yeni kosucu
-  (`scripts/ajan_deney.py`) her gozlemi degismez bir deney kimligi
-  (`<UTC>__<git sha>`) altinda; model, arac surumu, Git commit'i, calisma
-  parametreleri, HAM ve ayristirilmis cevap ve **her arac cevabinin
-  snapshot'i** ile kaydeder. Puanlama ayri bir adimdir
-  (`scripts/ajan_deney_puanla.py`): cevap anahtari uretim tarafina hic
-  girmez, ayni uretim iki kez sayilmaz, gecerli tekrarlar korunur ve sonuclar
-  **rol bazli** raporlanir - kontrol kosulari ile bozulma senaryolari tek bir
-  basari oraninda birlestirilmez. Yeni deneyler `reports/ajan_deneyleri/`
-  altindadir ve eski `reports/ajan_denemesi/` sonuclariyla karistirilmaz.
+---
 
-- **Ilk tekrarli ajan deneyi (2026-09-09):** 13 kosu x 3 tekrar = 39
-  gozlem, deney kimligi `20260909T120445Z__a15487c9`. Rol bazli, birlestirilmeden:
-  saglikli referans 1.000 (n=3), kontrol 1.000 (n=9), bozulma senaryosu
-  kati 0.389 / tespit-farkindalikli 0.722 (n=27).
-
-  Iki bulgu one cikiyor. Birincisi: **13 kosunun 13'u de uc tekrarinda ayni
-  hukmu verdi** - sozel ifade degisiyor, hukum degismiyor. Ikincisi:
-  kontrol kosularinda 9/9, Wilson %95 [0.701, 1.000]. Eski denemede dort
-  kontrolun birinde uydurmustu (kosu_12). Bu bir "model gelisti" bulgusu
-  degil: araclar artik her alt grup farkina gurultu bandini ekliyor, yani
-  yanlis pozitifi onleyen sey ona **gurultu tabanini gostermek**. Bu, ana
-  tezin ajan tarafindaki karsiligi.
-
-  Deney eski `reports/ajan_denemesi` sonuclariyla BIRLESTIRILMEZ; ikisi
-  farkli araclarla olculdu. Konsolun ajan sayfasi ikisini ayri gosterir.
-
-- **Konsol sunum icin elden gecirildi (2026-09-10):** Genel Bakis bir giris
-  ekranina indirildi (dort gosterge, uc asamali sema, tek ana grafik).
-  Veri sayfasindaki bes grafik+tablo cifti teke indi - cubuklar degeri
-  ucunde tasiyor, tablolar acilir bolumde. Egitim kunyesinin dort kimlik
-  alani one cikti. Kok font 18px'e cikarildi (projeksiyon icin), sekme
-  araligi acildi.
-
-  Uc gercek mantik hatasi kapandi. (1) Esigi asan bir YUKSELIS, esigi asan
-  bir dususle ayni sayiliyordu: D1'de mAP50_95 +0.0240 yukselmisken ekran
-  "esigi asiyor - zayif bulgu" diyordu. Ayni hata dort ayri yerde vardi ve
-  tek kaynaga indirildi (`asan_yone_gore`). (2) Gorsel kanit on senaryonun
-  dokuzunda ayni kareyi gosteriyordu; varsayilan olcut "saglikli modelden
-  en cok ayrisan" oldu, ornek ve kaynak secici eklendi. (3) Sonuclar
-  sayfasi "ajan denemesinde tekrar yok" diyordu - tekrarli deney
-  calistirildiktan sonra bile; artik deneyden turetiliyor.
-
-  `docs/SUNUM_SENARYOSU.md`: bir saatlik sunum senaryosu. Temel kavram
-  sozlugu (bbox, IoU, precision/recall, mAP50, epoch, checkpoint, seed,
-  gurultu bandi), kullanilan kutuphaneler, sayfa sayfa ne gosterilecegi ve
-  beklenen sorular. Sayilari ekrandan okutur; teste bagli olan uc istisna
-  disinda metne yazmaz.
-
-Guncel ayrinti: [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md)
+Güncel değişiklik kaydı: **[docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md)**
