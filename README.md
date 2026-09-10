@@ -232,4 +232,26 @@ atlanir.
   Deney eski `reports/ajan_denemesi` sonuclariyla BIRLESTIRILMEZ; ikisi
   farkli araclarla olculdu. Konsolun ajan sayfasi ikisini ayri gosterir.
 
+- **Konsol sunum icin elden gecirildi (2026-09-10):** Genel Bakis bir giris
+  ekranina indirildi (dort gosterge, uc asamali sema, tek ana grafik).
+  Veri sayfasindaki bes grafik+tablo cifti teke indi - cubuklar degeri
+  ucunde tasiyor, tablolar acilir bolumde. Egitim kunyesinin dort kimlik
+  alani one cikti. Kok font 18px'e cikarildi (projeksiyon icin), sekme
+  araligi acildi.
+
+  Uc gercek mantik hatasi kapandi. (1) Esigi asan bir YUKSELIS, esigi asan
+  bir dususle ayni sayiliyordu: D1'de mAP50_95 +0.0240 yukselmisken ekran
+  "esigi asiyor - zayif bulgu" diyordu. Ayni hata dort ayri yerde vardi ve
+  tek kaynaga indirildi (`asan_yone_gore`). (2) Gorsel kanit on senaryonun
+  dokuzunda ayni kareyi gosteriyordu; varsayilan olcut "saglikli modelden
+  en cok ayrisan" oldu, ornek ve kaynak secici eklendi. (3) Sonuclar
+  sayfasi "ajan denemesinde tekrar yok" diyordu - tekrarli deney
+  calistirildiktan sonra bile; artik deneyden turetiliyor.
+
+  `docs/SUNUM_SENARYOSU.md`: bir saatlik sunum senaryosu. Temel kavram
+  sozlugu (bbox, IoU, precision/recall, mAP50, epoch, checkpoint, seed,
+  gurultu bandi), kullanilan kutuphaneler, sayfa sayfa ne gosterilecegi ve
+  beklenen sorular. Sayilari ekrandan okutur; teste bagli olan uc istisna
+  disinda metne yazmaz.
+
 Guncel ayrinti: [docs/BAKIM_GUNLUGU.md](docs/BAKIM_GUNLUGU.md)

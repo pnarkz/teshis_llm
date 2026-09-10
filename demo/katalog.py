@@ -309,3 +309,40 @@ def kosu_aciklamasi(kosu: str) -> str:
     from teshis.degerlendirme.senaryo_ozeti import ozet
 
     return str((ozet(kosu) or {}).get("ne_olcuyor") or "")
+
+
+def senaryo_kosu_haritasi() -> dict[str, Any]:
+    """Hangi senaryo hangi kosulardan olusuyor - ve hicbirine bagli olmayanlar.
+
+    "14 senaryo" ile "26 kosu" arasindaki iliski hicbir yerde acikca
+    yazmiyordu; izleyici iki sayiyi gorup birbirini tutmadigini dusunuyordu.
+    Oysa aritmetik basit ve tamamen turetilebilir:
+
+        senaryolara bagli kosular + altyapi kosulari = butun defter
+
+    Altyapi kosulari bir hipotez DEGILDIR: saglikli referanslar olcumun
+    tabanini, kontrol kosulari da gurultu esigini verir. Ikisi de olcum
+    aracidir, olcum nesnesi degil.
+    """
+    from data_loader import load_results
+    from teshis.degerlendirme.karsilastirilabilirlik import kimlik
+
+    defter = [str(s) for s in load_results()["scenario"]
+              if kimlik(str(s)) is not None]
+    satirlar, bagli = [], set()
+    for x in senaryolar():
+        kosular = [k for k in [x["ana_kosu"], *x["varyantlar"]] if k]
+        bagli |= set(kosular)
+        satirlar.append({
+            "kod": x["kod"], "ad": x["ad"],
+            "kosular": kosular, "sayi": len(kosular),
+        })
+    altyapi = sorted(k for k in defter if k not in bagli)
+    return {
+        "senaryolar": satirlar,
+        "altyapi": altyapi,
+        "senaryo_sayisi": len(satirlar),
+        "senaryo_kosusu": len(bagli),
+        "altyapi_kosusu": len(altyapi),
+        "toplam": len(defter),
+    }

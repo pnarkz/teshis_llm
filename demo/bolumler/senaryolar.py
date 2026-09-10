@@ -542,8 +542,50 @@ def _kosu_defteri(sonuclar: pd.DataFrame) -> None:
     )
 
 
+def _senaryo_kosu_haritasi() -> None:
+    """SENARYO ile KOSU arasindaki iliskiyi acikca yazar.
+
+    Genel Bakis "14 senaryo" ve "26 kosu" diyor; ikisi arasindaki bag
+    hicbir yerde gorunmuyordu ve izleyici sayilarin birbirini tutmadigini
+    dusunuyordu. Bir senaryo bir HIPOTEZ, bir kosu o hipotezin bir
+    KAYDIDIR; bazi hipotezlerin birden fazla kaydi var.
+    """
+    h = katalog.senaryo_kosu_haritasi()
+    with st.expander(
+        f"{h['senaryo_sayisi']} senaryo, {h['toplam']} koşu — hangisi "
+        "hangisine bağlı?", expanded=False,
+    ):
+        st.markdown(
+            "Bir **senaryo** bir hipotezdir; bir **koşu** o hipotezin bir "
+            "kaydıdır. Bazı hipotezlerin birden fazla kaydı var — aynı "
+            "eğitimin son epoch'u, farklı bir başlangıç modeli ya da başka "
+            "bir rastgelelik tohumu."
+        )
+        st.dataframe(pd.DataFrame([
+            {"senaryo": f"{r['kod']} — {r['ad']}",
+             "koşu sayısı": r["sayi"],
+             "koşular": ", ".join(r["kosular"]) or "ölçülebilir koşu üretmedi"}
+            for r in h["senaryolar"]
+        ]), hide_index=True, width="stretch")
+
+        stil.ust_baslik("hiçbir senaryoya bağlı olmayan koşular")
+        st.dataframe(pd.DataFrame([
+            {"koşu": k, "rolü": katalog.kosu_adi(k).split("·", 1)[-1].strip()}
+            for k in h["altyapi"]
+        ]), hide_index=True, width="stretch")
+        stil.yorum(
+            f"<b>{h['senaryo_kosusu']} senaryo koşusu + "
+            f"{h['altyapi_kosusu']} altyapı koşusu = {h['toplam']} koşu.</b> "
+            "Altyapı koşuları bir hipotez değildir: sağlıklı referanslar "
+            "ölçümün tabanını, kontrol koşuları gürültü eşiğini verir. "
+            "İkisi de <b>ölçüm aracıdır, ölçüm nesnesi değil</b> — bu yüzden "
+            "hiçbir yerde bulgu olarak derecelendirilmezler."
+        )
+
+
 def goster() -> None:
     st.title("Deney Senaryoları")
+    _senaryo_kosu_haritasi()
     hepsi = katalog.senaryolar()
     if SECIM not in st.session_state:
         st.session_state[SECIM] = "D4" if any(

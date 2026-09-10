@@ -71,8 +71,14 @@ ROZET_RENGI = {
 
 CSS = f"""
 <style>
+  /* Sunum projeksiyonda yapiliyor ve salonun arkasindan okunmasi gerekiyor.
+     Kok font boyutu hic tanimli degildi, yani tarayici varsayilaninda (16px)
+     kaliyordu. Buradaki butun olculer `rem` oldugu icin koku buyutmek
+     hepsini ORANTILI buyutur - tek tek elle buyutmek yerine tek yerden. */
+  html {{ font-size: 18px; }}
   .stApp {{ background: {ZEMIN}; }}
   html, body, [class*="css"], p, li, span, label {{ color: {METIN}; }}
+  .stMarkdown p, .stMarkdown li {{ font-size: 1.02rem; line-height: 1.6; }}
   h1, h2, h3, h4 {{ color: {METIN}; font-weight: 600; letter-spacing: -0.01em; }}
   h1 {{ font-size: 1.7rem; margin-bottom: .2rem; }}
   h2 {{ font-size: 1.22rem; margin-top: 1.8rem; }}
@@ -82,7 +88,7 @@ CSS = f"""
   code {{ background: {YUZEY_2}; color: {IKINCIL}; padding: .08rem .3rem;
           border-radius: 3px; font-size: .86em; }}
 
-  .ust {{ font-size: .74rem; letter-spacing: .1em; text-transform: uppercase;
+  .ust {{ font-size: .8rem; letter-spacing: .1em; text-transform: uppercase;
           color: {METIN_SOLUK}; margin: .2rem 0 .3rem; }}
   .kutu {{ border: 1px solid {CIZGI}; border-radius: 8px; padding: .85rem 1rem;
            background: {YUZEY}; box-shadow: 0 1px 3px rgba(0,0,0,.35); }}
@@ -91,19 +97,19 @@ CSS = f"""
 
   .kpi {{ border: 1px solid {CIZGI}; border-radius: 8px; padding: .7rem .9rem;
           background: {YUZEY}; height: 100%; }}
-  .kpi .etiket {{ font-size: .74rem; letter-spacing: .06em;
+  .kpi .etiket {{ font-size: .8rem; letter-spacing: .06em;
                   text-transform: uppercase; color: {METIN_SOLUK}; }}
   .kpi .deger {{ font-size: 1.55rem; font-weight: 600; line-height: 1.25;
                  color: #ffffff; }}
-  .kpi .alt {{ font-size: .76rem; color: {METIN_SOLUK}; }}
+  .kpi .alt {{ font-size: .82rem; color: {METIN_SOLUK}; }}
 
-  .rozet {{ display: inline-block; font-size: .73rem; padding: .14rem .55rem;
+  .rozet {{ display: inline-block; font-size: .8rem; padding: .14rem .55rem;
             border-radius: 999px; border: 1px solid; margin: 0 .3rem .25rem 0;
             white-space: nowrap; }}
-  .yorum {{ font-size: .84rem; color: {METIN_SOLUK}; margin-top: .35rem;
+  .yorum {{ font-size: .92rem; color: {METIN_SOLUK}; margin-top: .35rem;
             line-height: 1.5; }}
 
-  .stDataFrame {{ font-size: .86rem; }}
+  .stDataFrame {{ font-size: .92rem; }}
   div[data-testid="stDataFrame"] {{ border: 1px solid {CIZGI};
                                     border-radius: 8px; overflow: hidden; }}
   section[data-testid="stSidebar"] {{ background: #080d18;

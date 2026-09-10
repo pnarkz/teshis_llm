@@ -164,3 +164,56 @@ def test_senaryo_metni_korlugu_vurguluyor(senaryo_metni):
     sade = senaryo_metni.replace("ö", "o").replace("ü", "u").replace("ı", "i")
     assert "goruntulere bakmiyor" in sade.lower()
     assert "cevap anahtari" in sade.lower()
+
+
+def test_kullanilan_araclar_gercekle_uyusuyor(senaryo_metni):
+    """Sunum metnindeki arac/model bilgisi kaynakla eslesmeli.
+
+    "Kullanilan araclar" tablosu sunumda sozlu olarak iddia edilecek.
+    Model adi degisirse ya da bir arac eklenirse metin sessizce bayatlar -
+    bu projede tam olarak boyle hatalar birikti.
+    """
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from ajan_katmani import VARSAYILAN_MODEL
+    from teshis.ajan import semalar
+
+    assert VARSAYILAN_MODEL in senaryo_metni, (
+        f"Metin ajan modelini '{VARSAYILAN_MODEL}' olarak yazmiyor"
+    )
+    n = len(semalar.ARAC_BILDIRIMLERI)
+    assert f"{n} arac" in senaryo_metni.replace("ç", "c"), (
+        f"Metin arac sayisini {n} olarak yazmiyor"
+    )
+
+
+def test_temel_kavramlar_sozlugu_eksiksiz(senaryo_metni):
+    """Alan disindan bir dinleyicinin takilacagi terimler aciklanmali."""
+    sade = senaryo_metni.lower()
+    for terim in ("bbox", "iou", "precision", "recall", "map50",
+                  "epoch", "checkpoint", "seed", "fine-tune",
+                  "gurultu bandi"):
+        assert terim in sade.replace("ü", "u").replace("ı", "i"), (
+            f"'{terim}' sozlukte aciklanmamis"
+        )
+
+
+def test_sunum_akisi_butun_sayfalari_kapsiyor(senaryo_metni):
+    """Yedi konsol bolumunun hepsi senaryoda yer almali."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    import app
+
+    for bolum in app.BOLUMLER:
+        # Baslik metinde tam gecmese de bolum adinin ayirt edici kelimesi
+        # gecmeli (orn. "Karsilastirma ve Gurultu" -> "Karsilastirma").
+        anahtar = bolum.split()[0]
+        sade = (senaryo_metni.replace("ş", "s").replace("ı", "i")
+                .replace("ğ", "g").replace("ç", "c").replace("ü", "u")
+                .replace("ö", "o"))
+        anahtar_sade = (anahtar.replace("ş", "s").replace("ı", "i")
+                        .replace("ğ", "g").replace("ç", "c")
+                        .replace("ü", "u").replace("ö", "o"))
+        assert anahtar_sade in sade, f"'{bolum}' sunum senaryosunda yok"
