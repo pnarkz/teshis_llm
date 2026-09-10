@@ -58,7 +58,8 @@ def _gt_bilgisi(kaynak_dosya: str) -> dict | None:
     return None
 
 
-def _aciklama(kayit: dict, gt: dict | None, saglikli: dict | None) -> str:
+def _aciklama(kayit: dict, gt: dict | None, saglikli: dict | None,
+              kendi_referansi: bool = False) -> str:
     """Secilen kare icin otomatik, tamamen turetilmis okuma notu."""
     fn = kayit.get("false_negatives") or 0
     fp = kayit.get("false_positives") or 0
@@ -86,7 +87,15 @@ def _aciklama(kayit: dict, gt: dict | None, saglikli: dict | None) -> str:
     if iou:
         parcalar.append(f"Eşleşen kutuların ortalama IoU'su: <b>{iou:.3f}</b>.")
 
-    if saglikli:
+    if kendi_referansi:
+        # Kosu KENDI olceginin referansi. Kendisiyle karsilastirilirsa
+        # "ayni hata sayilari" diye anlamsiz bir satir cikiyordu.
+        parcalar.append(
+            "<b>Bu koşu kendi ölçeğinin sağlıklı referansıdır</b>; "
+            "karşılaştırılacak ayrı bir taban yok. Buradaki hatalar "
+            "bozulmanın değil, <b>verinin kendi zorluğunun</b> ölçüsüdür."
+        )
+    elif saglikli:
         s_fn = saglikli.get("false_negatives") or 0
         s_fp = saglikli.get("false_positives") or 0
         yon = []
@@ -132,16 +141,29 @@ def goster() -> None:
         )
         return
 
+    import katalog
+
+    # Secicide ciplak kosu adi ("D4 last_pt") tek basina hicbir sey
+    # anlatmiyordu: izleyici hangi hipotezin kaydina baktigini bilmiyordu.
+    # Ad tek yerden uretilir (katalog.kosu_adi) ki Karsilastirma sayfasiyla
+    # ayrismasin.
     adlar = sorted(galeriler)
-    a, b, c = st.columns([2, 2, 1])
+    a, b, c = st.columns([3, 2, 1])
     with a:
         senaryo = st.selectbox(
-            "Koşu", adlar, index=adlar.index("D4") if "D4" in adlar else 0
+            "Koşu", adlar, index=adlar.index("D4") if "D4" in adlar else 0,
+            format_func=katalog.kosu_adi,
         )
     with b:
         siralama = st.selectbox("Sıralama", list(SIRALAMA))
     with c:
         adet = st.slider("Gösterilecek örnek", 1, 8, 3)
+
+    # Kosunun NE OLCTUGU seciciden hemen sonra yazilir; kullanici sayfayi
+    # terk edip Senaryolar'a gitmek zorunda kalmasin.
+    aciklama = katalog.kosu_aciklamasi(senaryo)
+    if aciklama:
+        stil.yorum(f"<b>{senaryo}</b> — {aciklama}")
 
     galeri = galeriler[senaryo]
     kayitlar = list(galeri["entries"])
@@ -263,7 +285,7 @@ def goster() -> None:
                 "listeler her zaman örtüşmez."
             )
         stil.kutu(_aciklama(kayit, _gt_bilgisi(kayit.get("source", "")),
-                            eslesen))
+                            eslesen, kendi_referansi=(ref_ad == senaryo)))
 
     matris = [g for g in images_for(senaryo) if "confusion" in g.name.lower()]
     if matris:

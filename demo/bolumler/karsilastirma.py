@@ -286,6 +286,16 @@ def _gorsel_kanit(senaryo: str) -> None:
 
 # --- Deney defteri (ikincil) ------------------------------------------------
 
+def _dusen(gozlem: dict) -> list[str]:
+    from teshis.degerlendirme.senaryo_ozeti import asan_yone_gore
+    return asan_yone_gore(gozlem.get("metrikler"))[0]
+
+
+def _yukselen(gozlem: dict) -> list[str]:
+    from teshis.degerlendirme.senaryo_ozeti import asan_yone_gore
+    return asan_yone_gore(gozlem.get("metrikler"))[1]
+
+
 def _defter_tablosu(sonuclar: pd.DataFrame) -> pd.DataFrame:
     satirlar = []
     for _, r in sonuclar.iterrows():
@@ -305,7 +315,11 @@ def _defter_tablosu(sonuclar: pd.DataFrame) -> pd.DataFrame:
             "Δ mAP50": m["mAP50"]["fark"],
             "Δ precision": m["precision"]["fark"],
             "Δ recall": m["recall"]["fark"],
-            "eşiği aşan": ", ".join(g["asan_metrikler"]) or "-",
+            # DUSUS ve YUKSELIS ayri. Onceden ikisi tek listede toplaniyordu
+            # ve yukselen bir metrik "esigi asan" sutununda dususlerle ayni
+            # yerde gorunuyordu (D1, mAP50_95 +0.0240).
+            "eşiği aşan düşüş": ", ".join(_dusen(g)) or "-",
+            "eşiği aşan yükseliş": ", ".join(_yukselen(g)) or "-",
             "kanıt": stil.seviye_adi(kanit_gucu(s)["seviye"]),
         })
     df = pd.DataFrame(satirlar)
@@ -487,10 +501,11 @@ def _deney_defteri(sonuclar: pd.DataFrame) -> None:
     with a:
         olcek = st.selectbox("Ölçek", olcekler, key="defter_olcek")
     with b:
-        sadece = st.checkbox("Yalnızca eşiği aşanlar", key="defter_asan")
+            sadece = st.checkbox("Yalnızca eşiği aşan düşüşü olanlar",
+                             key="defter_asan")
     gosterilen = df if olcek == "hepsi" else df[df["ölçek"] == olcek]
     if sadece:
-        gosterilen = gosterilen[gosterilen["eşiği aşan"] != "-"]
+        gosterilen = gosterilen[gosterilen["eşiği aşan düşüş"] != "-"]
     st.dataframe(gosterilen.drop(columns=["ölçek"]), hide_index=True,
                  width="stretch", height=420)
     st.download_button("Tabloyu CSV olarak indir",
@@ -705,6 +720,7 @@ def goster() -> None:
 
 def _ayrintilar(senaryo: str, o: dict, gozlem: dict) -> None:
     from data_loader import evidence_for
+    from teshis.degerlendirme.senaryo_ozeti import asan_yone_gore
 
     a, b = st.columns(2)
     with a:
@@ -725,7 +741,21 @@ def _ayrintilar(senaryo: str, o: dict, gozlem: dict) -> None:
     st.markdown("**Karşılaştırma tablosu**")
     satirlar = []
     for ad, d in gozlem["metrikler"].items():
-        ref, deger, fark = d["referans"], d["deger"], d["fark"]
+        ref, deger, fark, esik = (d["referans"], d["deger"], d["fark"],
+                                  d["gurultu_esigi"])
+        # KARAR yonu de tasir. Onceden yalnizca "esigi asiyor" yaziyordu ve
+        # yukselen bir metrik dususmus gibi okunuyordu - D1'de mAP50_95
+        # +0.0240 yukselmisken tabloda dususlerle ayni hucre metni vardi.
+        # Kat, farkin esige oranidir: "ne kadar asiyor" sorusu ayri bir
+        # sutun istemesin diye karara katildi.
+        if d["asiyor"] is None:
+            karar = "eşik yok"
+        elif not d["asiyor"]:
+            karar = "gürültü içinde"
+        else:
+            kat = abs(fark) / esik
+            karar = (f"eşiği aşan {'düşüş' if fark < 0 else 'YÜKSELİŞ'} "
+                     f"({kat:.1f}×)")
         satirlar.append({
             "metrik": ad,
             "sağlıklı referans": ref,
@@ -733,15 +763,18 @@ def _ayrintilar(senaryo: str, o: dict, gozlem: dict) -> None:
             # "mutlak fark" YANLIS bir baslikti: gosterilen degerler
             # negatif olabiliyor, mutlak fark ise negatif olamaz.
             "fark (senaryo − referans)": fark,
-            "göreli değişim (%)": (None if not ref or fark is None
-                                   else round(100 * fark / ref, 2)),
-            "gürültü eşiği": d["gurultu_esigi"],
-            "karar": {True: "eşiği aşıyor", False: "gürültü içinde"}.get(
-                d["asiyor"], "eşik yok"),
+            "gürültü eşiği": esik,
+            "karar": karar,
         })
     st.dataframe(pd.DataFrame(satirlar), hide_index=True, width="stretch")
+    if any("YÜKSELİŞ" in r["karar"] for r in satirlar):
+        stil.yorum(
+            "Bir metriğin beklenenin tersine <b>yükselmesi</b> bozulma kanıtı "
+            "değildir; eşiği aşsa bile. Bu yüzden karar sütunu yönü de yazar."
+        )
 
-    if not gozlem["asan_metrikler"] and gozlem["kontrol_kosu_sayisi"]:
+    dusen, _ = asan_yone_gore(gozlem.get("metrikler"))
+    if not dusen and gozlem["kontrol_kosu_sayisi"]:
         st.markdown("**Fark neden görülmemiş olabilir?**")
         for baslik, metin in GORULMEME_NEDENLERI:
             st.markdown(f"- **{baslik}** — {metin}")

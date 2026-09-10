@@ -245,3 +245,67 @@ def olculemeyen() -> list[dict[str, Any]]:
     dusurulmez, "ölçülemedi" rozetiyle gosterilir.
     """
     return [s for s in senaryolar() if not s["olculdu"]]
+
+
+# --- Kosu adlandirmasi ------------------------------------------------------
+
+# Katalogda senaryo olarak yer almayan roller. Bunlar bir hipotez degil,
+# olcum araci ya da tabandir; yine de secicilerde adiyla gorunmeleri gerekir.
+_ROL_ADI = {
+    "C2": "Kontrol — yalnızca seed farklı",
+    "v00_saglikli": "Sağlıklı referans",
+    "v00n": "Sağlıklı referans",
+}
+
+
+def _varyant_notu(kosu: str) -> str:
+    """Kosunun kendi kimliginden turetilen kisa ayirt edici not.
+
+    Elle yazilmis bir sozluk degil: checkpoint, baslangic modeli ve cikarim
+    cozunurlugu kosunun KENDI kaydindan okunur. Yeni bir varyant
+    eklendiginde burasi kendiliginden dogru kalir.
+    """
+    from teshis.degerlendirme.karsilastirilabilirlik import kimlik
+
+    k = kimlik(kosu)
+    if k is None:
+        return ""
+    notlar = []
+    if k.checkpoint == "last":
+        notlar.append("son epoch")
+    if k.model and k.model != "main_model.pt":
+        notlar.append(k.model.replace(".pt", ""))
+    if k.imgsz_eval and int(k.imgsz_eval) != 768:
+        notlar.append(f"{k.imgsz_eval} px")
+    # seed yalnizca ADINDA geciyorsa yazilir; her kosunun bir seed'i var,
+    # hepsine yazmak ayirt edici olmaz.
+    for parca in kosu.split()[1:]:
+        if parca.startswith("seed"):
+            notlar.append(f"seed {parca[4:]}")
+    return ", ".join(notlar)
+
+
+def kosu_adi(kosu: str) -> str:
+    """'D4 last_pt' -> 'D4 last_pt · Küçük nesne sinyal kaybı (son epoch)'.
+
+    Secicilerde ciplak kosu adi ("D4 last_pt") tek basina hicbir sey
+    anlatmiyordu; izleyici hangi hipotezin kaydina baktigini bilmiyordu.
+    Ad tek yerden uretilir ki iki sayfa ayni kosuyu farkli adlandirmasin.
+    """
+    kod = _kod(kosu)
+    adlar = {x["kod"]: x["ad"] for x in senaryolar()}
+    ad = adlar.get(kod) or _ROL_ADI.get(kod)
+    if ad is None and kod.endswith("n"):
+        # Model varyanti (D1n): ana senaryonun adini tasir.
+        ad = adlar.get(kod[:-1])
+    if ad is None:
+        return kosu
+    ek = _varyant_notu(kosu)
+    return f"{kosu}  ·  {ad}" + (f" ({ek})" if ek else "")
+
+
+def kosu_aciklamasi(kosu: str) -> str:
+    """Kosunun NE OLCTUGU - senaryolar/anlatim.yaml'den."""
+    from teshis.degerlendirme.senaryo_ozeti import ozet
+
+    return str((ozet(kosu) or {}).get("ne_olcuyor") or "")
