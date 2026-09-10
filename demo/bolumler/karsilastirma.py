@@ -113,9 +113,10 @@ def _sonuc_cumlesi(senaryo: str, gozlem: dict, yildiz_notu: str) -> str:
     # DUSUS ve YUKSELIS ayri anlatilir. Ikisi tek listede toplanirsa
     # beklenenin tersine yukselen bir metrik "esigi asiyor" diye, yani
     # bozulma kaniti gibi okunur - D1'de tam olarak bu oluyordu.
-    dusen = gozlem["asan_dusen"]
-    yukselen = gozlem["asan_yukselen"]
-    n = gozlem["kontrol_kosu_sayisi"]
+    from teshis.degerlendirme.senaryo_ozeti import asan_yone_gore
+
+    dusen, yukselen = asan_yone_gore(gozlem.get("metrikler"))
+    n = gozlem.get("kontrol_kosu_sayisi") or 0
     if not gurultu_esigi_gecerli_mi(senaryo):
         return esik_yoklugu_aciklamasi(senaryo)
     if not n:
@@ -138,12 +139,23 @@ def _sonuc_cumlesi(senaryo: str, gozlem: dict, yildiz_notu: str) -> str:
 
 # --- Gorsel kanit -----------------------------------------------------------
 
+# Sira ONEMLI: ilk secenek varsayilan olur.
+#
+# Varsayilan "saglikli modelden en cok ayrisan"dir, "en fazla kacirilan"
+# degil. Sebep olculdu: "en fazla kacirilan" olcutu on senaryonun DOKUZUNDA
+# ayni kareyi seciyor - o kare zaten en kalabalik olani ve hangi bozulma
+# uygulanirsa uygulansin basa cikiyor. Yani senaryo degistiginde ekranda
+# neredeyse ayni goruntu kaliyordu.
+#
+# Ayrisma olcutu "bu bozulma HANGI kareyi bozdu" sorusunu sorar: saglikli
+# modele gore hata ARTISINA bakar ve on senaryoda alti farkli kare secer.
 OLCUT = {
+    "sağlıklı modelden en çok ayrışan": ("_ayrisma", True),
     "en fazla kaçırılan nesne": ("false_negatives", True),
     "en fazla fazladan kutu": ("false_positives", True),
     "en düşük IoU": ("mean_iou", False),
-    "sağlıklı modelden en çok ayrışan": ("_ayrisma", True),
 }
+GOSTERILEN_ADAY = 8
 
 
 def _gorsel_kanit(senaryo: str) -> None:
@@ -172,8 +184,26 @@ def _gorsel_kanit(senaryo: str) -> None:
         )
         return
 
-    olcut = st.radio("Kare seçimi", list(OLCUT), horizontal=True,
-                     key=f"olcut_{senaryo}")
+    a, b = st.columns([3, 2])
+    with a:
+        olcut = st.radio("Kare seçimi", list(OLCUT), horizontal=True,
+                         key=f"olcut_{senaryo}")
+    kaynaklar = sorted({str(k.get("source", "")).split("__")[0]
+                        for k in kayitlar if k.get("source")})
+    with b:
+        kaynak = st.selectbox(
+            "Kaynak grubu", ["hepsi", *kaynaklar], key=f"kaynak_{senaryo}",
+            help=("Kaynak grupları ayrı çekim koşullarını temsil eder; "
+                  "bir bozulma bir kaynakta diğerinden çok daha görünür "
+                  "olabilir."),
+        )
+    if kaynak != "hepsi":
+        kayitlar = [k for k in kayitlar
+                    if str(k.get("source", "")).startswith(kaynak + "__")]
+        if not kayitlar:
+            st.info(f"{kaynak} grubunda ortak kare yok.")
+            return
+
     alan, ters = OLCUT[olcut]
     if alan == "_ayrisma":
         # Saglikli modele gore en cok BOZULAN kare: iki kaydin hata
@@ -190,7 +220,26 @@ def _gorsel_kanit(senaryo: str) -> None:
     if not sirali:
         st.info("Bu ölçüte göre sıralanabilir kare bulunamadı.")
         return
-    kayit = sirali[0]
+
+    # Tek bir kare gostermek yetmiyordu: olcut ne olursa olsun her zaman
+    # siralamanin BIRINCISI ciziliyordu ve baska bir ornege bakmanin yolu
+    # yoktu. Aday listesi, secilen karenin neden secildigini de gosterir.
+    adaylar = sirali[:GOSTERILEN_ADAY]
+
+    def _aday_etiketi(i_k):
+        i, k = i_k
+        s = saglikli[k["source"]]
+        ek = (f"ayrışma +{k['_ayrisma']}" if alan == "_ayrisma"
+              else f"{olcut}: {k.get(alan)}")
+        return (f"{i + 1}. {k['source']}  ·  {ek}  ·  kaçırılan "
+                f"{s.get('false_negatives')} → {k.get('false_negatives')}")
+
+    secim = st.selectbox(
+        "Örnek kare", list(enumerate(adaylar)), format_func=_aday_etiketi,
+        key=f"kare_{senaryo}_{olcut}_{kaynak}",
+        help="Bu ölçüte göre en üstteki kareler. Başka bir örneğe geçebilirsiniz.",
+    )
+    kayit = secim[1]
     eslesen = saglikli[kayit["source"]]
 
     a, b = st.columns(2)
@@ -224,6 +273,15 @@ def _gorsel_kanit(senaryo: str) -> None:
         f"fazladan kutu "
         f"<b>{eslesen.get('false_positives')} → {kayit.get('false_positives')}</b>."
     )
+    if alan == "_ayrisma":
+        stil.yorum(
+            "Varsayılan ölçüt <b>ayrışma</b>: sağlıklı modele göre hata "
+            "<b>artışı</b>. \"En fazla kaçırılan nesne\" ölçütü senaryodan "
+            "senaryoya neredeyse hep aynı kareyi seçer — o kare zaten en "
+            "kalabalık olanıdır ve hangi bozulma uygulanırsa uygulansın başa "
+            "çıkar. Ayrışma ise \"bu bozulma hangi kareyi bozdu\" sorusunu "
+            "sorar."
+        )
 
 
 # --- Deney defteri (ikincil) ------------------------------------------------

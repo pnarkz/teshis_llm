@@ -261,3 +261,55 @@ def test_checkpoint_dususu_kendi_referansina_gore():
     # Referansin kendisi her iki ailede de sifir fark gostermeli.
     assert abs(df.loc["v00_saglikli last.pt", "Δ kendi referansına"]) < 1e-9
     assert abs(df.loc["v00_saglikli best.pt", "Δ kendi referansına"]) < 1e-9
+
+
+def test_gorsel_kanit_varsayilan_olcutu_senaryolari_ayirt_ediyor():
+    """Varsayilan kare olcutu senaryodan senaryoya FARKLI kare secmeli.
+
+    Olculdu: "en fazla kacirilan nesne" olcutu on senaryonun dokuzunda ayni
+    kareyi seciyor (hituav__1_130_30_0_03841) - o kare zaten en kalabalik
+    olani ve hangi bozulma uygulanirsa uygulansin basa cikiyor. Senaryo
+    degistirildiginde ekranda neredeyse ayni goruntu kaliyordu.
+
+    Varsayilan artik "ayrisma": saglikli modele gore hata ARTISI. Bu test
+    varsayilanin geri degistirilmesini yakalar.
+    """
+    import sys
+
+    sys.path.insert(0, str(ROOT / "demo"))
+    from bolumler.karsilastirma import OLCUT
+    from data_loader import error_galleries, referans_galerisi
+
+    varsayilan = next(iter(OLCUT))
+    alan, ters = OLCUT[varsayilan]
+    galeriler = error_galleries()
+
+    secilenler = []
+    for senaryo in ("D1", "D2a", "D2b", "D3", "D3b", "D4", "D5", "D6b", "E1"):
+        galeri = galeriler.get(senaryo)
+        if not galeri:
+            continue
+        _, saglikli_galeri = referans_galerisi(senaryo)
+        saglikli = {e.get("source"): e
+                    for e in (saglikli_galeri.get("entries") or [])}
+        ortak = [k for k in galeri["entries"] if k.get("source") in saglikli]
+        if not ortak:
+            continue
+        for k in ortak:
+            s = saglikli[k["source"]]
+            k["_ayrisma"] = (
+                (k.get("false_negatives") or 0) - (s.get("false_negatives") or 0)
+                + (k.get("false_positives") or 0) - (s.get("false_positives") or 0)
+            )
+        sirali = sorted([k for k in ortak if alan in k],
+                        key=lambda k: k[alan], reverse=ters)
+        if sirali:
+            secilenler.append(sirali[0]["source"])
+
+    assert len(secilenler) >= 8, "yeterli galeri yok"
+    farkli = len(set(secilenler))
+    assert farkli >= len(secilenler) // 2, (
+        f"Varsayilan olcut '{varsayilan}' {len(secilenler)} senaryoda yalnizca "
+        f"{farkli} farkli kare seciyor: senaryo degistirildiginde ekranda ayni "
+        "goruntu kaliyor demektir"
+    )

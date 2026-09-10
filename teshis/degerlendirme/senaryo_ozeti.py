@@ -137,6 +137,28 @@ def ne_sabit_kaldi(senaryo: str) -> list[str]:
     return sabitler
 
 
+def asan_yone_gore(metrikler: dict[str, Any]) -> tuple[list[str], list[str]]:
+    """Esigi asan metrikleri (dusen, yukselen) diye ayirir.
+
+    Bir metrigin beklenenin TERSINE yukselmesi bozulma kaniti degildir; bu
+    ayrim yapilmazsa yukselen bir metrik dususmus gibi raporlanir (D1,
+    mAP50_95 +0.0240).
+
+    Ayrim `fark`in ISARETINDEN turetilir - hesaplanmis bir yardimci alandan
+    degil. Boyle olmasinin somut bir sebebi var: Streamlit `demo/` altini
+    sicak yeniler ama `teshis/` paketini yenilemez. Sayfa kodu guncelken
+    modul eski kalabiliyor; hesaplanmis bir alani okuyan cagiran taraf o
+    durumda KeyError ile cokuyordu. `fark` ve `asiyor` bu modulun en eski
+    alanlaridir.
+
+    Uretici de tuketici de AYNI bu fonksiyonu cagirir; kural tek yerdedir.
+    """
+    asan = [(m, d) for m, d in (metrikler or {}).items() if d.get("asiyor")]
+    dusen = [m for m, d in asan if (d.get("fark") or 0) < 0]
+    yukselen = [m for m, d in asan if (d.get("fark") or 0) > 0]
+    return dusen, yukselen
+
+
 def ne_gozlendi(senaryo: str) -> dict[str, Any]:
     """Kendi olcegindeki referansa gore farklar ve o olcegin gurultu esigi.
 
@@ -175,6 +197,7 @@ def ne_gozlendi(senaryo: str) -> dict[str, Any]:
             "yon": None if not fark else ("dusus" if fark < 0 else "yukselis"),
         }
     asan = [m for m, d in metrikler.items() if d["asiyor"]]
+    asan_dusen, asan_yukselen = asan_yone_gore(metrikler)
     return {
         "metrikler": metrikler,
         "kontrol_kosu_sayisi": len(karsi["kontroller"]),
@@ -187,8 +210,8 @@ def ne_gozlendi(senaryo: str) -> dict[str, Any]:
         # gucunde ise "zayif bulgu" diye gorunuyordu - ikisi de dususmus gibi.
         # Ayni hata once hipotez tablosunda, sonra etki haritasinda cikti;
         # bu, kuralin yasadigi UCUNCU yerdi.
-        "asan_dusen": [m for m in asan if metrikler[m]["yon"] == "dusus"],
-        "asan_yukselen": [m for m in asan if metrikler[m]["yon"] == "yukselis"],
+        "asan_dusen": asan_dusen,
+        "asan_yukselen": asan_yukselen,
         "referans_senaryo": ref_ad,
         "karsilastirma_turu": karsi["tur"],
         "karsilastirma_aciklamasi": karsi["aciklama"],
@@ -229,8 +252,7 @@ def kanit_gucu(senaryo: str) -> dict[str, Any]:
     # Derecelendirme YALNIZCA esigi asan DUSUSLERE bakar. Bir metrigin
     # beklenenin tersine yukselmesi bozulmanin kaniti degildir; ayri
     # anlatilir.
-    asan = gozlem["asan_dusen"]
-    yukselen = gozlem["asan_yukselen"]
+    asan, yukselen = asan_yone_gore(gozlem.get("metrikler"))
     n = gozlem["kontrol_kosu_sayisi"]
 
     # Kontrol kosusu OLCUM ARACIDIR, olcum nesnesi degil. Derecelendirilirse
